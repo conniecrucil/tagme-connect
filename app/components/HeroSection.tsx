@@ -26,8 +26,8 @@ export function HeroSection() {
 
           {/* Right side - Image */}
           <div className="flex justify-center lg:justify-end">
-            <img 
-              src="/assets/homepage-image-tagme.webp" 
+            <img
+              src="/homepage-image-tagme.webp"
               alt="Hands holding smartphone and TAG ME card demonstrating digital connection"
               className="max-w-full h-auto rounded-lg shadow-lg animate-fade-in-left animation-delay-500 hover:scale-105 transition-transform duration-500"
             />
