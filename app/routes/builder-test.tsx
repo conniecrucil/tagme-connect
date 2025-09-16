@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
+import { ActionIcon } from "../components/Icon";
 
 interface VCardData {
   prefix: string;
@@ -140,7 +141,7 @@ export default function BuilderTest() {
       name: actionName,
       value: "",
       type: actionName,
-      color: actionConfig?.color || '#374151',
+      color: actionConfig?.color || '#6B7280',
       placeholder: actionConfig?.placeholder || `Enter ${actionName}`
     };
 
@@ -208,19 +209,37 @@ END:VCARD`;
   };
 
   const availableActions = [
-    { name: 'email', label: 'Email', color: '#374151', placeholder: 'Enter email address' },
-    { name: 'call', label: 'Phone', color: '#374151', placeholder: 'Enter phone number' },
-    { name: 'Mobile', label: 'Mobile', color: '#374151', placeholder: 'Enter mobile number' },
-    { name: 'website', label: 'Website', color: '#374151', placeholder: 'Enter website URL' },
-    { name: 'location', label: 'Location', color: '#374151', placeholder: 'Enter location' },
-    { name: 'calendar', label: 'Calendar', color: '#374151', placeholder: 'Enter calendar link' },
+    // Primary Actions (Communication & Basic Info)
+    { name: 'email', label: 'Email', color: '#6B7280', placeholder: 'Enter email address' },
+    { name: 'call', label: 'Phone', color: '#6B7280', placeholder: 'Enter phone number' },
+    { name: 'Mobile', label: 'Mobile', color: '#6B7280', placeholder: 'Enter mobile number' },
+    { name: 'website', label: 'Website', color: '#6B7280', placeholder: 'Enter website URL' },
+    { name: 'location', label: 'Location', color: '#6B7280', placeholder: 'Enter location' },
+    { name: 'calendar', label: 'Calendar', color: '#6B7280', placeholder: 'Enter calendar link' },
     { name: 'whatsApp', label: 'WhatsApp', color: '#25D366', placeholder: 'Enter WhatsApp number' },
     { name: 'WeChat', label: 'WeChat', color: '#07C160', placeholder: 'Enter WeChat ID' },
     { name: 'messenger', label: 'Messenger', color: '#0084FF', placeholder: 'Enter Messenger username' },
     { name: 'signal', label: 'Signal', color: '#3A76F0', placeholder: 'Enter Signal number' },
-    { name: 'fax', label: 'Fax', color: '#374151', placeholder: 'Enter fax number' },
-    { name: 'Home', label: 'Home', color: '#374151', placeholder: 'Enter home phone' },
-    { name: 'Office', label: 'Office', color: '#374151', placeholder: 'Enter office phone' },
+    { name: 'fax', label: 'Fax', color: '#6B7280', placeholder: 'Enter fax number' },
+    { name: 'Home', label: 'Home', color: '#6B7280', placeholder: 'Enter home phone' },
+    { name: 'Office', label: 'Office', color: '#6B7280', placeholder: 'Enter office phone' },
+    
+    // Secondary Actions (Social Media & Platforms)
+    { name: 'facebook', label: 'Facebook', color: '#1877f2', placeholder: 'Enter Facebook URL' },
+    { name: 'instagram', label: 'Instagram', color: '#405de6', placeholder: 'Enter Instagram URL' },
+    { name: 'twitter', label: 'Twitter/X', color: '#000000', placeholder: 'Enter Twitter URL' },
+    { name: 'linkedin', label: 'LinkedIn', color: '#0077b5', placeholder: 'Enter LinkedIn URL' },
+    { name: 'youtube', label: 'YouTube', color: '#ff0000', placeholder: 'Enter YouTube URL' },
+    { name: 'tiktok', label: 'TikTok', color: '#ffffff', placeholder: 'Enter TikTok URL' },
+    { name: 'snapchat', label: 'Snapchat', color: '#fffc00', placeholder: 'Enter Snapchat URL' },
+    { name: 'twitch', label: 'Twitch', color: '#9146ff', placeholder: 'Enter Twitch URL' },
+    { name: 'vimeo', label: 'Vimeo', color: '#1ab7ea', placeholder: 'Enter Vimeo URL' },
+    { name: 'spotify', label: 'Spotify', color: '#1ed760', placeholder: 'Enter Spotify URL' },
+    { name: 'discord', label: 'Discord', color: '#7289da', placeholder: 'Enter Discord URL' },
+    { name: 'telegram', label: 'Telegram', color: '#0088cc', placeholder: 'Enter Telegram URL' },
+    { name: 'reddit', label: 'Reddit', color: '#ff5700', placeholder: 'Enter Reddit URL' },
+    { name: 'pinterest', label: 'Pinterest', color: '#bd081c', placeholder: 'Enter Pinterest URL' },
+    { name: 'github', label: 'GitHub', color: '#333333', placeholder: 'Enter GitHub URL' },
   ];
 
   const filteredPrimaryActions = availableActions.filter(action =>
@@ -232,50 +251,93 @@ END:VCARD`;
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
       
-      <div className="container mx-auto px-4" style={{ maxWidth: '960px' }}>
+      <div className="container mx-auto px-4 pb-20" style={{ maxWidth: '960px' }}>
         <div className="flex items-start justify-between pt-8">
-          <div className="w-24 h-24 bg-gray-800 rounded flex items-center justify-center">
-            <span className="text-gray-400 text-sm">LOGO</span>
+          <div className="w-24 h-24 bg-gray-100 rounded flex items-center justify-center">
+            <span className="text-gray-600 text-sm">LOGO</span>
           </div>
           <div className="flex gap-4">
             <Button 
               onClick={downloadVCard}
-              className="font-extrabold leading-none text-lg tracking-wide flex-shrink-0 p-5 mt-2 text-white bg-green-500 rounded hover:bg-green-600 focus:bg-green-600 transition-colors duration-200 focus:outline-none"
+              className="font-extrabold leading-none text-lg tracking-wide flex-shrink-0 p-5 mt-2 text-white bg-green-600 rounded hover:bg-green-700 focus:bg-green-700 transition-colors duration-200 focus:outline-none"
             >
               Download vCard
             </Button>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mt-16">
+        <div className="grid md:grid-cols-2 gap-16 mt-16">
           {/* Left Panel - Form */}
           <div className="px-4">
             {/* Header Image Section */}
             <div className="pt-8">
               <div className="mt-16">
-                <h2 className="font-extrabold text-2xl">Header Image</h2>
+                <h2 className="font-extrabold text-2xl text-gray-900">Header Image</h2>
                 
                 <div className="mt-6">
-                  <p>Select between a logo or cover photo</p>
-                  <br />
-                  <div className="flex items-center">
+                  <p className="text-gray-700 mb-4">Choose your header style</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Brand Logo Option */}
                     <div
-                      className={`relative group inline-block w-24 h-12 mr-3 align-middle select-none transition duration-200 ease-in bg-gray-700 rounded hover:bg-gray-600 focus:bg-gray-600 cursor-pointer focus:outline-none ${
-                        logoOrHeader ? 'bg-green-600 hover:bg-green-500 focus:bg-green-500' : ''
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                        !logoOrHeader 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-gray-300 bg-white hover:border-gray-400'
                       }`}
-                      onClick={() => setLogoOrHeader(!logoOrHeader)}
+                      onClick={() => setLogoOrHeader(false)}
                     >
-                      <input
-                        type="checkbox"
-                        checked={logoOrHeader}
-                        onChange={() => setLogoOrHeader(!logoOrHeader)}
-                        className="toggle-switch absolute block w-10 h-10 m-1 rounded border-4 border-transparent appearance-none cursor-pointer transition-colors duration-200 focus:outline-none bg-white"
-                      />
+                      <div className="flex items-start space-x-3">
+                        <input
+                          type="radio"
+                          name="headerType"
+                          checked={!logoOrHeader}
+                          onChange={() => setLogoOrHeader(false)}
+                          className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 mb-1">Brand Logo</h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Display your company logo prominently at the top of your card
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Best for: Professional branding, company recognition
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <p>{logoOrHeader ? 'Cover Photo' : 'Brand Logo'}</p>
+
+                    {/* Cover Photo Option */}
+                    <div
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                        logoOrHeader 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-gray-300 bg-white hover:border-gray-400'
+                      }`}
+                      onClick={() => setLogoOrHeader(true)}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <input
+                          type="radio"
+                          name="headerType"
+                          checked={logoOrHeader}
+                          onChange={() => setLogoOrHeader(true)}
+                          className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 mb-1">Cover Photo</h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Use a background image that spans the full width of your card
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Best for: Visual impact, personal branding, creative expression
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {logoOrHeader ? (
@@ -290,10 +352,10 @@ END:VCARD`;
                             />
                           ) : (
                             <button
-                              className="p-3 rounded bg-gray-700 cursor-pointer hover:bg-gray-600 focus:bg-gray-600 transition-colors duration-200 focus:outline-none"
+                              className="p-3 rounded bg-gray-200 cursor-pointer hover:bg-gray-300 focus:bg-gray-300 transition-colors duration-200 focus:outline-none"
                               onClick={() => fileInputRefs.cover.current?.click()}
                             >
-                              <div className="w-6 h-6 pointer-events-none text-white">+</div>
+                              <div className="w-6 h-6 pointer-events-none text-gray-700">+</div>
                             </button>
                           )}
                           <input
@@ -307,21 +369,21 @@ END:VCARD`;
                             }}
                           />
                           {!images.cover.url && (
-                            <p className="ml-3 leading-none">
+                            <p className="ml-3 leading-none text-gray-700">
                               Add cover photo<br />
-                              <span className="text-sm text-gray-400">suggested format: svg, jpeg, png or gif</span>
+                              <span className="text-sm text-gray-500">suggested format: svg, jpeg, png or gif</span>
                             </p>
                           )}
                           {images.cover.url && (
                             <button
-                              className="p-1 m-2 shrink-0 focus:outline-none rounded hover:bg-gray-700 focus:bg-gray-700 transition-colors duration-200"
+                              className="p-1 m-2 shrink-0 focus:outline-none rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors duration-200"
                               onClick={() => removeImage('cover')}
                             >
-                              <div className="w-6 h-6 text-white">×</div>
+                              <div className="w-6 h-6 text-gray-700">×</div>
                             </button>
                           )}
                         </div>
-                        <p className="mt-6 border p-4 rounded border-gray-700 text-gray-400">
+                        <p className="mt-6 border p-4 rounded border-gray-300 text-gray-600">
                           Recommended cover size is 960 x 640 pixels, with an expect ratio of 3:2.
                         </p>
                       </div>
@@ -338,10 +400,10 @@ END:VCARD`;
                             />
                           ) : (
                             <button
-                              className="p-3 rounded bg-gray-700 cursor-pointer hover:bg-gray-600 focus:bg-gray-600 transition-colors duration-200 focus:outline-none"
+                              className="p-3 rounded bg-gray-200 cursor-pointer hover:bg-gray-300 focus:bg-gray-300 transition-colors duration-200 focus:outline-none"
                               onClick={() => fileInputRefs.logo.current?.click()}
                             >
-                              <div className="w-6 h-6 pointer-events-none text-white">+</div>
+                              <div className="w-6 h-6 pointer-events-none text-gray-700">+</div>
                             </button>
                           )}
                           <input
@@ -355,21 +417,21 @@ END:VCARD`;
                             }}
                           />
                           {!images.logo.url && (
-                            <p className="ml-3 leading-none">
+                            <p className="ml-3 leading-none text-gray-700">
                               Upload your brand logo<br />
-                              <span className="text-sm text-gray-400">suggested format: svg, png or gif</span>
+                              <span className="text-sm text-gray-500">suggested format: svg, png or gif</span>
                             </p>
                           )}
                           {images.logo.url && (
                             <button
-                              className="p-1 m-2 shrink-0 focus:outline-none rounded hover:bg-gray-700 focus:bg-gray-700 transition-colors duration-200"
+                              className="p-1 m-2 shrink-0 focus:outline-none rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors duration-200"
                               onClick={() => removeImage('logo')}
                             >
-                              <div className="w-6 h-6 text-white">×</div>
+                              <div className="w-6 h-6 text-gray-700">×</div>
                             </button>
                           )}
                         </div>
-                        <p className="mt-6 border p-4 rounded border-gray-700 text-gray-400">
+                        <p className="mt-6 border p-4 rounded border-gray-300 text-gray-600">
                           Recommended brand logo size is 350 x 100 pixels.
                         </p>
                       </div>
@@ -381,7 +443,7 @@ END:VCARD`;
 
             {/* vCard Information */}
             <div className="mt-16">
-              <h2 className="font-extrabold text-2xl">vCard information</h2>
+              <h2 className="font-extrabold text-2xl text-gray-900">vCard information</h2>
               
               <div className="mt-6">
                 <div className="flex flex-wrap items-center">
@@ -393,10 +455,10 @@ END:VCARD`;
                     />
                   ) : (
                     <button
-                      className="p-3 rounded bg-gray-700 cursor-pointer hover:bg-gray-600 focus:bg-gray-600 transition-colors duration-200 focus:outline-none"
+                      className="p-3 rounded bg-gray-200 cursor-pointer hover:bg-gray-300 focus:bg-gray-300 transition-colors duration-200 focus:outline-none"
                       onClick={() => fileInputRefs.photo.current?.click()}
                     >
-                      <div className="w-6 h-6 pointer-events-none text-white">+</div>
+                      <div className="w-6 h-6 pointer-events-none text-gray-700">+</div>
                     </button>
                   )}
                   <input
@@ -410,91 +472,91 @@ END:VCARD`;
                     }}
                   />
                   {!images.photo.url && (
-                    <p className="ml-3 leading-none">
+                    <p className="ml-3 leading-none text-gray-700">
                       Upload your headshot<br />
-                      <span className="text-sm text-gray-400">suggested format: jpeg, png or gif</span>
+                      <span className="text-sm text-gray-500">suggested format: jpeg, png or gif</span>
                     </p>
                   )}
                   {images.photo.url && (
                     <button
-                      className="p-1 m-2 shrink-0 focus:outline-none rounded hover:bg-gray-700 focus:bg-gray-700 transition-colors duration-200"
+                      className="p-1 m-2 shrink-0 focus:outline-none rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors duration-200"
                       onClick={() => removeImage('photo')}
                     >
-                      <div className="w-6 h-6 text-white">×</div>
+                      <div className="w-6 h-6 text-gray-700">×</div>
                     </button>
                   )}
                 </div>
-                <p className="mt-6 border p-4 rounded border-gray-700 text-gray-400">
+                <p className="mt-6 border p-4 rounded border-gray-300 text-gray-600">
                   Recommended headshot is 300 x 300 pixels.
                 </p>
               </div>
 
               <div className="mt-6">
                 <div>
-                  <label className="ml-4">Prefix</label>
+                  <label className="ml-4 text-gray-700">Prefix</label>
                   <Input
                     placeholder="Dr./Mr./Prof."
                     value={vCardData.prefix}
                     onChange={(e) => handleInputChange('prefix', e.target.value)}
-                    className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                    className="mt-2"
                   />
                 </div>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <div>
-                  <label className="ml-4">First name</label>
+                  <label className="ml-4 text-gray-700">First name</label>
                   <Input
                     value={vCardData.fname}
                     onChange={(e) => handleInputChange('fname', e.target.value)}
-                    className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                    className="mt-2"
                   />
                 </div>
                 <div>
-                  <label className="ml-4">Last name</label>
+                  <label className="ml-4 text-gray-700">Last name</label>
                   <Input
                     value={vCardData.lname}
                     onChange={(e) => handleInputChange('lname', e.target.value)}
-                    className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                    className="mt-2"
                   />
                 </div>
               </div>
 
               <div className="mt-6">
-                <label className="ml-4">Gender pronouns</label>
+                <label className="ml-4 text-gray-700">Gender pronouns</label>
                 <Input
                   placeholder="He/Him/His"
                   value={vCardData.pronouns}
                   onChange={(e) => handleInputChange('pronouns', e.target.value)}
-                  className="mt-2 px-4 w-full h-12 bg-black placeholder-gray-600 rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                  className="mt-2"
                 />
               </div>
 
               <div className="mt-6">
-                <label className="ml-4">Job title</label>
+                <label className="ml-4 text-gray-700">Job title</label>
                 <Input
                   value={vCardData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                  className="mt-2"
                 />
               </div>
 
               <div className="mt-6">
-                <label className="ml-4">Business name</label>
+                <label className="ml-4 text-gray-700">Business name</label>
                 <Input
                   value={vCardData.biz}
                   onChange={(e) => handleInputChange('biz', e.target.value)}
-                  className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                  className="mt-2"
                 />
               </div>
 
               <div className="mt-6">
-                <label className="ml-4">Business address</label>
+                <label className="ml-4 text-gray-700">Business address</label>
                 <Input
                   placeholder="Street Address"
                   value={vCardData.street}
                   onChange={(e) => handleInputChange('street', e.target.value)}
-                  className="mt-2 px-4 py-3 w-full bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 resize-none hover:border-gray-600"
+                  className="mt-2"
                 />
               </div>
 
@@ -503,13 +565,13 @@ END:VCARD`;
                   placeholder="City"
                   value={vCardData.city}
                   onChange={(e) => handleInputChange('city', e.target.value)}
-                  className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                  className="mt-2"
                 />
                 <Input
                   placeholder="State"
                   value={vCardData.state}
                   onChange={(e) => handleInputChange('state', e.target.value)}
-                  className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                  className="mt-2"
                 />
               </div>
 
@@ -518,22 +580,22 @@ END:VCARD`;
                   placeholder="Postal Code"
                   value={vCardData.postal}
                   onChange={(e) => handleInputChange('postal', e.target.value)}
-                  className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                  className="mt-2"
                 />
                 <Input
                   placeholder="Country"
                   value={vCardData.country}
                   onChange={(e) => handleInputChange('country', e.target.value)}
-                  className="mt-2 px-4 w-full h-12 bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                  className="mt-2"
                 />
               </div>
 
               <div className="mt-6">
-                <label className="ml-4">Business description</label>
+                <label className="ml-4 text-gray-700">Business description</label>
                 <Textarea
                   value={vCardData.desc}
                   onChange={(e) => handleInputChange('desc', e.target.value)}
-                  className="mt-2 px-4 py-3 w-full bg-black rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 resize-none hover:border-gray-600"
+                  className="mt-2"
                   rows={4}
                 />
               </div>
@@ -541,37 +603,23 @@ END:VCARD`;
 
             {/* Primary Actions */}
             <div className="mt-16">
-              <h2 className="font-extrabold text-2xl">Primary actions</h2>
+              <h2 className="font-extrabold text-2xl text-gray-900">Primary actions</h2>
               
               <div className="space-y-4">
                 {primaryActions.map((action, index) => (
                   <div key={index} className="flex mt-6">
                     <button className="p-1 flex-shrink-0 focus:outline-none cursor-move">
-                      <div className="w-6 h-6 text-gray-400">⋮⋮</div>
+                      <div className="w-6 h-6 text-gray-500">⋮⋮</div>
                     </button>
                     <div
-                      className="p-3 flex-shrink-0 mr-3 rounded-full"
-                      style={{ background: action.color }}
+                      className="w-12 h-12 flex items-center justify-center flex-shrink-0 mr-3 rounded-full"
+                      style={{ backgroundColor: action.color }}
                     >
-                      <div className="w-6 h-6 text-white">
-                        {action.name === 'email' && '✉'}
-                        {action.name === 'call' && '📞'}
-                        {action.name === 'Mobile' && '📱'}
-                        {action.name === 'website' && '🌐'}
-                        {action.name === 'location' && '📍'}
-                        {action.name === 'calendar' && '📅'}
-                        {action.name === 'whatsApp' && '💬'}
-                        {action.name === 'WeChat' && '💬'}
-                        {action.name === 'messenger' && '💬'}
-                        {action.name === 'signal' && '📡'}
-                        {action.name === 'fax' && '📠'}
-                        {action.name === 'Home' && '🏠'}
-                        {action.name === 'Office' && '🏢'}
-                      </div>
+                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
                     </div>
                     <div className="w-full">
                       <Input
-                        className="px-4 w-full h-12 bg-black placeholder-gray-600 rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                        className="w-full"
                         type="text"
                         value={action.value}
                         onChange={(e) => updateActionValue('primary', index, e.target.value)}
@@ -579,10 +627,10 @@ END:VCARD`;
                       />
                     </div>
                     <button
-                      className="p-1 m-2 flex-shrink-0 focus:outline-none rounded hover:bg-gray-700 focus:bg-gray-700 transition-colors duration-200"
+                      className="p-1 m-2 flex-shrink-0 focus:outline-none rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors duration-200"
                       onClick={() => removeAction('primary', index)}
                     >
-                      <div className="w-6 h-6 text-white">×</div>
+                      <div className="w-6 h-6 text-gray-700">×</div>
                     </button>
                   </div>
                 ))}
@@ -590,7 +638,7 @@ END:VCARD`;
               
               <br />
               <Input
-                className="px-4 mb-2 w-full h-12 bg-black placeholder-gray-600 rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                className="mb-2 w-full"
                 type="text"
                 value={filterPrimary}
                 onChange={(e) => setFilterPrimary(e.target.value)}
@@ -598,30 +646,16 @@ END:VCARD`;
               />
 
               <div className={`mt-6 ${primaryActions.length ? 'border-t pt-6' : ''}`}>
-                <div className="grid grid-gap-6 justify-between grid-cols-[repeat(auto-fill,minmax(3rem,auto))]">
+                <div className="flex flex-wrap gap-4">
                   {filteredPrimaryActions.map((action) => (
                     <button
                       key={action.name}
                       onClick={() => addAction('primary', action.name)}
-                      className="p-3 flex-shrink-0 rounded-full hover:scale-125 focus:scale-125 transform transition-transform duration-200 focus:outline-none"
+                      className="w-12 h-12 flex items-center justify-center rounded-full hover:scale-110 focus:scale-110 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
                       style={{ backgroundColor: action.color }}
                       title={action.label}
                     >
-                      <div className="w-6 h-6 text-white">
-                        {action.name === 'email' && '✉'}
-                        {action.name === 'call' && '📞'}
-                        {action.name === 'Mobile' && '📱'}
-                        {action.name === 'website' && '🌐'}
-                        {action.name === 'location' && '📍'}
-                        {action.name === 'calendar' && '📅'}
-                        {action.name === 'whatsApp' && '💬'}
-                        {action.name === 'WeChat' && '💬'}
-                        {action.name === 'messenger' && '💬'}
-                        {action.name === 'signal' && '📡'}
-                        {action.name === 'fax' && '📠'}
-                        {action.name === 'Home' && '🏠'}
-                        {action.name === 'Office' && '🏢'}
-                      </div>
+                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
                     </button>
                   ))}
                 </div>
@@ -630,37 +664,23 @@ END:VCARD`;
 
             {/* Secondary Actions */}
             <div className="mt-16">
-              <h2 className="font-extrabold text-2xl">Secondary actions</h2>
+              <h2 className="font-extrabold text-2xl text-gray-900">Secondary actions</h2>
               
               <div className="space-y-4">
                 {secondaryActions.map((action, index) => (
                   <div key={index} className="flex mt-6">
                     <button className="p-1 flex-shrink-0 focus:outline-none cursor-move">
-                      <div className="w-6 h-6 text-gray-400">⋮⋮</div>
+                      <div className="w-6 h-6 text-gray-500">⋮⋮</div>
                     </button>
                     <div
-                      className="p-3 flex-shrink-0 mr-3 rounded-full"
-                      style={{ background: action.color }}
+                      className="w-12 h-12 flex items-center justify-center flex-shrink-0 mr-3 rounded-full"
+                      style={{ backgroundColor: action.color }}
                     >
-                      <div className="w-6 h-6 text-white">
-                        {action.name === 'email' && '✉'}
-                        {action.name === 'call' && '📞'}
-                        {action.name === 'Mobile' && '📱'}
-                        {action.name === 'website' && '🌐'}
-                        {action.name === 'location' && '📍'}
-                        {action.name === 'calendar' && '📅'}
-                        {action.name === 'whatsApp' && '💬'}
-                        {action.name === 'WeChat' && '💬'}
-                        {action.name === 'messenger' && '💬'}
-                        {action.name === 'signal' && '📡'}
-                        {action.name === 'fax' && '📠'}
-                        {action.name === 'Home' && '🏠'}
-                        {action.name === 'Office' && '🏢'}
-                      </div>
+                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
                     </div>
                     <div className="w-full">
                       <Input
-                        className="px-4 w-full h-12 bg-black placeholder-gray-600 rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                        className="w-full"
                         type="text"
                         value={action.value}
                         onChange={(e) => updateActionValue('secondary', index, e.target.value)}
@@ -668,10 +688,10 @@ END:VCARD`;
                       />
                     </div>
                     <button
-                      className="p-1 m-2 flex-shrink-0 focus:outline-none rounded hover:bg-gray-700 focus:bg-gray-700 transition-colors duration-200"
+                      className="p-1 m-2 flex-shrink-0 focus:outline-none rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors duration-200"
                       onClick={() => removeAction('secondary', index)}
                     >
-                      <div className="w-6 h-6 text-white">×</div>
+                      <div className="w-6 h-6 text-gray-700">×</div>
                     </button>
                   </div>
                 ))}
@@ -679,7 +699,7 @@ END:VCARD`;
               
               <br />
               <Input
-                className="px-4 mb-2 w-full h-12 bg-black placeholder-gray-600 rounded border border-transparent transition-colors duration-200 focus:outline-none focus:border-gray-600 hover:border-gray-600"
+                className="mb-2 w-full"
                 type="text"
                 value={filterSecondary}
                 onChange={(e) => setFilterSecondary(e.target.value)}
@@ -687,30 +707,16 @@ END:VCARD`;
               />
 
               <div className={`mt-6 ${secondaryActions.length ? 'border-t pt-6' : ''}`}>
-                <div className="grid grid-gap-6 justify-between grid-cols-[repeat(auto-fill,minmax(3rem,auto))]">
+                <div className="flex flex-wrap gap-4">
                   {filteredSecondaryActions.map((action) => (
                     <button
                       key={action.name}
                       onClick={() => addAction('secondary', action.name)}
-                      className="p-3 flex-shrink-0 rounded-full hover:scale-125 focus:scale-125 transform transition-transform duration-200 focus:outline-none"
-                      style={{ background: action.color }}
+                      className="w-12 h-12 flex items-center justify-center rounded-full hover:scale-110 focus:scale-110 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
+                      style={{ backgroundColor: action.color }}
                       title={action.label}
                     >
-                      <div className="w-6 h-6 text-white">
-                        {action.name === 'email' && '✉'}
-                        {action.name === 'call' && '📞'}
-                        {action.name === 'Mobile' && '📱'}
-                        {action.name === 'website' && '🌐'}
-                        {action.name === 'location' && '📍'}
-                        {action.name === 'calendar' && '📅'}
-                        {action.name === 'whatsApp' && '💬'}
-                        {action.name === 'WeChat' && '💬'}
-                        {action.name === 'messenger' && '💬'}
-                        {action.name === 'signal' && '📡'}
-                        {action.name === 'fax' && '📠'}
-                        {action.name === 'Home' && '🏠'}
-                        {action.name === 'Office' && '🏢'}
-                      </div>
+                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
                     </button>
                   ))}
                 </div>
@@ -721,14 +727,14 @@ END:VCARD`;
           {/* Right Panel - Visual Preview */}
           <div className="px-4">
             <div className="sticky top-8">
-              <h2 className="font-extrabold text-2xl mb-2">Your Business Card</h2>
-              <p className="text-gray-400 text-sm mb-6">Preview updates as you type</p>
+              <h2 className="font-extrabold text-2xl mb-2 text-gray-900">Your Business Card</h2>
+              <p className="text-gray-600 text-sm mb-6">Preview updates as you type</p>
               
               {/* Mobile Preview */}
-              <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '375px', margin: '0 auto' }}>
+              <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '562px', margin: '0 auto' }}>
                 {/* Header Section */}
                 <div 
-                  className="w-full h-32 relative"
+                  className="w-full h-48 relative"
                   style={{ 
                     backgroundColor: '#e4eaea',
                     backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
@@ -741,7 +747,7 @@ END:VCARD`;
                       <img 
                         src={images.logo.url} 
                         alt="Logo" 
-                        className="w-16 h-16 rounded-full bg-white p-2 shadow-md"
+                        className="w-24 h-24 rounded-full bg-white p-2 shadow-md"
                       />
                     </div>
                   )}
@@ -750,8 +756,8 @@ END:VCARD`;
                 {/* Profile Section */}
                 <div className="p-6 text-center">
                   {/* Profile Photo */}
-                  <div className="relative -mt-16 mb-4">
-                    <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto flex items-center justify-center overflow-hidden">
+                  <div className="relative -mt-24 mb-4">
+                    <div className="w-36 h-36 bg-gray-300 rounded-full mx-auto flex items-center justify-center overflow-hidden">
                       {images.photo.url ? (
                         <img src={images.photo.url} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
@@ -801,21 +807,7 @@ END:VCARD`;
                     {/* Primary Actions */}
                     {primaryActions.filter(action => action.value).map((action, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <span className="w-6 h-6 text-gray-500">
-                          {action.name === 'email' && '✉'}
-                          {action.name === 'call' && '📞'}
-                          {action.name === 'Mobile' && '📱'}
-                          {action.name === 'website' && '🌐'}
-                          {action.name === 'location' && '📍'}
-                          {action.name === 'calendar' && '📅'}
-                          {action.name === 'whatsApp' && '💬'}
-                          {action.name === 'WeChat' && '💬'}
-                          {action.name === 'messenger' && '💬'}
-                          {action.name === 'signal' && '📡'}
-                          {action.name === 'fax' && '📠'}
-                          {action.name === 'Home' && '🏠'}
-                          {action.name === 'Office' && '🏢'}
-                        </span>
+                        <ActionIcon name={action.name} className="w-6 h-6 text-gray-500" />
                         <span className="text-sm">{action.value}</span>
                       </div>
                     ))}
@@ -823,21 +815,7 @@ END:VCARD`;
                     {/* Secondary Actions */}
                     {secondaryActions.filter(action => action.value).map((action, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <span className="w-6 h-6 text-gray-500">
-                          {action.name === 'email' && '✉'}
-                          {action.name === 'call' && '📞'}
-                          {action.name === 'Mobile' && '📱'}
-                          {action.name === 'website' && '🌐'}
-                          {action.name === 'location' && '📍'}
-                          {action.name === 'calendar' && '📅'}
-                          {action.name === 'whatsApp' && '💬'}
-                          {action.name === 'WeChat' && '💬'}
-                          {action.name === 'messenger' && '💬'}
-                          {action.name === 'signal' && '📡'}
-                          {action.name === 'fax' && '📠'}
-                          {action.name === 'Home' && '🏠'}
-                          {action.name === 'Office' && '🏢'}
-                        </span>
+                        <ActionIcon name={action.name} className="w-6 h-6 text-gray-500" />
                         <span className="text-sm">{action.value}</span>
                       </div>
                     ))}

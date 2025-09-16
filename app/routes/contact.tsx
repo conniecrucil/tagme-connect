@@ -1,5 +1,3 @@
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
@@ -17,9 +15,7 @@ export function meta() {
 
 export default function Contact() {
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="pt-16">
+    <div className="pt-16">
         {/* Hero Section with Image */}
         <section className="relative py-20 bg-gradient-to-br from-green-50 to-green-100">
           <div className="container mx-auto px-4">
@@ -194,8 +190,6 @@ export default function Contact() {
             </div>
           </div>
         </section>
-      </main>
-      <Footer />
     </div>
   );
 }
