@@ -69,7 +69,7 @@ This document outlines the complete user journey for purchasing smart business c
   - Redirect to Stripe hosted checkout page
   - User enters payment information (card, billing address)
   - Stripe processes payment securely
-  - Webhook (`/api/stripe-webhook`) handles payment confirmation
+  - Webhook (`/.netlify/functions/stripe-webhook`) handles payment confirmation
   - Order status updated to 'paid' in database
 - **Security**: No sensitive payment data stored locally, PCI compliant via Stripe
 - **User Action**: User completes payment on Stripe checkout page
@@ -175,13 +175,13 @@ See `.env.example` for complete configuration template.
 ## API Endpoints (Netlify Functions)
 
 ### Core Workflow Endpoints
-- `/api/validate-card`: Validates card configuration and generates vCard
-- `/api/create-checkout-session`: Creates Stripe Checkout Session with order details
-- `/api/stripe-webhook`: Handles Stripe webhook events (payment confirmation)
+- `/.netlify/functions/validate-card`: Validates card configuration and generates vCard
+- `/.netlify/functions/create-checkout-session`: Creates Stripe Checkout Session with order details
+- `/.netlify/functions/stripe-webhook`: Handles Stripe webhook events (payment confirmation)
 
 ### Email Notification Endpoints
-- `/api/send-confirmation`: Sends customer confirmation email via Resend
-- `/api/send-admin-notification`: Sends admin notification emails via Resend
+- `/.netlify/functions/send-confirmation`: Sends customer confirmation email via Resend
+- `/.netlify/functions/send-admin-notification`: Sends admin notification emails via Resend
 
 ### Implementation Details
 - All endpoints use Netlify Functions (serverless)
