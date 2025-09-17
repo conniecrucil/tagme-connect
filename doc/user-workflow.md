@@ -69,8 +69,7 @@ This document outlines the complete user journey for purchasing smart business c
   - Redirect to Stripe hosted checkout page
   - User enters payment information (card, billing address)
   - Stripe processes payment securely
-  - Webhook (`/.netlify/functions/stripe-webhook`) handles payment confirmation
-  - Order status updated to 'paid' in database
+  - Redirect to confirmation page with session_id
 - **Security**: No sensitive payment data stored locally, PCI compliant via Stripe
 - **User Action**: User completes payment on Stripe checkout page
 
@@ -82,6 +81,7 @@ This document outlines the complete user journey for purchasing smart business c
   - Configuration summary
   - Estimated shipping timeline (15-20 business days)
   - Contact information for support
+- **Email Trigger**: Automatically triggers purchase emails on page load
 - **User Action**: User reviews order details
 
 ### 8. Email Notifications (via Resend)
@@ -96,7 +96,7 @@ This document outlines the complete user journey for purchasing smart business c
   - Shipping timeline (15-20 business days)
   - Support contact information
   - Company branding and professional styling
-- **Trigger**: Sent immediately after successful payment via `/api/send-confirmation`
+- **Trigger**: Sent automatically when confirmation page loads via `/api/send-purchase-emails`
 - **Template**: Professional HTML email template with company branding
 
 #### 8.2 Admin Notification Emails
@@ -111,7 +111,7 @@ This document outlines the complete user journey for purchasing smart business c
   - Attached files:
     - Customer-uploaded images/logos
     - Generated vCard file (.vcf)
-- **Trigger**: Sent for each card in the order after successful payment via `/api/send-admin-notification`
+- **Trigger**: Sent for each card in the order when confirmation page loads via `/api/send-purchase-emails`
 - **Template**: Admin-focused template with order processing details
 
 ## Technical Implementation Notes
@@ -177,17 +177,13 @@ See `.env.example` for complete configuration template.
 ### Core Workflow Endpoints
 - `/.netlify/functions/validate-card`: Validates card configuration and generates vCard
 - `/.netlify/functions/create-checkout-session`: Creates Stripe Checkout Session with order details
-- `/.netlify/functions/stripe-webhook`: Handles Stripe webhook events (payment confirmation)
-
-### Email Notification Endpoints
-- `/.netlify/functions/send-confirmation`: Sends customer confirmation email via Resend
-- `/.netlify/functions/send-admin-notification`: Sends admin notification emails via Resend
+- `/.netlify/functions/send-purchase-emails`: Sends all purchase-related emails (customer confirmation and admin notifications)
 
 ### Implementation Details
 - All endpoints use Netlify Functions (serverless)
 - Stripe integration uses official Stripe SDK
 - Resend integration uses official Resend SDK
-- Webhook endpoints include signature verification for security
+- Email function triggered by confirmation page load (not webhook)
 - Email templates support HTML formatting and attachments
 
 ## Database Schema

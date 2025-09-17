@@ -19,6 +19,32 @@ export default function Confirmation() {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const sendPurchaseEmails = async (sessionId: string, cart: any[], customerInfo: any) => {
+    try {
+      const response = await fetch('/.netlify/functions/send-purchase-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          customerInfo,
+          cart
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send purchase emails');
+      }
+
+      const result = await response.json();
+      console.log('Purchase emails sent successfully:', result);
+    } catch (error) {
+      console.error('Error sending purchase emails:', error);
+      // Don't show error to user as this is a background operation
+    }
+  };
+
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     
@@ -29,7 +55,7 @@ export default function Confirmation() {
       const totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
       
       if (cart.length > 0) {
-        setOrderDetails({
+        const orderData = {
           sessionId,
           customerEmail: cart[0].configuration.email,
           totalAmount,
@@ -38,7 +64,12 @@ export default function Confirmation() {
             quantity: item.quantity,
             configuration: item.configuration
           }))
-        });
+        };
+        
+        setOrderDetails(orderData);
+        
+        // Send purchase emails
+        sendPurchaseEmails(sessionId, cart, cart[0].configuration);
         
         // Clear the cart after successful order
         localStorage.removeItem('cart');

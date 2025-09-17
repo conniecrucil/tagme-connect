@@ -1,4 +1,5 @@
 import type { Context } from '@netlify/functions';
+import { generateVCard, isValidVCard, type VCardConfig } from './utils/vcard-generator.js';
 
 export default async (req: Request, context: Context) => {
   // Only allow POST requests
@@ -49,7 +50,7 @@ export default async (req: Request, context: Context) => {
     }
 
     // Generate vCard to test validity
-    const vcardContent = generateVCard(configuration);
+    const vcardContent = generateVCard(configuration as VCardConfig);
 
     // Basic vCard structure validation
     if (!isValidVCard(vcardContent)) {
@@ -89,7 +90,7 @@ export default async (req: Request, context: Context) => {
   }
 };
 
-function validateConfiguration(config) {
+function validateConfiguration(config: any) {
   const errors = [];
 
   // Optional fields validation - only validate if values are provided
@@ -123,7 +124,7 @@ function validateConfiguration(config) {
   // Social media validation
   if (config.socialMedia) {
     Object.entries(config.socialMedia).forEach(([platform, url]) => {
-      if (url && !isValidUrl(url)) {
+      if (url && typeof url === 'string' && !isValidUrl(url)) {
         errors.push(`${platform} URL is invalid`);
       }
     });
@@ -137,104 +138,13 @@ function validateConfiguration(config) {
   return errors;
 }
 
-function generateVCard(config) {
-  const lines = [];
 
-  // vCard header
-  lines.push('BEGIN:VCARD');
-  lines.push('VERSION:3.0');
-
-  // Name
-  if (config.name && config.name.trim()) {
-    const nameParts = config.name.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-    lines.push(`FN:${config.name}`);
-    lines.push(`N:${lastName};${firstName};;;`);
-  } else {
-    // Use a default name if none provided
-    lines.push(`FN:Contact Card`);
-    lines.push(`N:Card;Contact;;;`);
-  }
-  
-  // Organization
-  if (config.company) {
-    lines.push(`ORG:${config.company}`);
-  }
-  
-  if (config.title) {
-    lines.push(`TITLE:${config.title}`);
-  }
-  
-  // Contact information
-  if (config.email) {
-    lines.push(`EMAIL:${config.email}`);
-  }
-  
-  if (config.phone) {
-    lines.push(`TEL:${config.phone}`);
-  }
-  
-  // Website
-  if (config.website) {
-    lines.push(`URL:${config.website}`);
-  }
-  
-  // Social media links
-  if (config.socialMedia) {
-    Object.entries(config.socialMedia).forEach(([platform, url]) => {
-      if (url) {
-        lines.push(`URL;TYPE=${platform.toUpperCase()}:${url}`);
-      }
-    });
-  }
-  
-  // Custom message as note
-  if (config.customMessage) {
-    lines.push(`NOTE:${config.customMessage}`);
-  }
-  
-  // vCard footer
-  lines.push('END:VCARD');
-  
-  return lines.join('\n');
-}
-
-function isValidVCard(vcardContent) {
-  // Basic vCard structure validation
-  const lines = vcardContent.split('\n');
-
-  // Must start with BEGIN:VCARD and end with END:VCARD
-  if (!lines[0].startsWith('BEGIN:VCARD') || !lines[lines.length - 1].startsWith('END:VCARD')) {
-    return false;
-  }
-
-  // Must have VERSION
-  if (!lines.some(line => line.startsWith('VERSION:'))) {
-    return false;
-  }
-
-  // Must have at least one contact field (FN, EMAIL, TEL, etc.)
-  const hasContactInfo = lines.some(line =>
-    line.startsWith('FN:') ||
-    line.startsWith('EMAIL:') ||
-    line.startsWith('TEL:') ||
-    line.startsWith('URL:')
-  );
-
-  if (!hasContactInfo) {
-    return false;
-  }
-
-  return true;
-}
-
-function isValidEmail(email) {
+function isValidEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-function isValidUrl(url) {
+function isValidUrl(url: string) {
   try {
     new URL(url);
     return true;

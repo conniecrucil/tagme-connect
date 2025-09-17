@@ -1,96 +1,66 @@
-import Stripe from 'stripe';
 import { Resend } from 'resend';
 import type { Context } from '@netlify/functions';
+import { createVCardAttachment, type VCardConfig } from './utils/vcard-generator.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
-export default async (req: Request, context: Context) => {
-  const sig = req.headers.get('stripe-signature');
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const emailFrom = process.env.EMAIL_FROM || 'hello@brianbancroft.ca';
+const adminEmail = process.env.ADMIN_EMAIL || 'connectme-test@mailinator.com';
 
-  if (!sig) {
-    return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), {
-      status: 400,
+export default async (req: Request, context: Context) => {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  if (!webhookSecret) {
-    return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
+  try {
+    const body = await req.json();
+    const { sessionId, customerInfo, cart } = body;
+
+    if (!sessionId || !customerInfo || !cart) {
+      return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Create a mock session object for compatibility with existing functions
+    const session = {
+      id: sessionId,
+      metadata: {
+        sessionId,
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        totalItems: cart.reduce((sum: number, item: any) => sum + item.quantity, 0).toString(),
+        totalAmount: cart.reduce((sum: number, item: any) => {
+          const price = item.productType === 'basic' ? 40 : 47;
+          return sum + (price * item.quantity);
+        }, 0).toString()
+      },
+      shipping: customerInfo.shipping || null
+    };
+
+    await handleCheckoutSessionCompleted(session, cart, customerInfo);
+
+    return new Response(JSON.stringify({ success: true, message: 'Emails sent successfully' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error processing purchase emails:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
-
-  let stripeEvent;
-
-  try {
-    const body = await req.text();
-    stripeEvent = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err instanceof Error ? err.message : String(err));
-    return new Response(JSON.stringify({ error: 'Webhook signature verification failed' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  // Handle the event
-  switch (stripeEvent.type) {
-    case 'checkout.session.completed':
-      await handleCheckoutSessionCompleted(stripeEvent.data.object);
-      break;
-    case 'payment_intent.succeeded':
-      await handlePaymentSucceeded(stripeEvent.data.object);
-      break;
-    default:
-      console.log(`Unhandled event type ${stripeEvent.type}`);
-  }
-
-  return new Response(JSON.stringify({ received: true }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
 };
 
-async function handleCheckoutSessionCompleted(session: any) {
+async function handleCheckoutSessionCompleted(session: any, cart?: any, customerInfo?: any) {
   try {
-    // Retrieve cart data from stored file
-    const sessionId = session.metadata.sessionId;
-    let cart, customerInfo;
-    
-    if (sessionId) {
-      try {
-        const fs = await import('fs/promises');
-        const path = await import('path');
-        const dataDir = path.join(process.cwd(), 'temp-cart-data');
-        const cartDataFile = path.join(dataDir, `${sessionId}.json`);
-        
-        const cartDataContent = await fs.readFile(cartDataFile, 'utf-8');
-        const cartData = JSON.parse(cartDataContent);
-        cart = cartData.cart;
-        customerInfo = cartData.customerInfo;
-        
-        // Clean up the temporary file
-        await fs.unlink(cartDataFile);
-      } catch (fileError) {
-        console.error('Error reading cart data file:', fileError);
-        // Fallback to basic data from metadata
-        cart = [{
-          productId: 'unknown',
-          productType: 'basic',
-          quantity: parseInt(session.metadata.totalItems) || 1,
-          price: parseFloat(session.metadata.totalAmount) || 40
-        }];
-        customerInfo = {
-          name: session.metadata.customerName || 'Customer',
-          email: session.metadata.customerEmail || 'customer@example.com',
-          phone: ''
-        };
-      }
-    } else {
-      // Fallback to basic data from metadata
+    // Use provided data or fallback to metadata
+    if (!cart || !customerInfo) {
       cart = [{
         productId: 'unknown',
         productType: 'basic',
@@ -190,7 +160,7 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
     `;
 
     await resend.emails.send({
-      from: 'noreply@yourcompany.com', // This should be your verified domain
+      from: emailFrom, // This should be your verified domain
       to: [customerData.email],
       subject: `Order Confirmation - ${session.id}`,
       html: emailHtml,
@@ -204,6 +174,56 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
 
 async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any) {
   try {
+    // Generate vCard attachment from item configuration
+    let vcardAttachment = null;
+    let customerImages = [];
+    
+    if (item.configuration) {
+      // Create vCard configuration from item data
+      const vcardConfig: VCardConfig = {
+        name: item.configuration.name,
+        email: item.configuration.email,
+        phone: item.configuration.phone,
+        company: item.configuration.company,
+        title: item.configuration.title,
+        website: item.configuration.website,
+        socialMedia: item.configuration.socialMedia,
+        customMessage: item.configuration.customMessage
+      };
+      
+      // Generate vCard attachment
+      vcardAttachment = createVCardAttachment(vcardConfig, session.id, cardNumber);
+      
+      // Handle customer images if they exist
+      if (item.configuration.images) {
+        const { logo, photo, cover } = item.configuration.images;
+        
+        if (logo?.blob) {
+          customerImages.push({
+            filename: `logo-${session.id}-${cardNumber}.${logo.ext || 'jpg'}`,
+            content: logo.blob.split(',')[1], // Remove data:image/jpeg;base64, prefix
+            contentType: logo.mime || 'image/jpeg'
+          });
+        }
+        
+        if (photo?.blob) {
+          customerImages.push({
+            filename: `photo-${session.id}-${cardNumber}.${photo.ext || 'jpg'}`,
+            content: photo.blob.split(',')[1], // Remove data:image/jpeg;base64, prefix
+            contentType: photo.mime || 'image/jpeg'
+          });
+        }
+        
+        if (cover?.blob) {
+          customerImages.push({
+            filename: `cover-${session.id}-${cardNumber}.${cover.ext || 'jpg'}`,
+            content: cover.blob.split(',')[1], // Remove data:image/jpeg;base64, prefix
+            contentType: cover.mime || 'image/jpeg'
+          });
+        }
+      }
+    }
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -248,13 +268,13 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
               <div class="card-config">
                 <p><strong>Social Media Links:</strong></p>
                 <ul>
-                  ${customerData.socialMedia ? Object.entries(customerData.socialMedia).map(([platform, url]) => 
+                  ${item.configuration?.socialMedia ? Object.entries(item.configuration.socialMedia).map(([platform, url]) => 
                     `<li>${platform}: ${url}</li>`
                   ).join('') : '<li>No social media links provided</li>'}
                 </ul>
                 
                 <p><strong>Custom Message:</strong></p>
-                <p>${customerData.customMessage || 'No custom message provided'}</p>
+                <p>${item.configuration?.customMessage || 'No custom message provided'}</p>
               </div>
 
               <h3>Shipping Address</h3>
@@ -266,29 +286,43 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
                 <p><strong>Country:</strong> ${session.shipping?.address?.country || 'Not provided'}</p>
               </div>
 
-              <p><em>Note: Customer-uploaded images and generated vCard files will be attached to this email.</em></p>
+              <h3>Attachments</h3>
+              <div class="card-config">
+                <p><strong>vCard File:</strong> ${vcardAttachment ? vcardAttachment.filename : 'Not generated'}</p>
+                <p><strong>Customer Images:</strong> ${customerImages.length} file(s) attached</p>
+                <ul>
+                  ${customerImages.map(img => `<li>${img.filename}</li>`).join('')}
+                </ul>
+              </div>
             </div>
           </div>
         </body>
       </html>
     `;
 
+    // Prepare attachments array
+    const attachments = [];
+    
+    if (vcardAttachment) {
+      attachments.push({
+        filename: vcardAttachment.filename,
+        content: vcardAttachment.content,
+        contentType: 'text/vcard'
+      });
+    }
+    
+    // Add customer images
+    attachments.push(...customerImages);
+
     await resend.emails.send({
-      from: 'orders@yourcompany.com', // This should be your verified domain
-      to: [process.env.ADMIN_EMAIL || 'admin@example.com'],
+      from: emailFrom, // This should be your verified domain
+      to: [adminEmail],
       subject: `New Order - ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'} #${cardNumber}`,
       html: emailHtml,
-      // Note: In a real implementation, you would attach the vCard file and customer images here
-      // attachments: [
-      //   {
-      //     filename: `vcard-${session.id}-${cardNumber}.vcf`,
-      //     content: vcardContent,
-      //   },
-      //   ...customerImages
-      // ]
+      attachments: attachments.length > 0 ? attachments : undefined
     });
 
-    console.log(`Admin notification email sent for card ${cardNumber}`);
+    console.log(`Admin notification email sent for card ${cardNumber} with ${attachments.length} attachments`);
   } catch (error) {
     console.error(`Error sending admin notification email for card ${cardNumber}:`, error);
   }

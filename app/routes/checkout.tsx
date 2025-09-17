@@ -53,6 +53,17 @@ export default function Checkout() {
   };
 
   const handleCheckout = async () => {
+    // Validate required fields
+    if (!customerInfo.email.trim()) {
+      alert('Please enter your email address');
+      return;
+    }
+    
+    if (!customerInfo.phone.trim()) {
+      alert('Please enter your phone number');
+      return;
+    }
+
     // Use customer info from form, or fallback to cart configuration, or defaults
     const finalCustomerInfo = {
       name: customerInfo.name || cart[0]?.configuration?.name || 'Customer',
