@@ -1,102 +1,110 @@
-exports.handler = async (event, context) => {
+import type { Context } from '@netlify/functions';
+
+export default async (req: Request, context: Context) => {
   // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: 'Method not allowed' }),
-    };
+    });
   }
 
   try {
-    const { configuration } = JSON.parse(event.body);
+
+    console.log('validate-card');
+
+    const { configuration } = await req.json();
+
+
 
     if (!configuration) {
-      return {
-        statusCode: 400,
+      return new Response(JSON.stringify({ error: 'Configuration is required' }), {
+        status: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ error: 'Configuration is required' }),
-      };
+      });
     }
 
     // Validate required fields
     const validationErrors = validateConfiguration(configuration);
-    
+
     if (validationErrors.length > 0) {
-      return {
-        statusCode: 400,
+      return new Response(JSON.stringify({
+        error: 'Validation failed',
+        details: validationErrors
+      }), {
+        status: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          error: 'Validation failed',
-          details: validationErrors 
-        }),
-      };
+      });
     }
 
     // Generate vCard to test validity
     const vcardContent = generateVCard(configuration);
-    
+
     // Basic vCard structure validation
     if (!isValidVCard(vcardContent)) {
-      return {
-        statusCode: 400,
+      return new Response(JSON.stringify({
+        error: 'Invalid vCard generated',
+        details: ['Generated vCard does not meet standard requirements']
+      }), {
+        status: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          error: 'Invalid vCard generated',
-          details: ['Generated vCard does not meet standard requirements']
-        }),
-      };
+      });
     }
 
-    return {
-      statusCode: 200,
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Configuration validated successfully',
+      vcardPreview: vcardContent.substring(0, 200) + '...' // Preview only, not full vCard
+    }), {
+      status: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        success: true,
-        message: 'Configuration validated successfully',
-        vcardPreview: vcardContent.substring(0, 200) + '...' // Preview only, not full vCard
-      }),
-    };
+    });
 
   } catch (error) {
     console.error('Error validating card configuration:', error);
-    return {
-      statusCode: 500,
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
       headers: {
         'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: 'Internal server error' }),
-    };
+    });
   }
 };
 
 function validateConfiguration(config) {
   const errors = [];
 
-  // Required fields validation
-  if (!config.name || config.name.trim().length === 0) {
-    errors.push('Name is required');
+  // Optional fields validation - only validate if values are provided
+  if (config.name && config.name.trim().length === 0) {
+    errors.push('Name cannot be empty if provided');
   }
 
-  if (!config.email || !isValidEmail(config.email)) {
-    errors.push('Valid email address is required');
+  if (config.email) {
+    if (!isValidEmail(config.email)) {
+      errors.push('Email address must be valid if provided');
+    }
   }
 
-  if (!config.phone || config.phone.trim().length === 0) {
-    errors.push('Phone number is required');
+  if (config.phone && config.phone.trim().length === 0) {
+    errors.push('Phone number cannot be empty if provided');
   }
 
   // Optional but recommended fields
@@ -131,18 +139,22 @@ function validateConfiguration(config) {
 
 function generateVCard(config) {
   const lines = [];
-  
+
   // vCard header
   lines.push('BEGIN:VCARD');
   lines.push('VERSION:3.0');
-  
+
   // Name
-  if (config.name) {
+  if (config.name && config.name.trim()) {
     const nameParts = config.name.trim().split(' ');
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
     lines.push(`FN:${config.name}`);
     lines.push(`N:${lastName};${firstName};;;`);
+  } else {
+    // Use a default name if none provided
+    lines.push(`FN:Contact Card`);
+    lines.push(`N:Card;Contact;;;`);
   }
   
   // Organization
@@ -191,22 +203,29 @@ function generateVCard(config) {
 function isValidVCard(vcardContent) {
   // Basic vCard structure validation
   const lines = vcardContent.split('\n');
-  
+
   // Must start with BEGIN:VCARD and end with END:VCARD
   if (!lines[0].startsWith('BEGIN:VCARD') || !lines[lines.length - 1].startsWith('END:VCARD')) {
     return false;
   }
-  
+
   // Must have VERSION
   if (!lines.some(line => line.startsWith('VERSION:'))) {
     return false;
   }
-  
-  // Must have at least FN (formatted name)
-  if (!lines.some(line => line.startsWith('FN:'))) {
+
+  // Must have at least one contact field (FN, EMAIL, TEL, etc.)
+  const hasContactInfo = lines.some(line =>
+    line.startsWith('FN:') ||
+    line.startsWith('EMAIL:') ||
+    line.startsWith('TEL:') ||
+    line.startsWith('URL:')
+  );
+
+  if (!hasContactInfo) {
     return false;
   }
-  
+
   return true;
 }
 

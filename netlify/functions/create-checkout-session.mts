@@ -1,37 +1,38 @@
-const Stripe = require('stripe');
+import Stripe from 'stripe';
+import type { Context } from '@netlify/functions';
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
-exports.handler = async (event, context) => {
+export default async (req: Request, context: Context) => {
   // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: 'Method not allowed' }),
-    };
+    });
   }
 
   try {
-    const { cart, customerInfo } = JSON.parse(event.body);
+    const { cart, customerInfo } = await req.json();
 
     // Validate required data
     if (!cart || !cart.length) {
-      return {
-        statusCode: 400,
+      return new Response(JSON.stringify({ error: 'Cart is required' }), {
+        status: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ error: 'Cart is required' }),
-      };
+      });
     }
 
     // Create line items for Stripe
-    const lineItems = cart.map(item => ({
+    const lineItems = cart.map((item: any) => ({
       price_data: {
         currency: 'usd',
         product_data: {
@@ -66,27 +67,26 @@ exports.handler = async (event, context) => {
       },
     });
 
-    return {
-      statusCode: 200,
+    return new Response(JSON.stringify({
+      sessionId: session.id,
+      url: session.url
+    }), {
+      status: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        sessionId: session.id,
-        url: session.url 
-      }),
-    };
+    });
 
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    return {
-      statusCode: 500,
+    return new Response(JSON.stringify({ error: 'Failed to create checkout session' }), {
+      status: 500,
       headers: {
         'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: 'Failed to create checkout session' }),
-    };
+    });
   }
 };
 

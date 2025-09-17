@@ -120,7 +120,7 @@ export default function ConfigureProduct() {
       };
 
       // Validate configuration
-      const response = await fetch('/api/validate-card', {
+      const response = await fetch('/.netlify/functions/validate-card', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,8 +153,8 @@ export default function ConfigureProduct() {
           description: "Your card configuration has been saved successfully.",
         });
 
-        // Navigate to cart
-        navigate('/cart');
+        // Navigate back to product page
+        navigate(`/shop/${productId}`);
       } else {
         toast({
           variant: "destructive",
@@ -164,6 +164,7 @@ export default function ConfigureProduct() {
       }
     } catch (error) {
       console.error('Error validating configuration:', error);
+      console.log(error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -359,22 +360,20 @@ export default function ConfigureProduct() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="fname">First Name *</Label>
+                        <Label htmlFor="fname">First Name</Label>
                         <Input
                           id="fname"
                           value={vCardData.fname}
                           onChange={(e) => handleInputChange('fname', e.target.value)}
-                          required
                           placeholder="John"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lname">Last Name *</Label>
+                        <Label htmlFor="lname">Last Name</Label>
                         <Input
                           id="lname"
                           value={vCardData.lname}
                           onChange={(e) => handleInputChange('lname', e.target.value)}
-                          required
                           placeholder="Doe"
                         />
                       </div>
@@ -421,26 +420,24 @@ export default function ConfigureProduct() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address *</Label>
+                      <Label htmlFor="email">Email Address</Label>
                       <Input
                         id="email"
                         type="email"
                         value={vCardData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        required
                         placeholder="john@example.com"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Phone *</Label>
+                        <Label htmlFor="phone">Phone</Label>
                         <Input
                           id="phone"
                           type="tel"
                           value={vCardData.phone}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
-                          required
                           placeholder="+1 (555) 123-4567"
                         />
                       </div>
@@ -721,7 +718,7 @@ export default function ConfigureProduct() {
               <Button
                 type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white"
-                disabled={isSubmitting || !vCardData.fname || !vCardData.lname || !vCardData.email || !vCardData.phone}
+                disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving Configuration...' : 'Save Configuration'}
               </Button>

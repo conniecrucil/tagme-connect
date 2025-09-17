@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useParams } from "react-router";
+import { toast } from "sonner";
 
 // Types for the configuration
 export interface VCardData {
@@ -272,56 +273,84 @@ export function ConfigurationProvider({
   };
 
   const saveConfiguration = async (): Promise<void> => {
-    if (!productId) return;
+    if (!productId) {
+      toast.error("Configuration Error", {
+        description: "Product ID is missing. Please refresh the page and try again.",
+      });
+      return;
+    }
 
-    const configuration = {
-      name: `${vCardData.prefix ? vCardData.prefix + ' ' : ''}${vCardData.fname} ${vCardData.lname}`.trim(),
-      email: vCardData.email,
-      phone: vCardData.phone,
-      company: vCardData.biz,
-      title: vCardData.title,
-      website: vCardData.website,
-      socialMedia: {
-        linkedin: primaryActions.find(a => a.name === 'linkedin')?.value || secondaryActions.find(a => a.name === 'linkedin')?.value || '',
-        instagram: primaryActions.find(a => a.name === 'instagram')?.value || secondaryActions.find(a => a.name === 'instagram')?.value || '',
-        twitter: primaryActions.find(a => a.name === 'twitter')?.value || secondaryActions.find(a => a.name === 'twitter')?.value || '',
-        facebook: primaryActions.find(a => a.name === 'facebook')?.value || secondaryActions.find(a => a.name === 'facebook')?.value || ''
-      },
-      customMessage: vCardData.desc,
-      prefix: vCardData.prefix,
-      fname: vCardData.fname,
-      lname: vCardData.lname,
-      pronouns: vCardData.pronouns,
-      street: vCardData.street,
-      city: vCardData.city,
-      state: vCardData.state,
-      postal: vCardData.postal,
-      country: vCardData.country,
-      mobile: vCardData.mobile,
-      photo: vCardData.photo,
-      primaryActions: primaryActions.filter(a => a.value),
-      secondaryActions: secondaryActions.filter(a => a.value),
-      images: images,
-      logoOrHeader: logoOrHeader
-    };
+    try {
+      const configuration = {
+        name: `${vCardData.prefix ? vCardData.prefix + ' ' : ''}${vCardData.fname} ${vCardData.lname}`.trim(),
+        email: vCardData.email,
+        phone: vCardData.phone,
+        company: vCardData.biz,
+        title: vCardData.title,
+        website: vCardData.website,
+        socialMedia: {
+          linkedin: primaryActions.find(a => a.name === 'linkedin')?.value || secondaryActions.find(a => a.name === 'linkedin')?.value || '',
+          instagram: primaryActions.find(a => a.name === 'instagram')?.value || secondaryActions.find(a => a.name === 'instagram')?.value || '',
+          twitter: primaryActions.find(a => a.name === 'twitter')?.value || secondaryActions.find(a => a.name === 'twitter')?.value || '',
+          facebook: primaryActions.find(a => a.name === 'facebook')?.value || secondaryActions.find(a => a.name === 'facebook')?.value || ''
+        },
+        customMessage: vCardData.desc,
+        prefix: vCardData.prefix,
+        fname: vCardData.fname,
+        lname: vCardData.lname,
+        pronouns: vCardData.pronouns,
+        street: vCardData.street,
+        city: vCardData.city,
+        state: vCardData.state,
+        postal: vCardData.postal,
+        country: vCardData.country,
+        mobile: vCardData.mobile,
+        photo: vCardData.photo,
+        primaryActions: primaryActions.filter(a => a.value),
+        secondaryActions: secondaryActions.filter(a => a.value),
+        images: images,
+        logoOrHeader: logoOrHeader
+      };
 
-    // Save to localStorage
-    const storageKey = `configuration-${productId}`;
-    localStorage.setItem(storageKey, JSON.stringify({
-      configuration,
-      timestamp: Date.now()
-    }));
+      // Save to localStorage
+      const storageKey = `configuration-${productId}`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        configuration,
+        timestamp: Date.now()
+      }));
+
+      toast.success("Configuration Saved", {
+        description: "Your card configuration has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving configuration:', error);
+      toast.error("Save Failed", {
+        description: "Unable to save your configuration. Please try again.",
+        action: {
+          label: "Retry",
+          onClick: () => saveConfiguration(),
+        },
+      });
+    }
   };
 
   const loadConfiguration = async (): Promise<void> => {
-    if (!productId) return;
+    if (!productId) {
+      console.warn('Cannot load configuration: Product ID is missing');
+      return;
+    }
 
-    const storageKey = `configuration-${productId}`;
-    const stored = localStorage.getItem(storageKey);
+    try {
+      const storageKey = `configuration-${productId}`;
+      const stored = localStorage.getItem(storageKey);
 
-    if (stored) {
-      try {
+      if (stored) {
         const { configuration } = JSON.parse(stored);
+
+        // Validate configuration structure
+        if (!configuration || typeof configuration !== 'object') {
+          throw new Error('Invalid configuration format');
+        }
 
         // Restore vCard data
         if (configuration.fname) setVCardData(prev => ({ ...prev, fname: configuration.fname }));
@@ -346,50 +375,73 @@ export function ConfigurationProvider({
 
         // Restore UI state
         if (configuration.logoOrHeader !== undefined) setLogoOrHeader(configuration.logoOrHeader);
-      } catch (error) {
-        console.error('Error loading configuration:', error);
+
+        toast.success("Configuration Loaded", {
+          description: "Your saved configuration has been restored.",
+        });
       }
+    } catch (error) {
+      console.error('Error loading configuration:', error);
+      toast.error("Load Failed", {
+        description: "Unable to load your saved configuration. Starting with a fresh configuration.",
+      });
     }
   };
 
   const clearConfiguration = () => {
-    if (!productId) return;
+    if (!productId) {
+      toast.error("Clear Failed", {
+        description: "Product ID is missing. Unable to clear configuration.",
+      });
+      return;
+    }
 
-    const storageKey = `configuration-${productId}`;
-    localStorage.removeItem(storageKey);
+    try {
+      const storageKey = `configuration-${productId}`;
+      localStorage.removeItem(storageKey);
 
-    // Reset all state to initial values
-    setVCardData({
-      prefix: "",
-      fname: "",
-      lname: "",
-      pronouns: "",
-      title: "",
-      biz: "",
-      desc: "",
-      street: "",
-      city: "",
-      state: "",
-      postal: "",
-      country: "",
-      email: "",
-      phone: "",
-      mobile: "",
-      website: "",
-      photo: "",
-    });
+      // Reset all state to initial values
+      setVCardData({
+        prefix: "",
+        fname: "",
+        lname: "",
+        pronouns: "",
+        title: "",
+        biz: "",
+        desc: "",
+        street: "",
+        city: "",
+        state: "",
+        postal: "",
+        country: "",
+        email: "",
+        phone: "",
+        mobile: "",
+        website: "",
+        photo: "",
+      });
 
-    setImages({
-      logo: { url: null, blob: null, ext: null, mime: null, resized: null },
-      photo: { url: null, blob: null, ext: null, mime: null, resized: null },
-      cover: { url: null, blob: null, ext: null, mime: null, resized: null },
-    });
+      setImages({
+        logo: { url: null, blob: null, ext: null, mime: null, resized: null },
+        photo: { url: null, blob: null, ext: null, mime: null, resized: null },
+        cover: { url: null, blob: null, ext: null, mime: null, resized: null },
+      });
 
-    setPrimaryActions([]);
-    setSecondaryActions([]);
-    setLogoOrHeader(false);
-    setFilterPrimary("");
-    setFilterSecondary("");
+      setPrimaryActions([]);
+      setSecondaryActions([]);
+      setLogoOrHeader(false);
+      setFilterPrimary("");
+      setFilterSecondary("");
+
+      toast.success("Configuration Cleared", {
+        description: "All configuration data has been reset to defaults.",
+      });
+    } catch (error) {
+      console.error('Error clearing configuration:', error);
+      toast.error("Clear Failed", {
+        description: "Unable to clear your configuration. Please try again.",
+      });
+    }
   };
 
   const contextValue: ConfigurationContextType = {

@@ -1,23 +1,39 @@
-const Stripe = require('stripe');
-const { Resend } = require('resend');
+import Stripe from 'stripe';
+import { Resend } from 'resend';
+import type { Context } from '@netlify/functions';
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-const resend = new Resend(process.env.RESEND_API_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+const resend = new Resend(process.env.RESEND_API_KEY || '');
 
-exports.handler = async (event, context) => {
-  const sig = event.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+export default async (req: Request, context: Context) => {
+  const sig = req.headers.get('stripe-signature');
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+
+  if (!sig) {
+    return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (!webhookSecret) {
+    return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   let stripeEvent;
 
   try {
-    stripeEvent = stripe.webhooks.constructEvent(event.body, sig, webhookSecret);
+    const body = await req.text();
+    stripeEvent = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Webhook signature verification failed' }),
-    };
+    console.error('Webhook signature verification failed:', err instanceof Error ? err.message : String(err));
+    return new Response(JSON.stringify({ error: 'Webhook signature verification failed' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   // Handle the event
@@ -32,13 +48,13 @@ exports.handler = async (event, context) => {
       console.log(`Unhandled event type ${stripeEvent.type}`);
   }
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ received: true }),
-  };
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 };
 
-async function handleCheckoutSessionCompleted(session) {
+async function handleCheckoutSessionCompleted(session: any) {
   try {
     const { cart, customerInfo } = JSON.parse(session.metadata.cart);
     const customerData = JSON.parse(session.metadata.customerInfo);
@@ -59,14 +75,14 @@ async function handleCheckoutSessionCompleted(session) {
   }
 }
 
-async function handlePaymentSucceeded(paymentIntent) {
+async function handlePaymentSucceeded(paymentIntent: any) {
   console.log('Payment succeeded:', paymentIntent.id);
   // Additional payment success logic can be added here
 }
 
-async function sendCustomerConfirmationEmail(session, customerData, cart) {
+async function sendCustomerConfirmationEmail(session: any, customerData: any, cart: any) {
   try {
-    const totalAmount = cart.reduce((sum, item) => {
+    const totalAmount = cart.reduce((sum: number, item: any) => {
       const price = item.productType === 'basic' ? 40 : 47;
       return sum + (price * item.quantity);
     }, 0);
@@ -104,7 +120,7 @@ async function sendCustomerConfirmationEmail(session, customerData, cart) {
               </div>
 
               <h3>Items Ordered:</h3>
-              ${cart.map(item => `
+              ${cart.map((item: any) => `
                 <div class="item">
                   <strong>${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'}</strong><br>
                   Quantity: ${item.quantity}<br>
@@ -141,7 +157,7 @@ async function sendCustomerConfirmationEmail(session, customerData, cart) {
   }
 }
 
-async function sendAdminNotificationEmail(session, customerData, item, cardNumber) {
+async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any) {
   try {
     const emailHtml = `
       <!DOCTYPE html>
@@ -214,7 +230,7 @@ async function sendAdminNotificationEmail(session, customerData, item, cardNumbe
 
     await resend.emails.send({
       from: 'orders@yourcompany.com', // This should be your verified domain
-      to: [process.env.ADMIN_EMAIL],
+      to: [process.env.ADMIN_EMAIL || 'admin@example.com'],
       subject: `New Order - ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'} #${cardNumber}`,
       html: emailHtml,
       // Note: In a real implementation, you would attach the vCard file and customer images here

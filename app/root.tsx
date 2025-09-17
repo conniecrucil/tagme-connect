@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { Footer } from "./components/Footer";
 import { Toaster } from "./components/ui/toaster";
+import { Toaster as SonnerToaster } from "./components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -70,7 +71,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ScrollRestoration />
         <Scripts />
         <Footer />
-        <Toaster />  
+        <Toaster />
+        <SonnerToaster
+          position="top-right"
+          expand={false}
+          richColors
+          closeButton
+        />
       </body>
     </html>
   );
