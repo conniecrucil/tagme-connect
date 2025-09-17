@@ -56,16 +56,61 @@ export default async (req: Request, context: Context) => {
 
 async function handleCheckoutSessionCompleted(session: any) {
   try {
-    const { cart, customerInfo } = JSON.parse(session.metadata.cart);
-    const customerData = JSON.parse(session.metadata.customerInfo);
+    // Retrieve cart data from stored file
+    const sessionId = session.metadata.sessionId;
+    let cart, customerInfo;
+    
+    if (sessionId) {
+      try {
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const dataDir = path.join(process.cwd(), 'temp-cart-data');
+        const cartDataFile = path.join(dataDir, `${sessionId}.json`);
+        
+        const cartDataContent = await fs.readFile(cartDataFile, 'utf-8');
+        const cartData = JSON.parse(cartDataContent);
+        cart = cartData.cart;
+        customerInfo = cartData.customerInfo;
+        
+        // Clean up the temporary file
+        await fs.unlink(cartDataFile);
+      } catch (fileError) {
+        console.error('Error reading cart data file:', fileError);
+        // Fallback to basic data from metadata
+        cart = [{
+          productId: 'unknown',
+          productType: 'basic',
+          quantity: parseInt(session.metadata.totalItems) || 1,
+          price: parseFloat(session.metadata.totalAmount) || 40
+        }];
+        customerInfo = {
+          name: session.metadata.customerName || 'Customer',
+          email: session.metadata.customerEmail || 'customer@example.com',
+          phone: ''
+        };
+      }
+    } else {
+      // Fallback to basic data from metadata
+      cart = [{
+        productId: 'unknown',
+        productType: 'basic',
+        quantity: parseInt(session.metadata.totalItems) || 1,
+        price: parseFloat(session.metadata.totalAmount) || 40
+      }];
+      customerInfo = {
+        name: session.metadata.customerName || 'Customer',
+        email: session.metadata.customerEmail || 'customer@example.com',
+        phone: ''
+      };
+    }
 
     // Send customer confirmation email
-    await sendCustomerConfirmationEmail(session, customerData, cart);
+    await sendCustomerConfirmationEmail(session, customerInfo, cart);
 
     // Send admin notification emails (one per card)
     for (const item of cart) {
       for (let i = 0; i < item.quantity; i++) {
-        await sendAdminNotificationEmail(session, customerData, item, i + 1);
+        await sendAdminNotificationEmail(session, customerInfo, item, i + 1);
       }
     }
 

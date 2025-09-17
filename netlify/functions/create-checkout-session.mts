@@ -31,6 +31,9 @@ export default async (req: Request, context: Context) => {
       });
     }
 
+    // Get base URL for redirects and images
+    const baseUrl = process.env.NETLIFY_SITE_URL || 'http://localhost:8888';
+
     // Create line items for Stripe
     const lineItems = cart.map((item: any) => ({
       price_data: {
@@ -41,8 +44,8 @@ export default async (req: Request, context: Context) => {
             ? 'One custom NFC card with personalized smart link'
             : 'Complete digital profile with automatic contact saving',
           images: [item.productType === 'basic' 
-            ? `${process.env.NETLIFY_SITE_URL}/sample-tag-basic-card.webp`
-            : `${process.env.NETLIFY_SITE_URL}/sample-tag-core-card.webp`
+            ? `${baseUrl}/sample-tag-basic-card.webp`
+            : `${baseUrl}/sample-tag-core-card.webp`
           ],
         },
         unit_amount: item.productType === 'basic' ? 4000 : 4700, // $40.00 and $47.00 in cents
@@ -50,17 +53,48 @@ export default async (req: Request, context: Context) => {
       quantity: item.quantity,
     }));
 
-    // Create Stripe Checkout Session
+    // Generate a unique session ID for storing cart data
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Store cart data in a temporary location (in production, use a database)
+    // For now, we'll store it in the file system
+    const cartData = {
+      cart,
+      customerInfo,
+      timestamp: new Date().toISOString()
+    };
+    
+    // In a real implementation, you'd store this in a database
+    // For this POC, we'll store it in a JSON file
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const dataDir = path.join(process.cwd(), 'temp-cart-data');
+    
+    try {
+      await fs.mkdir(dataDir, { recursive: true });
+      await fs.writeFile(
+        path.join(dataDir, `${sessionId}.json`),
+        JSON.stringify(cartData, null, 2)
+      );
+    } catch (error) {
+      console.error('Error storing cart data:', error);
+      // Continue without storing - webhook will have limited data
+    }
+
+    // Create Stripe Checkout Session with minimal metadata
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NETLIFY_SITE_URL}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NETLIFY_SITE_URL}/cart`,
+      success_url: `${baseUrl}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/cart`,
       customer_email: customerInfo?.email,
       metadata: {
-        cart: JSON.stringify(cart),
-        customerInfo: JSON.stringify(customerInfo),
+        sessionId: sessionId,
+        customerName: customerInfo?.name || 'Customer',
+        customerEmail: customerInfo?.email || '',
+        totalItems: cart.reduce((sum: number, item: any) => sum + item.quantity, 0).toString(),
+        totalAmount: cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0).toString()
       },
       shipping_address_collection: {
         allowed_countries: ['US', 'CA', 'GB', 'AU'],

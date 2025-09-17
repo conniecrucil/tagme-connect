@@ -53,22 +53,24 @@ export default function Checkout() {
   };
 
   const handleCheckout = async () => {
-    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
-      alert('Please fill in all required customer information.');
-      return;
-    }
+    // Use customer info from form, or fallback to cart configuration, or defaults
+    const finalCustomerInfo = {
+      name: customerInfo.name || cart[0]?.configuration?.name || 'Customer',
+      email: customerInfo.email || cart[0]?.configuration?.email || 'customer@example.com',
+      phone: customerInfo.phone || cart[0]?.configuration?.phone || '+1 (555) 123-4567'
+    };
 
     setIsProcessing(true);
 
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/.netlify/functions/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           cart,
-          customerInfo
+          customerInfo: finalCustomerInfo
         }),
       });
 
@@ -275,7 +277,7 @@ export default function Checkout() {
                       <Button 
                         className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg"
                         onClick={handleCheckout}
-                        disabled={isProcessing || !customerInfo.name || !customerInfo.email || !customerInfo.phone}
+                        disabled={isProcessing}
                       >
                         {isProcessing ? 'Processing...' : `Pay $${getTotalPrice().toFixed(2)}`}
                       </Button>
