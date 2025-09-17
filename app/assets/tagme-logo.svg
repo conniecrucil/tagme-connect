@@ -1,0 +1,13 @@
+<svg width="120" height="60" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wi-Fi signal extending from T -->
+  <path d="M15 8 L15 2 L22 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M22 2 Q25 2 25 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <path d="M25 5 Q28 5 28 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <path d="M28 8 Q31 8 31 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  
+  <!-- TAG text -->
+  <text x="15" y="25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="currentColor">TAG</text>
+  
+  <!-- ME text -->
+  <text x="15" y="45" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="currentColor">ME</text>
+</svg>

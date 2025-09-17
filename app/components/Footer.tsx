@@ -1,14 +1,19 @@
 import { MapPin, Mail } from "lucide-react";
+import tagmeLogoDark from "../assets/tagme-logo-dark.svg";
 
 export function Footer() {
   return (
     <footer className="bg-gray-900 text-white py-12">
       <div className="container mx-auto px-4">
-        {/* Main Footer Content - Three Column Layout */}
-        <div className="grid md:grid-cols-3 gap-8">
+        {/* Main Footer Content - Four Column Layout */}
+        <div className="grid md:grid-cols-4 gap-8">
+          {/* Logo */}
+          <div>
+            <img src={tagmeLogoDark} alt="TagMe Connections" className="h-16 w-48 mb-4" />
+          </div>
+
           {/* Company Info */}
           <div>
-            <h3 className="text-xl font-bold mb-4">TagMe Connections</h3>
             <p className="text-gray-300">
               Revolutionizing professional networking with innovative e-business cards.
             </p>

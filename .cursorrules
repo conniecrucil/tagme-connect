@@ -1,0 +1,1 @@
+Assume netlify dev is run at port 8888. Check that port with browsermcp. If browsermcp not responding, stop and ask for it to be running. If running, and no port, run netlify dev.

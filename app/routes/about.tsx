@@ -1,7 +1,7 @@
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/button";
-
+import { Link } from "react-router";
 // Import images
 import conniePhoto from "../../assets/connie-photo.jpg";
 import tagmeLogo from "../../assets/tagme-logo.png";
@@ -16,7 +16,6 @@ export function meta() {
 export default function About() {
   return (
     <div className="min-h-screen">
-      <Header />
       <main className="pt-16">
         {/* Hero Section */}
         <section className="py-20 bg-gradient-to-br from-green-50 to-green-100">
@@ -126,34 +125,14 @@ export default function About() {
             <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
               Interested in working together? Fill out some info and we will be in touch shortly. We can't wait to hear from you!
             </p>
-            <Button variant="outline" className="bg-white text-green-600 hover:bg-green-50 border-white px-8 py-3 text-lg">
+            <Link to="/contact" className=" rounded bg-white text-green-600 hover:bg-green-50 border-white px-8 py-3 text-lg">
               Get in Touch
-            </Button>
+            </Link>
           </div>
         </section>
 
-        {/* Contact Info */}
-        <section className="py-16 bg-gray-900 text-white">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-              <div>
-                <h3 className="text-2xl font-bold mb-4">Location</h3>
-                <p className="text-gray-300">
-                  Vancouver Island<br />
-                  British Columbia, Canada
-                </p>
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold mb-4">Contact</h3>
-                <p className="text-gray-300">
-                  contact@tagmeconnections.com
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+       
       </main>
-      <Footer />
     </div>
   );
 }

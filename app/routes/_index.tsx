@@ -14,15 +14,12 @@ export function meta() {
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main>
+  <main className="min-h-screen">
         <HeroSection />
         <FeaturesSection />
         <TagMeCardsSection />
         <StorySection />
-      </main>
-      <Footer />
-    </div>
+    </main>
+
   );
 }

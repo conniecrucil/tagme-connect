@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Button } from "./ui/button";
-import { ShoppingCart, User } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
+import tagmeLogo from "../assets/tagme-logo.svg";
 
 export function Header() {
   return (
@@ -8,7 +9,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
-          <div className="text-2xl font-bold text-primary">TagMe Connections</div>
+          <img src={tagmeLogo} alt="TagMe Connections" className="h-10 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
@@ -29,21 +30,10 @@ export function Header() {
 
         {/* Right side actions */}
         <div className="flex items-center space-x-4">
-          {/* Login Account */}
-          <Button variant="ghost" size="sm" className="hidden sm:flex items-center space-x-1">
-            <User className="h-4 w-4" />
-            <span>Login Account</span>
-          </Button>
-
           {/* Cart */}
           <Button variant="ghost" size="sm" className="flex items-center space-x-1">
             <ShoppingCart className="h-4 w-4" />
             <span>(0)</span>
-          </Button>
-
-          {/* Book now - Primary CTA */}
-          <Button className="bg-green-600 hover:bg-green-700 text-white">
-            Book now
           </Button>
 
           {/* Mobile menu button */}

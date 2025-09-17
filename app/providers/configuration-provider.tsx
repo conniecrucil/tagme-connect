@@ -1,0 +1,428 @@
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import { useParams } from "react-router";
+
+// Types for the configuration
+export interface VCardData {
+  prefix: string;
+  fname: string;
+  lname: string;
+  pronouns: string;
+  title: string;
+  biz: string;
+  desc: string;
+  street: string;
+  city: string;
+  state: string;
+  postal: string;
+  country: string;
+  email: string;
+  phone: string;
+  mobile: string;
+  website: string;
+  photo: string;
+}
+
+export interface Action {
+  name: string;
+  value: string;
+  type: string;
+  color?: string;
+  placeholder?: string;
+}
+
+export interface ImageData {
+  url: string | null;
+  blob: string | null;
+  ext: string | null;
+  mime: string | null;
+  resized: string | null;
+}
+
+// Product data type
+export type ProductData = {
+  id: string;
+  name: string;
+  price: string;
+  description: string;
+  image: string;
+};
+
+export interface ConfigurationContextType {
+  // VCard data
+  vCardData: VCardData;
+  setVCardData: React.Dispatch<React.SetStateAction<VCardData>>;
+  updateVCardField: (field: keyof VCardData, value: string) => void;
+
+  // Images
+  images: {
+    logo: ImageData;
+    photo: ImageData;
+    cover: ImageData;
+  };
+  setImages: React.Dispatch<React.SetStateAction<{
+    logo: ImageData;
+    photo: ImageData;
+    cover: ImageData;
+  }>>;
+  updateImage: (type: 'logo' | 'photo' | 'cover', imageData: ImageData) => void;
+
+  // Actions
+  primaryActions: Action[];
+  secondaryActions: Action[];
+  setPrimaryActions: React.Dispatch<React.SetStateAction<Action[]>>;
+  setSecondaryActions: React.Dispatch<React.SetStateAction<Action[]>>;
+  addAction: (type: 'primary' | 'secondary', actionName: string) => void;
+  removeAction: (type: 'primary' | 'secondary', index: number) => void;
+  updateActionValue: (type: 'primary' | 'secondary', index: number, value: string) => void;
+
+  // UI state
+  logoOrHeader: boolean;
+  setLogoOrHeader: React.Dispatch<React.SetStateAction<boolean>>;
+  filterPrimary: string;
+  setFilterPrimary: React.Dispatch<React.SetStateAction<string>>;
+  filterSecondary: string;
+  setFilterSecondary: React.Dispatch<React.SetStateAction<string>>;
+
+  // Form state
+  isSubmitting: boolean;
+  setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
+
+  // Product info
+  product: ProductData | null;
+
+  // Configuration methods
+  saveConfiguration: () => Promise<void>;
+  loadConfiguration: () => Promise<void>;
+  clearConfiguration: () => void;
+}
+
+// Create the context
+const ConfigurationContext = createContext<ConfigurationContextType | null>(null);
+
+// Custom hook to use the configuration context
+export const useConfiguration = () => {
+  const context = useContext(ConfigurationContext);
+  if (!context) {
+    throw new Error('useConfiguration must be used within a ConfigurationProvider');
+  }
+  return context;
+};
+
+// Available actions configuration
+export const availableActions = [
+  // Primary Actions (Communication & Basic Info)
+  { name: 'email', label: 'Email', color: '#6B7280', placeholder: 'Enter email address' },
+  { name: 'call', label: 'Phone', color: '#6B7280', placeholder: 'Enter phone number' },
+  { name: 'Mobile', label: 'Mobile', color: '#6B7280', placeholder: 'Enter mobile number' },
+  { name: 'website', label: 'Website', color: '#6B7280', placeholder: 'Enter website URL' },
+  { name: 'location', label: 'Location', color: '#6B7280', placeholder: 'Enter location' },
+  { name: 'calendar', label: 'Calendar', color: '#6B7280', placeholder: 'Enter calendar link' },
+  { name: 'whatsApp', label: 'WhatsApp', color: '#25D366', placeholder: 'Enter WhatsApp number' },
+  { name: 'WeChat', label: 'WeChat', color: '#07C160', placeholder: 'Enter WeChat ID' },
+  { name: 'messenger', label: 'Messenger', color: '#0084FF', placeholder: 'Enter Messenger username' },
+  { name: 'signal', label: 'Signal', color: '#3A76F0', placeholder: 'Enter Signal number' },
+  { name: 'fax', label: 'Fax', color: '#6B7280', placeholder: 'Enter fax number' },
+  { name: 'Home', label: 'Home', color: '#6B7280', placeholder: 'Enter home phone' },
+  { name: 'Office', label: 'Office', color: '#6B7280', placeholder: 'Enter office phone' },
+
+  // Secondary Actions (Social Media & Platforms)
+  { name: 'facebook', label: 'Facebook', color: '#1877f2', placeholder: 'Enter Facebook URL' },
+  { name: 'instagram', label: 'Instagram', color: '#405de6', placeholder: 'Enter Instagram URL' },
+  { name: 'twitter', label: 'Twitter/X', color: '#000000', placeholder: 'Enter Twitter URL' },
+  { name: 'linkedin', label: 'LinkedIn', color: '#0077b5', placeholder: 'Enter LinkedIn URL' },
+  { name: 'youtube', label: 'YouTube', color: '#ff0000', placeholder: 'Enter YouTube URL' },
+  { name: 'tiktok', label: 'TikTok', color: '#ffffff', placeholder: 'Enter TikTok URL' },
+  { name: 'snapchat', label: 'Snapchat', color: '#fffc00', placeholder: 'Enter Snapchat URL' },
+  { name: 'twitch', label: 'Twitch', color: '#9146ff', placeholder: 'Enter Twitch URL' },
+  { name: 'vimeo', label: 'Vimeo', color: '#1ab7ea', placeholder: 'Enter Vimeo URL' },
+  { name: 'spotify', label: 'Spotify', color: '#1ed760', placeholder: 'Enter Spotify URL' },
+  { name: 'discord', label: 'Discord', color: '#7289da', placeholder: 'Enter Discord URL' },
+  { name: 'telegram', label: 'Telegram', color: '#0088cc', placeholder: 'Enter Telegram URL' },
+  { name: 'reddit', label: 'Reddit', color: '#ff5700', placeholder: 'Enter Reddit URL' },
+  { name: 'pinterest', label: 'Pinterest', color: '#bd081c', placeholder: 'Enter Pinterest URL' },
+  { name: 'github', label: 'GitHub', color: '#333333', placeholder: 'Enter GitHub URL' },
+];
+
+interface ConfigurationProviderProps {
+  children: ReactNode;
+  product?: ProductData | null;
+}
+
+// Configuration Provider Component
+export function ConfigurationProvider({
+  children,
+  product: providedProduct
+}: ConfigurationProviderProps) {
+  const { productId } = useParams();
+
+  const products: Record<string, ProductData> = {
+    "tag-basic-card": {
+      id: "tag-basic-card",
+      name: "TAG Basic Card",
+      price: "$40.00",
+      description: "One Link. Endless Possibilities.",
+      image: "/sample-tag-basic-card.webp"
+    },
+    "tag-core-card": {
+      id: "tag-core-card",
+      name: "TAG Core Card",
+      price: "$47.00",
+      description: "Instant Connection. Full Profile. One Tap.",
+      image: "/sample-tag-core-card.webp"
+    }
+  };
+
+  const product = providedProduct || products[productId as keyof typeof products] || null;
+
+  // Initialize state
+  const [vCardData, setVCardData] = useState<VCardData>({
+    prefix: "",
+    fname: "",
+    lname: "",
+    pronouns: "",
+    title: "",
+    biz: "",
+    desc: "",
+    street: "",
+    city: "",
+    state: "",
+    postal: "",
+    country: "",
+    email: "",
+    phone: "",
+    mobile: "",
+    website: "",
+    photo: "",
+  });
+
+  const [images, setImages] = useState<{
+    logo: ImageData;
+    photo: ImageData;
+    cover: ImageData;
+  }>({
+    logo: { url: null, blob: null, ext: null, mime: null, resized: null },
+    photo: { url: null, blob: null, ext: null, mime: null, resized: null },
+    cover: { url: null, blob: null, ext: null, mime: null, resized: null },
+  });
+
+  const [primaryActions, setPrimaryActions] = useState<Action[]>([]);
+  const [secondaryActions, setSecondaryActions] = useState<Action[]>([]);
+  const [logoOrHeader, setLogoOrHeader] = useState(false);
+  const [filterPrimary, setFilterPrimary] = useState("");
+  const [filterSecondary, setFilterSecondary] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Load configuration from localStorage on mount
+  useEffect(() => {
+    if (productId) {
+      loadConfiguration();
+    }
+  }, [productId]);
+
+  const updateVCardField = (field: keyof VCardData, value: string) => {
+    setVCardData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const updateImage = (type: 'logo' | 'photo' | 'cover', imageData: ImageData) => {
+    setImages(prev => ({
+      ...prev,
+      [type]: imageData
+    }));
+  };
+
+  const addAction = (type: 'primary' | 'secondary', actionName: string) => {
+    const actionConfig = availableActions.find(a => a.name === actionName);
+    const newAction: Action = {
+      name: actionName,
+      value: "",
+      type: actionName,
+      color: actionConfig?.color || '#6B7280',
+      placeholder: actionConfig?.placeholder || `Enter ${actionName}`
+    };
+
+    if (type === 'primary') {
+      setPrimaryActions(prev => [...prev, newAction]);
+    } else {
+      setSecondaryActions(prev => [...prev, newAction]);
+    }
+  };
+
+  const removeAction = (type: 'primary' | 'secondary', index: number) => {
+    if (type === 'primary') {
+      setPrimaryActions(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setSecondaryActions(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateActionValue = (type: 'primary' | 'secondary', index: number, value: string) => {
+    if (type === 'primary') {
+      setPrimaryActions(prev => prev.map((action, i) =>
+        i === index ? { ...action, value } : action
+      ));
+    } else {
+      setSecondaryActions(prev => prev.map((action, i) =>
+        i === index ? { ...action, value } : action
+      ));
+    }
+  };
+
+  const saveConfiguration = async (): Promise<void> => {
+    if (!productId) return;
+
+    const configuration = {
+      name: `${vCardData.prefix ? vCardData.prefix + ' ' : ''}${vCardData.fname} ${vCardData.lname}`.trim(),
+      email: vCardData.email,
+      phone: vCardData.phone,
+      company: vCardData.biz,
+      title: vCardData.title,
+      website: vCardData.website,
+      socialMedia: {
+        linkedin: primaryActions.find(a => a.name === 'linkedin')?.value || secondaryActions.find(a => a.name === 'linkedin')?.value || '',
+        instagram: primaryActions.find(a => a.name === 'instagram')?.value || secondaryActions.find(a => a.name === 'instagram')?.value || '',
+        twitter: primaryActions.find(a => a.name === 'twitter')?.value || secondaryActions.find(a => a.name === 'twitter')?.value || '',
+        facebook: primaryActions.find(a => a.name === 'facebook')?.value || secondaryActions.find(a => a.name === 'facebook')?.value || ''
+      },
+      customMessage: vCardData.desc,
+      prefix: vCardData.prefix,
+      fname: vCardData.fname,
+      lname: vCardData.lname,
+      pronouns: vCardData.pronouns,
+      street: vCardData.street,
+      city: vCardData.city,
+      state: vCardData.state,
+      postal: vCardData.postal,
+      country: vCardData.country,
+      mobile: vCardData.mobile,
+      photo: vCardData.photo,
+      primaryActions: primaryActions.filter(a => a.value),
+      secondaryActions: secondaryActions.filter(a => a.value),
+      images: images,
+      logoOrHeader: logoOrHeader
+    };
+
+    // Save to localStorage
+    const storageKey = `configuration-${productId}`;
+    localStorage.setItem(storageKey, JSON.stringify({
+      configuration,
+      timestamp: Date.now()
+    }));
+  };
+
+  const loadConfiguration = async (): Promise<void> => {
+    if (!productId) return;
+
+    const storageKey = `configuration-${productId}`;
+    const stored = localStorage.getItem(storageKey);
+
+    if (stored) {
+      try {
+        const { configuration } = JSON.parse(stored);
+
+        // Restore vCard data
+        if (configuration.fname) setVCardData(prev => ({ ...prev, fname: configuration.fname }));
+        if (configuration.lname) setVCardData(prev => ({ ...prev, lname: configuration.lname }));
+        if (configuration.prefix) setVCardData(prev => ({ ...prev, prefix: configuration.prefix }));
+        if (configuration.pronouns) setVCardData(prev => ({ ...prev, pronouns: configuration.pronouns }));
+        if (configuration.title) setVCardData(prev => ({ ...prev, title: configuration.title }));
+        if (configuration.company) setVCardData(prev => ({ ...prev, biz: configuration.company }));
+        if (configuration.customMessage) setVCardData(prev => ({ ...prev, desc: configuration.customMessage }));
+        if (configuration.email) setVCardData(prev => ({ ...prev, email: configuration.email }));
+        if (configuration.phone) setVCardData(prev => ({ ...prev, phone: configuration.phone }));
+        if (configuration.mobile) setVCardData(prev => ({ ...prev, mobile: configuration.mobile }));
+        if (configuration.website) setVCardData(prev => ({ ...prev, website: configuration.website }));
+        if (configuration.photo) setVCardData(prev => ({ ...prev, photo: configuration.photo }));
+
+        // Restore images
+        if (configuration.images) setImages(configuration.images);
+
+        // Restore actions
+        if (configuration.primaryActions) setPrimaryActions(configuration.primaryActions);
+        if (configuration.secondaryActions) setSecondaryActions(configuration.secondaryActions);
+
+        // Restore UI state
+        if (configuration.logoOrHeader !== undefined) setLogoOrHeader(configuration.logoOrHeader);
+      } catch (error) {
+        console.error('Error loading configuration:', error);
+      }
+    }
+  };
+
+  const clearConfiguration = () => {
+    if (!productId) return;
+
+    const storageKey = `configuration-${productId}`;
+    localStorage.removeItem(storageKey);
+
+    // Reset all state to initial values
+    setVCardData({
+      prefix: "",
+      fname: "",
+      lname: "",
+      pronouns: "",
+      title: "",
+      biz: "",
+      desc: "",
+      street: "",
+      city: "",
+      state: "",
+      postal: "",
+      country: "",
+      email: "",
+      phone: "",
+      mobile: "",
+      website: "",
+      photo: "",
+    });
+
+    setImages({
+      logo: { url: null, blob: null, ext: null, mime: null, resized: null },
+      photo: { url: null, blob: null, ext: null, mime: null, resized: null },
+      cover: { url: null, blob: null, ext: null, mime: null, resized: null },
+    });
+
+    setPrimaryActions([]);
+    setSecondaryActions([]);
+    setLogoOrHeader(false);
+    setFilterPrimary("");
+    setFilterSecondary("");
+  };
+
+  const contextValue: ConfigurationContextType = {
+    vCardData,
+    setVCardData,
+    updateVCardField,
+    images,
+    setImages,
+    updateImage,
+    primaryActions,
+    secondaryActions,
+    setPrimaryActions,
+    setSecondaryActions,
+    addAction,
+    removeAction,
+    updateActionValue,
+    logoOrHeader,
+    setLogoOrHeader,
+    filterPrimary,
+    setFilterPrimary,
+    filterSecondary,
+    setFilterSecondary,
+    isSubmitting,
+    setIsSubmitting,
+    product,
+    saveConfiguration,
+    loadConfiguration,
+    clearConfiguration,
+  };
+
+  return (
+    <ConfigurationContext.Provider value={contextValue}>
+      {children}
+    </ConfigurationContext.Provider>
+  );
+}
