@@ -1,55 +1,112 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect } from 'react';
+import { SkeletonImage } from './ui/skeleton';
+import { cn } from '../lib/utils';
 
 interface AnimatedImageProps {
   src: string;
   alt: string;
   className?: string;
-  delay?: number;
+  placeholderClassName?: string;
+  onLoad?: () => void;
+  onError?: () => void;
+  aspectRatio?: 'square' | 'video' | 'auto';
 }
 
-export function AnimatedImage({ src, alt, className = "", delay = 0 }: AnimatedImageProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const imgRef = useRef<HTMLDivElement>(null);
+export function AnimatedImage({
+  src,
+  alt,
+  className,
+  placeholderClassName,
+  onLoad,
+  onError,
+  aspectRatio = 'auto'
+}: AnimatedImageProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => {
-            setIsVisible(true);
-          }, delay);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px"
-      }
-    );
-
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    if (!src) {
+      setIsLoading(false);
+      setHasError(true);
+      return;
     }
 
-    return () => {
-      if (imgRef.current) {
-        observer.unobserve(imgRef.current);
-      }
+    setIsLoading(true);
+    setHasError(false);
+    setImageLoaded(false);
+
+    const img = new Image();
+    
+    const handleLoad = () => {
+      setIsLoading(false);
+      setImageLoaded(true);
+      onLoad?.();
     };
-  }, [delay]);
+
+    const handleError = () => {
+      setIsLoading(false);
+      setHasError(true);
+      onError?.();
+    };
+
+    img.onload = handleLoad;
+    img.onerror = handleError;
+    img.src = src;
+
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [src, onLoad, onError]);
+
+  const getAspectRatioClass = () => {
+    switch (aspectRatio) {
+      case 'square':
+        return 'aspect-square';
+      case 'video':
+        return 'aspect-video';
+      default:
+        return '';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <SkeletonImage 
+        className={cn(
+          getAspectRatioClass(),
+          placeholderClassName
+        )} 
+      />
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div 
+        className={cn(
+          "flex items-center justify-center bg-muted rounded-lg",
+          getAspectRatioClass(),
+          className
+        )}
+      >
+        <span className="text-muted-foreground text-sm">Failed to load image</span>
+      </div>
+    );
+  }
 
   return (
-    <div
-      ref={imgRef}
-      className={`transition-all duration-1000 ease-out ${
-        isVisible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-8"
-      } ${className}`}
-    >
+    <div className={cn("relative overflow-hidden", getAspectRatioClass())}>
       <img
         src={src}
         alt={alt}
-        className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+        className={cn(
+          "transition-opacity duration-500",
+          imageLoaded ? "opacity-100" : "opacity-0",
+          className
+        )}
+        onLoad={() => setImageLoaded(true)}
       />
     </div>
   );
