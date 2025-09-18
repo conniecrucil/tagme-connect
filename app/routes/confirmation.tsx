@@ -194,14 +194,36 @@ export default function Confirmation() {
                         </span>
                       </div>
                       <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>Name:</strong> {item.configuration.name}</p>
-                        <p><strong>Email:</strong> {item.configuration.email}</p>
-                        <p><strong>Phone:</strong> {item.configuration.phone}</p>
-                        {item.configuration.company && (
-                          <p><strong>Company:</strong> {item.configuration.company}</p>
-                        )}
-                        {item.configuration.title && (
-                          <p><strong>Title:</strong> {item.configuration.title}</p>
+                        {item.productType === 'basic' ? (
+                          /* Basic Card - Show Website URL */
+                          <>
+                            <p><strong>Website URL:</strong> 
+                              <a 
+                                href={item.configuration.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-green-600 hover:text-green-700 ml-1"
+                              >
+                                {item.configuration.website}
+                              </a>
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              This card will redirect users to the website above when tapped.
+                            </p>
+                          </>
+                        ) : (
+                          /* Core Card - Show Contact Details */
+                          <>
+                            <p><strong>Name:</strong> {item.configuration.name}</p>
+                            <p><strong>Email:</strong> {item.configuration.email}</p>
+                            <p><strong>Phone:</strong> {item.configuration.phone}</p>
+                            {item.configuration.company && (
+                              <p><strong>Company:</strong> {item.configuration.company}</p>
+                            )}
+                            {item.configuration.title && (
+                              <p><strong>Title:</strong> {item.configuration.title}</p>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -262,4 +284,5 @@ export default function Confirmation() {
     </div>
   );
 }
+
 

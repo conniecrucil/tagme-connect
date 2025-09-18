@@ -10,12 +10,15 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.891.0",
+    "@aws-sdk/s3-request-presigner": "^3.891.0",
     "@netlify/functions": "^4.2.5",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@react-router/fs-routes": "^7.9.1",
     "@react-router/node": "^7.7.1",
     "@react-router/serve": "^7.7.1",
+    "@types/uuid": "^10.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "isbot": "^5.1.27",
@@ -27,7 +30,8 @@
     "resend": "^6.1.0",
     "sonner": "^2.0.7",
     "stripe": "^18.5.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@react-router/dev": "^7.7.1",

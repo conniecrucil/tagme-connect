@@ -1,7 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Skeleton, SkeletonCard, SkeletonImage, SkeletonButton } from "./ui/skeleton";
-import { AnimatedImage } from "./AnimatedImage";
+import { Skeleton } from "./ui/skeleton";
 import { Droplets, Smartphone, Palette, Leaf } from "lucide-react";
 import { useLoadingState } from "../lib/useLoadingState";
 
@@ -31,20 +28,6 @@ export function TagMeCardsSection() {
     }
   ];
 
-  const products = [
-    {
-      name: "TAG Basic Card",
-      price: "$40",
-      description: "Essential features for professional networking",
-      image: "/sample-tag-basic-card.webp"
-    },
-    {
-      name: "TAG Core Card", 
-      price: "$47",
-      description: "Advanced features with premium customization",
-      image: "/sample-tag-core-card.webp"
-    }
-  ];
 
   return (
     <section className="py-20 bg-gray-50">
@@ -110,57 +93,6 @@ export function TagMeCardsSection() {
           )}
         </div>
 
-        {/* Product Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {isLoading ? (
-            Array.from({ length: 2 }).map((_, index) => (
-              <SkeletonCard key={index} className="text-center">
-                <div className="space-y-4">
-                  <SkeletonImage className="w-32 h-32 mx-auto" />
-                  <Skeleton className="h-6 w-3/4 mx-auto" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3 mx-auto" />
-                  <Skeleton className="h-8 w-20 mx-auto" />
-                  <SkeletonButton className="w-full h-10" />
-                </div>
-              </SkeletonCard>
-            ))
-          ) : (
-            products.map((product, index) => (
-              <Card 
-                key={index} 
-                className="text-center border-2 hover:border-green-600 transition-all duration-300 overflow-hidden animate-fade-in-up hover-lift"
-                style={{ animationDelay: `${index * 200 + 1200}ms` }}
-              >
-                <div className="p-6">
-                  <AnimatedImage
-                    src={product.image}
-                    alt={product.name}
-                    className="w-32 h-32 mx-auto mb-6 object-contain rounded-lg shadow-md hover:scale-110 transition-transform duration-300"
-                    placeholderClassName="w-32 h-32 mx-auto mb-6"
-                    aspectRatio="square"
-                  />
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-gray-900">
-                    {product.name}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    {product.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-green-600 mb-6">
-                    {product.price}
-                  </div>
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white hover:scale-105 transition-transform duration-300">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
       </div>
     </section>
   );
