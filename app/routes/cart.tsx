@@ -9,7 +9,8 @@ interface CartItem {
   productId: string;
   productType: 'basic' | 'core';
   quantity: number;
-  configuration: any;
+  configuration?: any;
+  url?: string;
   price: number;
 }
 
@@ -140,14 +141,20 @@ export default function Cart() {
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-gray-900 mb-2">Configuration:</h4>
                         <div className="text-sm text-gray-600 space-y-1">
-                          <p><strong>Name:</strong> {item.configuration.name}</p>
-                          <p><strong>Email:</strong> {item.configuration.email}</p>
-                          <p><strong>Phone:</strong> {item.configuration.phone}</p>
-                          {item.configuration.company && (
-                            <p><strong>Company:</strong> {item.configuration.company}</p>
-                          )}
-                          {item.configuration.title && (
-                            <p><strong>Title:</strong> {item.configuration.title}</p>
+                          {item.productType === 'basic' ? (
+                            <p><strong>Website URL:</strong> {item.url}</p>
+                          ) : (
+                            <>
+                              <p><strong>Name:</strong> {item.configuration?.name || 'Not set'}</p>
+                              <p><strong>Email:</strong> {item.configuration?.email || 'Not set'}</p>
+                              <p><strong>Phone:</strong> {item.configuration?.phone || 'Not set'}</p>
+                              {item.configuration?.company && (
+                                <p><strong>Company:</strong> {item.configuration.company}</p>
+                              )}
+                              {item.configuration?.title && (
+                                <p><strong>Title:</strong> {item.configuration.title}</p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -178,11 +185,19 @@ export default function Cart() {
 
                       {/* Edit Configuration Button */}
                       <div className="pt-2">
-                        <Link to={`/configure/${item.productId}`}>
-                          <Button variant="outline" size="sm">
-                            Edit Configuration
-                          </Button>
-                        </Link>
+                        {item.productType === 'basic' ? (
+                          <Link to={`/shop/${item.productId}`}>
+                            <Button variant="outline" size="sm">
+                              Edit URL
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Link to={`/shop/${item.productId}/configure`}>
+                            <Button variant="outline" size="sm">
+                              Edit Configuration
+                            </Button>
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </CardContent>

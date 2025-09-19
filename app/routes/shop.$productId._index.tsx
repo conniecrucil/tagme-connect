@@ -8,20 +8,47 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const [hasConfiguration, setHasConfiguration] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [url, setUrl] = useState("");
+  const [isValidUrl, setIsValidUrl] = useState(false);
 
-  // Check if there's existing configuration
+  // Function to validate URL
+  const validateUrl = (urlString: string): boolean => {
+    if (!urlString.trim()) return false;
+    
+    try {
+      const url = new URL(urlString);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  // Check if there's existing configuration or URL
   useEffect(() => {
     if (productId) {
-      const storageKey = `configuration-${productId}`;
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        try {
-          const { configuration } = JSON.parse(stored);
-          // Check if configuration has meaningful data
-          const hasData = configuration.fname || configuration.lname || configuration.email || configuration.phone;
-          setHasConfiguration(hasData);
-        } catch (error) {
-          console.error('Error parsing stored configuration:', error);
+      if (productId === 'tag-basic-card') {
+        // For basic card, check for URL
+        const urlKey = `url-${productId}`;
+        const storedUrl = localStorage.getItem(urlKey);
+        if (storedUrl) {
+          setUrl(storedUrl);
+          const isValid = validateUrl(storedUrl);
+          setIsValidUrl(isValid);
+          setHasConfiguration(isValid);
+        }
+      } else {
+        // For core card, check for configuration
+        const storageKey = `configuration-${productId}`;
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          try {
+            const { configuration } = JSON.parse(stored);
+            // Check if configuration has meaningful data
+            const hasData = configuration.fname || configuration.lname || configuration.email || configuration.phone;
+            setHasConfiguration(hasData);
+          } catch (error) {
+            console.error('Error parsing stored configuration:', error);
+          }
         }
       }
     }
@@ -30,23 +57,19 @@ export default function ProductDetail() {
   const handlePurchase = () => {
     if (!productId) return;
 
-    const storageKey = `configuration-${productId}`;
-    const stored = localStorage.getItem(storageKey);
-
-    if (!stored) {
-      // No configuration found, redirect to configure
-      navigate('configure');
-      return;
-    }
-
-    try {
-      const { configuration } = JSON.parse(stored);
+    if (productId === 'tag-basic-card') {
+      // For basic card, check if URL is valid
+      if (!validateUrl(url)) {
+        alert('Please enter a valid URL (must start with http:// or https://)');
+        return;
+      }
+      
       const cartItem = {
         productId,
-        productType: productId === 'tag-basic-card' ? 'basic' : 'core',
+        productType: 'basic',
         quantity: quantity,
-        configuration,
-        price: productId === 'tag-basic-card' ? 40 : 47
+        url: url.trim(),
+        price: 40
       };
 
       const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -54,9 +77,67 @@ export default function ProductDetail() {
       localStorage.setItem('cart', JSON.stringify(existingCart));
 
       navigate('/cart');
-    } catch (error) {
-      console.error('Error processing purchase:', error);
-      navigate('configure');
+    } else {
+      // For core card, check for configuration
+      const storageKey = `configuration-${productId}`;
+      const stored = localStorage.getItem(storageKey);
+
+      if (!stored) {
+        // No configuration found, redirect to configure
+        navigate('configure');
+        return;
+      }
+
+      try {
+        const { configuration } = JSON.parse(stored);
+        const cartItem = {
+          productId,
+          productType: 'core',
+          quantity: quantity,
+          configuration,
+          price: 47
+        };
+
+        const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
+        existingCart.push(cartItem);
+        localStorage.setItem('cart', JSON.stringify(existingCart));
+
+        navigate('/cart');
+      } catch (error) {
+        console.error('Error processing purchase:', error);
+        navigate('configure');
+      }
+    }
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value;
+    setUrl(newUrl);
+    
+    // Validate URL and update state
+    const isValid = validateUrl(newUrl);
+    setIsValidUrl(isValid);
+    
+    // Save URL to localStorage
+    if (productId === 'tag-basic-card') {
+      const urlKey = `url-${productId}`;
+      if (newUrl.trim()) {
+        localStorage.setItem(urlKey, newUrl.trim());
+        setHasConfiguration(isValid);
+      } else {
+        localStorage.removeItem(urlKey);
+        setHasConfiguration(false);
+      }
+    }
+  };
+
+  const handleClearUrl = () => {
+    setUrl("");
+    setIsValidUrl(false);
+    if (productId === 'tag-basic-card') {
+      const urlKey = `url-${productId}`;
+      localStorage.removeItem(urlKey);
+      setHasConfiguration(false);
     }
   };
 
@@ -104,53 +185,134 @@ export default function ProductDetail() {
                 </p>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-900 mb-2">Ready to Order?</h4>
-                <p className="text-sm text-blue-700">
-                  {hasConfiguration
-                    ? "Your card is configured and ready to purchase!"
-                    : "Configure your card with your personal information to complete your order."
-                  }
-                </p>
-              </div>
+              {productId === 'tag-basic-card' ? (
+                // Basic Card - URL Input
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-900 mb-2">Ready to Order?</h4>
+                    <p className="text-sm text-blue-700">
+                      {isValidUrl
+                        ? "Your URL is set and ready to purchase!"
+                        : url.trim() 
+                          ? "Please enter a valid URL (must start with http:// or https://)"
+                          : "Enter the URL you want your card to link to."
+                      }
+                    </p>
+                  </div>
 
-              {/* Configuration Button */}
-              <Link to="configure" className="w-full">
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg rounded">
-                  {hasConfiguration ? 'Modify Configuration' : 'Configure Card'}
-                </button>
-              </Link>
-
-              {/* Quantity and Purchase Controls - only show if configuration exists */}
-              {hasConfiguration && (
-                <div className="space-y-4 mt-6">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                      Quantity:
+                  {/* URL Input */}
+                  <div className="space-y-2">
+                    <label htmlFor="url" className="text-sm font-medium text-gray-700">
+                      Website URL:
                     </label>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex space-x-2">
+                      <input
+                        id="url"
+                        type="url"
+                        value={url}
+                        onChange={handleUrlChange}
+                        placeholder="https://example.com"
+                        className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
+                          url.trim() 
+                            ? isValidUrl 
+                              ? 'border-green-500 focus:ring-green-500' 
+                              : 'border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:ring-green-500'
+                        }`}
+                        required
+                      />
                       <button
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                        onClick={handleClearUrl}
+                        className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md"
                       >
-                        -
-                      </button>
-                      <span className="w-12 text-center">{quantity}</span>
-                      <button
-                        onClick={() => setQuantity(quantity + 1)}
-                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                      >
-                        +
+                        Clear
                       </button>
                     </div>
                   </div>
 
-                  <button
-                    onClick={handlePurchase}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg rounded"
-                  >
-                    Purchase - ${(productId === 'tag-basic-card' ? 40 : 47) * quantity}.00
-                  </button>
+                  {/* Quantity and Purchase Controls */}
+                  <div className="space-y-4 mt-6">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                        Quantity:
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                        >
+                          -
+                        </button>
+                        <span className="w-12 text-center">{quantity}</span>
+                        <button
+                          onClick={() => setQuantity(quantity + 1)}
+                          className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handlePurchase}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg rounded"
+                    >
+                      Purchase - $40.00
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Core Card - Configuration Flow
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-900 mb-2">Ready to Order?</h4>
+                    <p className="text-sm text-blue-700">
+                      {hasConfiguration
+                        ? "Your card is configured and ready to purchase!"
+                        : "Configure your card with your personal information to complete your order."
+                      }
+                    </p>
+                  </div>
+
+                  {/* Configuration Button */}
+                  <Link to="configure" className="w-full">
+                    <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg rounded">
+                      {hasConfiguration ? 'Modify Configuration' : 'Configure Card'}
+                    </button>
+                  </Link>
+
+                  {/* Quantity and Purchase Controls - only show if configuration exists */}
+                  {hasConfiguration && (
+                    <div className="space-y-4 mt-6">
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                          Quantity:
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                          >
+                            -
+                          </button>
+                          <span className="w-12 text-center">{quantity}</span>
+                          <button
+                            onClick={() => setQuantity(quantity + 1)}
+                            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handlePurchase}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg rounded"
+                      >
+                        Purchase - $47.00
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
