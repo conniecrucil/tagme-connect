@@ -30,6 +30,20 @@ export default function AdminIndex() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Update Contact</CardTitle>
+              <CardDescription>
+                Retrieve and update existing TAG Core card sites by URL. Edit contact details and re-publish under the same UUID.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/update">Update Existing Contact</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>View Analytics</CardTitle>
               <CardDescription>
                 View contact card analytics, usage statistics, and performance metrics.
@@ -42,33 +56,6 @@ export default function AdminIndex() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Manage Users</CardTitle>
-              <CardDescription>
-                Manage user accounts, permissions, and access controls.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>System Settings</CardTitle>
-              <CardDescription>
-                Configure system settings, integrations, and preferences.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
-              </Button>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>
@@ -111,21 +98,6 @@ export default function AdminIndex() {
               </Button>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="mt-8 p-4 bg-white rounded-lg border">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Quick Actions</h2>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link to="/admin/create">Create Contact</Link>
-            </Button>
-            <Button variant="outline" size="sm" disabled>
-              View Logs
-            </Button>
-            <Button variant="outline" size="sm" disabled>
-              System Status
-            </Button>
-          </div>
         </div>
       </div>
     </div>
