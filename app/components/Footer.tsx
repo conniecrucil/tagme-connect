@@ -30,7 +30,12 @@ export function Footer() {
             <div className="flex items-start space-x-3 mb-4">
               <Mail className="h-5 w-5 text-green-400 mt-1" />
               <div>
-                <p className="text-gray-300">contact@tagmeconnections.com</p>
+                <a 
+                  href="mailto:contact@tagmeconnections.com" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
+                  contact@tagmeconnections.com
+                </a>
               </div>
             </div>
             <div className="flex items-start space-x-3">
