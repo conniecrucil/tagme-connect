@@ -734,7 +734,7 @@ END:VCARD`;
               <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '562px', margin: '0 auto' }}>
                 {/* Header Section */}
                 <div 
-                  className="w-full h-48 relative"
+                  className="w-full h-48 relative flex items-center justify-center"
                   style={{ 
                     backgroundColor: '#e4eaea',
                     backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
@@ -743,13 +743,11 @@ END:VCARD`;
                   }}
                 >
                   {images.logo.url && !logoOrHeader && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-                      <img 
-                        src={images.logo.url} 
-                        alt="Logo" 
-                        className="w-24 h-24 rounded-full bg-white p-2 shadow-md"
-                      />
-                    </div>
+                    <img 
+                      src={images.logo.url} 
+                      alt="Brand Logo" 
+                      className="w-full h-full object-cover"
+                    />
                   )}
                 </div>
 

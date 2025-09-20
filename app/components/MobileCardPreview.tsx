@@ -43,7 +43,7 @@ export default function MobileCardPreview({
     <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', margin: '0 auto' }}>
       {/* Header Section */}
       <div
-        className="w-full h-32 relative"
+        className="w-full h-32 relative flex items-center justify-center"
         style={{
           backgroundColor: '#e4eaea',
           backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
@@ -52,13 +52,11 @@ export default function MobileCardPreview({
         }}
       >
         {images.logo.url && !logoOrHeader && (
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-            <img
-              src={images.logo.url}
-              alt="Logo"
-              className="w-16 h-16 rounded-full bg-white p-2 shadow-md"
-            />
-          </div>
+          <img
+            src={images.logo.url}
+            alt="Brand Logo"
+            className="w-full h-full object-cover"
+          />
         )}
       </div>
 

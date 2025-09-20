@@ -110,24 +110,30 @@ export const useConfiguration = () => {
   return context;
 };
 
-// Available actions configuration
-export const availableActions = [
-  // Primary Actions (Communication & Basic Info)
-  { name: 'email', label: 'Email', color: '#6B7280', placeholder: 'Enter email address' },
-  { name: 'call', label: 'Phone', color: '#6B7280', placeholder: 'Enter phone number' },
-  { name: 'Mobile', label: 'Mobile', color: '#6B7280', placeholder: 'Enter mobile number' },
-  { name: 'website', label: 'Website', color: '#6B7280', placeholder: 'Enter website URL' },
+// Primary Actions (Communication & Basic Info) - Limited set as per design
+export const primaryActions = [
+  { name: 'zalo', label: 'Zalo', color: '#0068FF', placeholder: 'Enter Zalo ID' },
+  { name: 'store', label: 'Store', color: '#6B7280', placeholder: 'Enter store location' },
   { name: 'location', label: 'Location', color: '#6B7280', placeholder: 'Enter location' },
-  { name: 'calendar', label: 'Calendar', color: '#6B7280', placeholder: 'Enter calendar link' },
-  { name: 'whatsApp', label: 'WhatsApp', color: '#25D366', placeholder: 'Enter WhatsApp number' },
-  { name: 'WeChat', label: 'WeChat', color: '#07C160', placeholder: 'Enter WeChat ID' },
-  { name: 'messenger', label: 'Messenger', color: '#0084FF', placeholder: 'Enter Messenger username' },
-  { name: 'signal', label: 'Signal', color: '#3A76F0', placeholder: 'Enter Signal number' },
-  { name: 'fax', label: 'Fax', color: '#6B7280', placeholder: 'Enter fax number' },
   { name: 'Home', label: 'Home', color: '#6B7280', placeholder: 'Enter home phone' },
+  { name: 'calendar', label: 'Calendar', color: '#6B7280', placeholder: 'Enter calendar link' },
+  { name: 'email', label: 'Email', color: '#6B7280', placeholder: 'Enter email address' },
+  { name: 'Mobile', label: 'Mobile', color: '#6B7280', placeholder: 'Enter mobile number' },
   { name: 'Office', label: 'Office', color: '#6B7280', placeholder: 'Enter office phone' },
+  { name: 'call', label: 'Call', color: '#6B7280', placeholder: 'Enter phone number' },
+  { name: 'sms', label: 'SMS', color: '#6B7280', placeholder: 'Enter SMS number' },
+  { name: 'fax', label: 'Fax', color: '#6B7280', placeholder: 'Enter fax number' },
+  { name: 'whatsApp', label: 'WhatsApp', color: '#25D366', placeholder: 'Enter WhatsApp number' },
+  { name: 'messenger', label: 'Messenger', color: '#0084FF', placeholder: 'Enter Messenger username' },
+  { name: 'telegram', label: 'Telegram', color: '#0088cc', placeholder: 'Enter Telegram URL' },
+  { name: 'website', label: 'Website', color: '#6B7280', placeholder: 'Enter website URL' },
+  { name: 'matrix', label: 'Matrix', color: '#000000', placeholder: 'Enter Matrix ID' },
+  { name: 'skype', label: 'Skype', color: '#00AFF0', placeholder: 'Enter Skype username' },
+  { name: 'Line', label: 'Line', color: '#00C300', placeholder: 'Enter Line ID' },
+];
 
-  // Secondary Actions (Social Media & Platforms)
+// Secondary Actions (Social Media & Platforms)
+export const secondaryActions = [
   { name: 'facebook', label: 'Facebook', color: '#1877f2', placeholder: 'Enter Facebook URL' },
   { name: 'instagram', label: 'Instagram', color: '#405de6', placeholder: 'Enter Instagram URL' },
   { name: 'twitter', label: 'Twitter/X', color: '#000000', placeholder: 'Enter Twitter URL' },
@@ -139,11 +145,26 @@ export const availableActions = [
   { name: 'vimeo', label: 'Vimeo', color: '#1ab7ea', placeholder: 'Enter Vimeo URL' },
   { name: 'spotify', label: 'Spotify', color: '#1ed760', placeholder: 'Enter Spotify URL' },
   { name: 'discord', label: 'Discord', color: '#7289da', placeholder: 'Enter Discord URL' },
-  { name: 'telegram', label: 'Telegram', color: '#0088cc', placeholder: 'Enter Telegram URL' },
   { name: 'reddit', label: 'Reddit', color: '#ff5700', placeholder: 'Enter Reddit URL' },
   { name: 'pinterest', label: 'Pinterest', color: '#bd081c', placeholder: 'Enter Pinterest URL' },
   { name: 'github', label: 'GitHub', color: '#333333', placeholder: 'Enter GitHub URL' },
+  { name: 'WeChat', label: 'WeChat', color: '#07C160', placeholder: 'Enter WeChat ID' },
+  { name: 'signal', label: 'Signal', color: '#3A76F0', placeholder: 'Enter Signal number' },
+  { name: 'viber', label: 'Viber', color: '#665CAC', placeholder: 'Enter Viber number' },
+  { name: 'apple', label: 'Apple App Store', color: '#007AFF', placeholder: 'Enter App Store URL' },
+  { name: 'artstation', label: 'ArtStation', color: '#000000', placeholder: 'Enter ArtStation URL' },
+  { name: 'bemer', label: 'Bemer', color: '#FFD700', placeholder: 'Enter Bemer ID' },
+  { name: 'behance', label: 'Behance', color: '#1769FF', placeholder: 'Enter Behance URL' },
+  { name: 'buymeacoffee', label: 'Buy Me a Coffee', color: '#FFDD00', placeholder: 'Enter Buy Me a Coffee URL' },
+  { name: 'cashapp', label: 'Cash App', color: '#00D632', placeholder: 'Enter Cash App username' },
+  { name: 'coinbase', label: 'Coinbase', color: '#0052FF', placeholder: 'Enter Coinbase URL' },
+  { name: 'yelp', label: 'Yelp', color: '#FF1A1A', placeholder: 'Enter Yelp URL' },
+  { name: 'npm', label: 'NPM', color: '#CB3837', placeholder: 'Enter NPM package URL' },
+  { name: 'dribbble', label: 'Dribbble', color: '#EA4C89', placeholder: 'Enter Dribbble URL' },
 ];
+
+// Combined available actions for backward compatibility
+export const availableActions = [...primaryActions, ...secondaryActions];
 
 interface ConfigurationProviderProps {
   children: ReactNode;
@@ -345,7 +366,20 @@ export function ConfigurationProvider({
       const stored = localStorage.getItem(storageKey);
 
       if (stored) {
-        const { configuration } = JSON.parse(stored);
+        const { configuration, timestamp } = JSON.parse(stored);
+
+        // Check if configuration has expired (1 hour = 3600000 ms)
+        const oneHour = 60 * 60 * 1000;
+        const isExpired = timestamp && (Date.now() - timestamp) > oneHour;
+        
+        if (isExpired) {
+          console.log('Configuration expired, clearing stored data');
+          localStorage.removeItem(storageKey);
+          toast.info("Configuration Expired", {
+            description: "Your saved configuration has expired. Please configure your card again.",
+          });
+          return;
+        }
 
         // Validate configuration structure
         if (!configuration || typeof configuration !== 'object') {

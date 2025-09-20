@@ -84,24 +84,6 @@ async function uploadContactCardToS3(sessionId: string, configuration: any) {
 
 async function sendAdminNotificationEmail(sessionId: string, configuration: any, s3Data: any) {
   try {
-    // Generate vCard attachment
-    const vcardConfig: VCardConfig = {
-      name: configuration.name,
-      email: configuration.email,
-      phone: configuration.phone,
-      company: configuration.company,
-      title: configuration.title,
-      website: configuration.website,
-      socialMedia: configuration.socialMedia,
-      customMessage: configuration.customMessage
-    };
-
-    const vcardContent = generateVCard(vcardConfig);
-    const vcardAttachment = {
-      filename: `${configuration.name.replace(/\s+/g, '_')}_contact.vcf`,
-      content: Buffer.from(vcardContent).toString('base64'),
-      contentType: 'text/vcard'
-    };
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -177,10 +159,9 @@ async function sendAdminNotificationEmail(sessionId: string, configuration: any,
                 <p><strong>📁 S3 Folder ID:</strong> ${s3Data.folderId}</p>
               </div>
 
-              <h3>📎 Attachments</h3>
+              <h3>📎 Contact Information</h3>
               <div class="card-config">
-                <p><strong>vCard File:</strong> ${vcardAttachment.filename}</p>
-                <p><em>This contact card is attached to this email for your records.</em></p>
+                <p><em>Contact card has been successfully created and uploaded to S3.</em></p>
               </div>
 
               <h3>📊 Summary</h3>
@@ -206,8 +187,7 @@ async function sendAdminNotificationEmail(sessionId: string, configuration: any,
       from: emailFrom,
       to: [adminEmail],
       subject: `Admin Contact Created - ${configuration.name} (${sessionId})`,
-      html: emailHtml,
-      attachments: [vcardAttachment]
+      html: emailHtml
     });
 
     console.log('Admin notification email sent successfully');

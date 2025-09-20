@@ -112,19 +112,3 @@ export function isValidVCard(vcardContent: string): boolean {
   return true;
 }
 
-/**
- * Creates a vCard attachment object for email sending
- */
-export function createVCardAttachment(
-  config: VCardConfig, 
-  sessionId: string, 
-  cardNumber: number
-): { filename: string; content: string } {
-  const vcardContent = generateVCard(config);
-  const filename = `vcard-${sessionId}-${cardNumber}.vcf`;
-  
-  return {
-    filename,
-    content: vcardContent
-  };
-}

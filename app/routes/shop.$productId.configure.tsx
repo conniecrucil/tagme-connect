@@ -8,7 +8,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { ActionIcon } from "~/components/Icon";
 import { useToast } from "~/components/ui/use-toast";
 import { useConfiguration } from "~/providers/configuration-provider";
-import { availableActions } from "~/providers/configuration-provider";
+import { primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions } from "~/providers/configuration-provider";
 
 export default function ConfigureProduct() {
   const { productId } = useParams();
@@ -274,132 +274,202 @@ export default function ConfigureProduct() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                           {/* Brand Logo Option */}
                           <div
-                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                            className={`p-4 border-2 rounded-lg transition-all duration-200 ${
                               !logoOrHeader
                                 ? 'border-green-500 bg-green-50'
-                                : 'border-gray-300 bg-white hover:border-gray-400'
+                                : images.cover.url
+                                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                                : 'border-gray-300 bg-white hover:border-gray-400 cursor-pointer'
                             }`}
-                            onClick={() => setLogoOrHeader(false)}
+                            onClick={() => !images.cover.url && setLogoOrHeader(false)}
                           >
                             <div className="flex items-start space-x-3">
                               <input
                                 type="radio"
                                 name="headerType"
                                 checked={!logoOrHeader}
-                                onChange={() => setLogoOrHeader(false)}
-                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                onChange={() => !images.cover.url && setLogoOrHeader(false)}
+                                disabled={!!images.cover.url}
+                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500 disabled:cursor-not-allowed"
                               />
                               <div className="flex-1">
                                 <h3 className="font-semibold text-gray-900 mb-1">Brand Logo</h3>
                                 <p className="text-sm text-gray-600">
                                   Display your company logo prominently
                                 </p>
+                                <p className="text-xs text-gray-500 mt-1">Recommended size: 350×100px</p>
+                                {images.cover.url && (
+                                  <p className="text-xs text-red-500 mt-1">Remove cover photo to switch</p>
+                                )}
                               </div>
                             </div>
                           </div>
 
                           {/* Cover Photo Option */}
                           <div
-                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                            className={`p-4 border-2 rounded-lg transition-all duration-200 ${
                               logoOrHeader
                                 ? 'border-green-500 bg-green-50'
-                                : 'border-gray-300 bg-white hover:border-gray-400'
+                                : images.logo.url
+                                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                                : 'border-gray-300 bg-white hover:border-gray-400 cursor-pointer'
                             }`}
-                            onClick={() => setLogoOrHeader(true)}
+                            onClick={() => !images.logo.url && setLogoOrHeader(true)}
                           >
                             <div className="flex items-start space-x-3">
                               <input
                                 type="radio"
                                 name="headerType"
                                 checked={logoOrHeader}
-                                onChange={() => setLogoOrHeader(true)}
-                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                onChange={() => !images.logo.url && setLogoOrHeader(true)}
+                                disabled={!!images.logo.url}
+                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500 disabled:cursor-not-allowed"
                               />
                               <div className="flex-1">
                                 <h3 className="font-semibold text-gray-900 mb-1">Cover Photo</h3>
                                 <p className="text-sm text-gray-600">
                                   Use a background image for visual impact
                                 </p>
+                                <p className="text-xs text-gray-500 mt-1">Recommended size: 960×640px</p>
+                                {images.logo.url && (
+                                  <p className="text-xs text-red-500 mt-1">Remove brand logo to switch</p>
+                                )}
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {logoOrHeader ? (
-                          <div className="flex items-center space-x-4">
-                            {images.cover.url ? (
-                              <img
-                                className="w-12 h-12 rounded object-contain"
-                                src={images.cover.url}
-                                alt="Cover image"
-                              />
+                        {/* Upload Section */}
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                          {logoOrHeader ? (
+                            // Cover Photo Upload
+                            images.cover.url ? (
+                              <div className="space-y-2">
+                                <img
+                                  src={images.cover.url}
+                                  alt="Cover image"
+                                  className="max-h-20 mx-auto rounded"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeImage('cover')}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
                             ) : (
-                              <button
-                                type="button"
-                                className="p-3 rounded bg-gray-200 cursor-pointer hover:bg-gray-300"
-                                onClick={() => fileInputRefs.cover.current?.click()}
-                              >
-                                <div className="w-6 h-6 text-gray-700">+</div>
-                              </button>
-                            )}
-                            <input
-                              ref={fileInputRefs.cover}
-                              type="file"
-                              accept=".png,.jpg,.jpeg,.gif,.webp,.svg"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleImageUpload('cover', file);
-                              }}
-                            />
-                            {images.cover.url && (
-                              <button
-                                type="button"
-                                className="p-1 rounded hover:bg-gray-200"
-                                onClick={() => removeImage('cover')}
-                              >
-                                <div className="w-6 h-6 text-gray-700">×</div>
-                              </button>
+                              <div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => fileInputRefs.cover.current?.click()}
+                                >
+                                  Upload Cover Photo
+                                </Button>
+                                <input
+                                  ref={fileInputRefs.cover}
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleImageUpload('cover', file);
+                                  }}
+                                />
+                              </div>
+                            )
+                          ) : (
+                            // Brand Logo Upload
+                            images.logo.url ? (
+                              <div className="space-y-2">
+                                <img
+                                  src={images.logo.url}
+                                  alt="Brand Logo"
+                                  className="max-h-20 mx-auto rounded"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeImage('logo')}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ) : (
+                              <div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => fileInputRefs.logo.current?.click()}
+                                >
+                                  Upload Brand Logo
+                                </Button>
+                                <input
+                                  ref={fileInputRefs.logo}
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleImageUpload('logo', file);
+                                  }}
+                                />
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Avatar Photo Section */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Avatar Photo</CardTitle>
+                        <CardDescription>Upload your profile picture</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <Label>Avatar Photo</Label>
+                          <p className="text-sm text-gray-500">Recommended size: 300×300px</p>
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                            {images.photo.url ? (
+                              <div className="space-y-2">
+                                <img src={images.photo.url} alt="Photo" className="w-20 h-20 mx-auto rounded-full object-cover" />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeImage('photo')}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ) : (
+                              <div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => fileInputRefs.photo.current?.click()}
+                                >
+                                  Upload Photo
+                                </Button>
+                                <input
+                                  ref={fileInputRefs.photo}
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleImageUpload('photo', file);
+                                  }}
+                                />
+                              </div>
                             )}
                           </div>
-                        ) : (
-                          <div className="flex items-center space-x-4">
-                            {images.logo.url ? (
-                              <img
-                                className="w-12 h-12 rounded object-contain"
-                                src={images.logo.url}
-                                alt="Brand logo"
-                              />
-                            ) : (
-                              <button
-                                type="button"
-                                className="p-3 rounded bg-gray-200 cursor-pointer hover:bg-gray-300"
-                                onClick={() => fileInputRefs.logo.current?.click()}
-                              >
-                                <div className="w-6 h-6 text-gray-700">+</div>
-                              </button>
-                            )}
-                            <input
-                              ref={fileInputRefs.logo}
-                              type="file"
-                              accept=".png,.jpg,.jpeg,.gif,.webp,.svg"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleImageUpload('logo', file);
-                              }}
-                            />
-                            {images.logo.url && (
-                              <button
-                                type="button"
-                                className="p-1 rounded hover:bg-gray-200"
-                                onClick={() => removeImage('logo')}
-                              >
-                                <div className="w-6 h-6 text-gray-700">×</div>
-                              </button>
-                            )}
-                          </div>
-                        )}
+                        </div>
                       </CardContent>
                     </Card>
 
@@ -536,43 +606,59 @@ export default function ConfigureProduct() {
                         <CardDescription>Main contact methods and links</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
+                        {/* Current Primary Actions with Drag Handles */}
+                        <div className="space-y-3">
                           {primaryActions.map((action, index) => (
-                            <div key={index} className="flex items-center space-x-3">
+                            <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                              {/* Drag Handle */}
+                              <div className="flex flex-col space-y-1 cursor-grab">
+                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                              </div>
+                              
+                              {/* Action Icon */}
                               <div
-                                className="w-12 h-12 flex items-center justify-center rounded-full flex-shrink-0"
+                                className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
                                 style={{ backgroundColor: action.color }}
                               >
-                                <ActionIcon name={action.name} className="w-6 h-6 text-white" />
+                                <ActionIcon name={action.name} className="w-5 h-5 text-white" />
                               </div>
+                              
+                              {/* Input Field */}
                               <Input
                                 className="flex-1"
                                 value={action.value}
                                 onChange={(e) => updateActionValue('primary', index, e.target.value)}
                                 placeholder={action.placeholder}
                               />
+                              
+                              {/* Remove Button */}
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={() => removeAction('primary', index)}
+                                className="w-8 h-8 p-0"
                               >
-                                Remove
+                                ✕
                               </Button>
                             </div>
                           ))}
                         </div>
 
-                        <div className="mt-4">
+                        {/* Search and Available Actions */}
+                        <div className="mt-6">
                           <Input
                             className="mb-4"
                             value={filterPrimary}
                             onChange={(e) => setFilterPrimary(e.target.value)}
-                            placeholder="Search actions..."
+                            placeholder="Search an action"
                           />
-                          <div className="flex flex-wrap gap-2">
-                            {availableActions.filter(action =>
-                              action.label.toLowerCase().includes(filterPrimary.toLowerCase())
+                          <div className="grid grid-cols-4 gap-2">
+                            {availablePrimaryActions.filter(action =>
+                              action.name.toLowerCase().includes(filterPrimary.toLowerCase()) &&
+                              !primaryActions.some(existing => existing.name === action.name)
                             ).map((action) => (
                               <Button
                                 key={action.name}
@@ -580,10 +666,15 @@ export default function ConfigureProduct() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => addAction('primary', action.name)}
-                                className="flex items-center space-x-2"
+                                className="flex flex-col items-center space-y-1 h-auto py-3"
                               >
-                                <ActionIcon name={action.name} className="w-4 h-4" />
-                                <span>{action.label}</span>
+                                <div
+                                  className="w-8 h-8 flex items-center justify-center rounded-full"
+                                  style={{ backgroundColor: action.color }}
+                                >
+                                  <ActionIcon name={action.name} className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-xs">{action.name}</span>
                               </Button>
                             ))}
                           </div>
@@ -598,43 +689,59 @@ export default function ConfigureProduct() {
                         <CardDescription>Social media and additional links</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
+                        {/* Current Secondary Actions with Drag Handles */}
+                        <div className="space-y-3">
                           {secondaryActions.map((action, index) => (
-                            <div key={index} className="flex items-center space-x-3">
+                            <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                              {/* Drag Handle */}
+                              <div className="flex flex-col space-y-1 cursor-grab">
+                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                              </div>
+                              
+                              {/* Action Icon */}
                               <div
-                                className="w-12 h-12 flex items-center justify-center rounded-full flex-shrink-0"
+                                className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
                                 style={{ backgroundColor: action.color }}
                               >
-                                <ActionIcon name={action.name} className="w-6 h-6 text-white" />
+                                <ActionIcon name={action.name} className="w-5 h-5 text-white" />
                               </div>
+                              
+                              {/* Input Field */}
                               <Input
                                 className="flex-1"
                                 value={action.value}
                                 onChange={(e) => updateActionValue('secondary', index, e.target.value)}
                                 placeholder={action.placeholder}
                               />
+                              
+                              {/* Remove Button */}
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={() => removeAction('secondary', index)}
+                                className="w-8 h-8 p-0"
                               >
-                                Remove
+                                ✕
                               </Button>
                             </div>
                           ))}
                         </div>
 
-                        <div className="mt-4">
+                        {/* Search and Available Actions */}
+                        <div className="mt-6">
                           <Input
                             className="mb-4"
                             value={filterSecondary}
                             onChange={(e) => setFilterSecondary(e.target.value)}
-                            placeholder="Search actions..."
+                            placeholder="Search an action"
                           />
-                          <div className="flex flex-wrap gap-2">
-                            {availableActions.filter(action =>
-                              action.label.toLowerCase().includes(filterSecondary.toLowerCase())
+                          <div className="grid grid-cols-4 gap-2">
+                            {availableSecondaryActions.filter(action =>
+                              action.name.toLowerCase().includes(filterSecondary.toLowerCase()) &&
+                              !secondaryActions.some(existing => existing.name === action.name)
                             ).map((action) => (
                               <Button
                                 key={action.name}
@@ -642,10 +749,15 @@ export default function ConfigureProduct() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => addAction('secondary', action.name)}
-                                className="flex items-center space-x-2"
+                                className="flex flex-col items-center space-y-1 h-auto py-3"
                               >
-                                <ActionIcon name={action.name} className="w-4 h-4" />
-                                <span>{action.label}</span>
+                                <div
+                                  className="w-8 h-8 flex items-center justify-center rounded-full"
+                                  style={{ backgroundColor: action.color }}
+                                >
+                                  <ActionIcon name={action.name} className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-xs">{action.name}</span>
                               </Button>
                             ))}
                           </div>
@@ -712,7 +824,7 @@ export default function ConfigureProduct() {
                       <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', margin: '0 auto' }}>
                         {/* Header Section */}
                         <div
-                          className="w-full h-32 relative"
+                          className="w-full h-32 relative flex items-center justify-center"
                           style={{
                             backgroundColor: '#e4eaea',
                             backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
@@ -721,13 +833,11 @@ export default function ConfigureProduct() {
                           }}
                         >
                           {images.logo.url && !logoOrHeader && (
-                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-                              <img
-                                src={images.logo.url}
-                                alt="Logo"
-                                className="w-16 h-16 rounded-full bg-white p-2 shadow-md"
-                              />
-                            </div>
+                            <img
+                              src={images.logo.url}
+                              alt="Brand Logo"
+                              className="w-full h-full object-cover"
+                            />
                           )}
                         </div>
 

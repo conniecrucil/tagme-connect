@@ -2,6 +2,7 @@ import { Button } from "./ui/button";
 import { Skeleton, SkeletonButton } from "./ui/skeleton";
 import { AnimatedImage } from "./AnimatedImage";
 import { useLoadingState } from "../lib/useLoadingState";
+import { Link } from "react-router";
 
 export function HeroSection() {
   const isLoading = useLoadingState(100);
@@ -40,9 +41,11 @@ export function HeroSection() {
                 </p>
                 
                 {/* CTA Button */}
-                <Button size="lg" className="bg-black hover:bg-gray-800 text-white text-lg px-8 py-6 animate-fade-in-up animation-delay-700 hover:scale-105 transition-transform duration-300 pulse-glow">
-                  Start Today
-                </Button>
+                <Link to="/shop">
+                  <Button size="lg" className="bg-black hover:bg-gray-800 text-white text-lg px-8 py-6 animate-fade-in-up animation-delay-700 hover:scale-105 transition-transform duration-300 pulse-glow">
+                    Start Today
+                  </Button>
+                </Link>
               </>
             )}
           </div>

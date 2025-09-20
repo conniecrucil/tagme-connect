@@ -1,4 +1,16 @@
 import React from 'react';
+import { ZaloIcon } from './icons/Zalo';
+import { StoreIcon } from './icons/Store';
+import { SmsIcon } from './icons/Sms';
+import { MatrixIcon } from './icons/Matrix';
+import { SkypeIcon } from './icons/Skype';
+import { LineIcon } from './icons/Line';
+import { ViberIcon } from './icons/Viber';
+import { AppleIcon } from './icons/Apple';
+import { ArtStationIcon } from './icons/ArtStation';
+import { BemerIcon } from './icons/Bemer';
+import { BuyMeACoffeeIcon } from './icons/BuyMeACoffee';
+import { CashAppIcon } from './icons/CashApp';
 
 interface IconProps {
   name: string;

@@ -42,7 +42,19 @@ export default function ProductDetail() {
         const stored = localStorage.getItem(storageKey);
         if (stored) {
           try {
-            const { configuration } = JSON.parse(stored);
+            const { configuration, timestamp } = JSON.parse(stored);
+            
+            // Check if configuration has expired (1 hour = 3600000 ms)
+            const oneHour = 60 * 60 * 1000;
+            const isExpired = timestamp && (Date.now() - timestamp) > oneHour;
+            
+            if (isExpired) {
+              console.log('Configuration expired, clearing stored data');
+              localStorage.removeItem(storageKey);
+              setHasConfiguration(false);
+              return;
+            }
+            
             // Check if configuration has meaningful data
             const hasData = configuration.fname || configuration.lname || configuration.email || configuration.phone;
             setHasConfiguration(hasData);
@@ -89,7 +101,19 @@ export default function ProductDetail() {
       }
 
       try {
-        const { configuration } = JSON.parse(stored);
+        const { configuration, timestamp } = JSON.parse(stored);
+        
+        // Check if configuration has expired (1 hour = 3600000 ms)
+        const oneHour = 60 * 60 * 1000;
+        const isExpired = timestamp && (Date.now() - timestamp) > oneHour;
+        
+        if (isExpired) {
+          console.log('Configuration expired, redirecting to configure');
+          localStorage.removeItem(storageKey);
+          navigate('configure');
+          return;
+        }
+        
         const cartItem = {
           productId,
           productType: 'core',
