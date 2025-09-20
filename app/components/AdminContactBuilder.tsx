@@ -557,7 +557,8 @@ export default function AdminContactBuilder() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Logo */}
             <div className="space-y-2">
-              <Label>Logo</Label>
+              <Label>Brand Logo</Label>
+              <p className="text-sm text-gray-500">Recommended size: 350×100px</p>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                 {images.logo.url ? (
                   <div className="space-y-2">
@@ -597,7 +598,8 @@ export default function AdminContactBuilder() {
 
             {/* Photo */}
             <div className="space-y-2">
-              <Label>Photo</Label>
+              <Label>Avatar Photo</Label>
+              <p className="text-sm text-gray-500">Recommended size: 300×300px</p>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                 {images.photo.url ? (
                   <div className="space-y-2">
@@ -637,7 +639,8 @@ export default function AdminContactBuilder() {
 
             {/* Cover */}
             <div className="space-y-2">
-              <Label>Cover Image</Label>
+              <Label>Cover Photo</Label>
+              <p className="text-sm text-gray-500">Recommended size: 960×640px</p>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                 {images.cover.url ? (
                   <div className="space-y-2">
