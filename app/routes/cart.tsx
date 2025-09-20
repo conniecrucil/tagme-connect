@@ -116,9 +116,14 @@ export default function Cart() {
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Shopping Cart
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-gray-600 mb-6">
               Review your items before proceeding to checkout
             </p>
+            <Link to="/shop">
+              <Button variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
+                ← Continue Shopping
+              </Button>
+            </Link>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
