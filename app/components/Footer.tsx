@@ -1,5 +1,6 @@
 import { MapPin, Mail } from "lucide-react";
-import tagmeLogoDark from "../assets/tagme-logo-dark.svg";
+import { Link } from "react-router";
+import { TagMeLogoDark } from "./TagMeLogoDark";
 
 export function Footer() {
   return (
@@ -9,7 +10,12 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Logo */}
           <div>
-            <img src={tagmeLogoDark} alt="TagMe Connections" className="h-16 w-48 mb-4" />
+            <div className="flex items-center mb-4">
+              <TagMeLogoDark width={80} height={96} className="mr-8" />
+              <span className="text-white font-bold text-xl -ml-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                connections
+              </span>
+            </div>
           </div>
 
           {/* Company Info */}
@@ -19,9 +25,14 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Location */}
+          {/* Contact & Location */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Location</h4>
+            <div className="flex items-start space-x-3 mb-4">
+              <Mail className="h-5 w-5 text-green-400 mt-1" />
+              <div>
+                <p className="text-gray-300">contact@tagmeconnections.com</p>
+              </div>
+            </div>
             <div className="flex items-start space-x-3">
               <MapPin className="h-5 w-5 text-green-400 mt-1" />
               <div>
@@ -31,13 +42,23 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <div className="flex items-start space-x-3">
-              <Mail className="h-5 w-5 text-green-400 mt-1" />
+            <div className="space-y-2">
               <div>
-                <p className="text-gray-300">contact@tagmeconnections.com</p>
+                <Link to="/about" className="text-gray-300 hover:text-white transition-colors">
+                  About
+                </Link>
+              </div>
+              <div>
+                <Link to="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">
+                  Privacy Policy
+                </Link>
+              </div>
+              <div>
+                <Link to="/terms-and-conditions" className="text-gray-300 hover:text-white transition-colors">
+                  Terms and Conditions
+                </Link>
               </div>
             </div>
           </div>

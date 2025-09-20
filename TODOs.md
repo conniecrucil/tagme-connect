@@ -1,5 +1,0 @@
-- [ ] In the admin success route, the copy button does not work
-- [ ] In the admin success route and the emails, the route of the website and card created is not the true location. 
-  -  it is https://${bucketName}.s3.dev.amazonaws.com/${uuid}/${item}
-  -  we need to strip out the ".s3.dev.amazonaws.com" from the url
-- [ ] 
