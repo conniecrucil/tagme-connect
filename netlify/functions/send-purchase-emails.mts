@@ -1,6 +1,5 @@
 import { Resend } from 'resend';
 import type { Context } from '@netlify/functions';
-import { createVCardAttachment, type VCardConfig } from './utils/vcard-generator.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
@@ -289,25 +288,10 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
 
 async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any, s3Data: any = null) {
   try {
-    // Generate vCard attachment from item configuration - only for core cards
-    let vcardAttachment = null;
+    // Handle customer images if they exist
     let customerImages = [];
     
     if (item.configuration && item.productType === 'core') {
-      // Create vCard configuration from item data
-      const vcardConfig: VCardConfig = {
-        name: item.configuration.name,
-        email: item.configuration.email,
-        phone: item.configuration.phone,
-        company: item.configuration.company,
-        title: item.configuration.title,
-        website: item.configuration.website,
-        socialMedia: item.configuration.socialMedia,
-        customMessage: item.configuration.customMessage
-      };
-      
-      // Generate vCard attachment
-      vcardAttachment = createVCardAttachment(vcardConfig, session.id, cardNumber);
       
       // Handle customer images if they exist
       if (item.configuration.images) {
@@ -435,7 +419,6 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
               ${item.productType === 'core' ? `
                 <h3>Attachments</h3>
                 <div class="card-config">
-                  <p><strong>vCard File:</strong> ${vcardAttachment ? vcardAttachment.filename : 'Not generated'}</p>
                   <p><strong>Customer Images:</strong> ${customerImages.length} file(s) attached</p>
                   <ul>
                     ${customerImages.map(img => `<li>${img.filename}</li>`).join('')}
@@ -519,14 +502,6 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
 
     // Prepare attachments array
     const attachments = [];
-    
-    if (vcardAttachment) {
-      attachments.push({
-        filename: vcardAttachment.filename,
-        content: vcardAttachment.content,
-        contentType: 'text/vcard'
-      });
-    }
     
     // Add customer images
     attachments.push(...customerImages);
