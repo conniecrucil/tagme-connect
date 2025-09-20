@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { QuantityInput } from "~/components/ui/quantity-input";
 
 interface CartItem {
   productId: string;
@@ -190,14 +190,13 @@ export default function Cart() {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-4">
                           <Label htmlFor={`quantity-${index}`}>Quantity:</Label>
-                          <Input
+                          <QuantityInput
                             id={`quantity-${index}`}
-                            type="number"
-                            min="1"
-                            max="5"
                             value={item.quantity}
-                            onChange={(e) => updateQuantity(index, parseInt(e.target.value))}
-                            className="w-20"
+                            onChange={(newQuantity) => updateQuantity(index, newQuantity)}
+                            onRemove={() => removeItem(index)}
+                            min={1}
+                            max={5}
                           />
                         </div>
                         <div className="text-right">
