@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
+import { transformS3UrlToDomain } from "~/lib/utils";
 
 export default function CustomerConfirmationTemplate() {
   // Sample data for preview
@@ -125,8 +126,8 @@ export default function CustomerConfirmationTemplate() {
                   ${sampleData.s3Urls.map((url, index) => `
                     <div style="border: 1px solid #ddd; padding: 20px; margin: 15px 0; border-radius: 8px; background: #fff;">
                       <h4 style="margin: 0 0 15px 0; color: #10b981;">Contact Card ${index + 1}</h4>
-                      <p style="margin: 8px 0;"><strong>View Online:</strong> <a href="${url.urls.html}" target="_blank" style="color: #10b981; text-decoration: none;">${url.urls.html}</a></p>
-                      <p style="margin: 8px 0;"><strong>Download vCard:</strong> <a href="${url.urls.vcard}" download style="color: #10b981; text-decoration: none;">Save to Contacts</a></p>
+                      <p style="margin: 8px 0;"><strong>View Online:</strong> <a href="${transformS3UrlToDomain(url.urls.html)}" target="_blank" style="color: #10b981; text-decoration: none;">${transformS3UrlToDomain(url.urls.html)}</a></p>
+                      <p style="margin: 8px 0;"><strong>Download vCard:</strong> <a href="${transformS3UrlToDomain(url.urls.vcard)}" download style="color: #10b981; text-decoration: none;">Save to Contacts</a></p>
                       <p style="margin: 8px 0; font-size: 14px; color: #666;">Share this URL with anyone to let them save your contact information instantly!</p>
                     </div>
                   `).join('')}

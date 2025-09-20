@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import type { Context } from '@netlify/functions';
+import { transformS3UrlToDomain } from './utils/url-transform.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
@@ -210,8 +211,8 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
                     ${s3Urls.map((url, index) => `
                       <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: #fff;">
                         <h4 style="margin: 0 0 10px 0; color: #10b981;">Contact Card ${index + 1}</h4>
-                        <p style="margin: 5px 0;"><strong>📱 View Online:</strong> <a href="${url.urls.html}" target="_blank" style="color: #10b981; text-decoration: none;">${url.urls.html}</a></p>
-                        <p style="margin: 5px 0;"><strong>📥 Download vCard:</strong> <a href="${url.urls.vcard}" download style="color: #10b981; text-decoration: none;">Save to Contacts</a></p>
+                        <p style="margin: 5px 0;"><strong>📱 View Online:</strong> <a href="${transformS3UrlToDomain(url.urls.html)}" target="_blank" style="color: #10b981; text-decoration: none;">${transformS3UrlToDomain(url.urls.html)}</a></p>
+                        <p style="margin: 5px 0;"><strong>📥 Download vCard:</strong> <a href="${transformS3UrlToDomain(url.urls.vcard)}" download style="color: #10b981; text-decoration: none;">Save to Contacts</a></p>
                         <p style="margin: 5px 0; font-size: 12px; color: #666;">Share this URL with anyone to let them save your contact information instantly!</p>
                       </div>
                     `).join('')}
@@ -442,13 +443,13 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
                     
                     <div style="background: #fff; padding: 15px; border-radius: 8px; margin: 10px 0;">
                       <h5>📱 Live Contact Card:</h5>
-                      <p><strong>Website URL:</strong> <a href="${s3Data.urls.html}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold;">${s3Data.urls.html}</a></p>
+                      <p><strong>Website URL:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.html)}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold;">${transformS3UrlToDomain(s3Data.urls.html)}</a></p>
                       <p style="font-size: 12px; color: #666; margin: 5px 0;">This is a fully functional mobile-optimized contact card website</p>
                     </div>
                     
                     <div style="background: #fff; padding: 15px; border-radius: 8px; margin: 10px 0;">
                       <h5>📥 vCard Download:</h5>
-                      <p><strong>vCard File:</strong> <a href="${s3Data.urls.vcard}" target="_blank" style="color: #10b981; text-decoration: none;">${s3Data.urls.vcard}</a></p>
+                      <p><strong>vCard File:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.vcard)}" target="_blank" style="color: #10b981; text-decoration: none;">${transformS3UrlToDomain(s3Data.urls.vcard)}</a></p>
                       <p style="font-size: 12px; color: #666; margin: 5px 0;">Direct download link for contact import</p>
                     </div>
                     

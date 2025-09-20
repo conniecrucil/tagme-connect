@@ -303,6 +303,7 @@ export default function ProductDetail() {
               ) : (
                 // Core Card - Configuration Flow
                 <div className="space-y-4">
+
                   {/* Mobile-First Site Explanation */}
                   <div className="bg-green-50 p-6 rounded-lg border border-green-200">
                     <h3 className="font-semibold text-green-900 mb-3">Mobile-First Digital Directory</h3>

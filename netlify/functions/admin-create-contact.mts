@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import type { Context } from '@netlify/functions';
+import { transformS3UrlToDomain } from './utils/url-transform.js';
 import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
@@ -154,8 +155,8 @@ async function sendAdminNotificationEmail(sessionId: string, configuration: any,
               <h3>🌐 Digital Contact Card</h3>
               <div class="url-box">
                 <p><strong>✅ Successfully uploaded to S3</strong></p>
-                <p><strong>📱 View Online:</strong> <a href="${s3Data.urls.html}" target="_blank" style="color: #0288d1; text-decoration: none;">${s3Data.urls.html}</a></p>
-                <p><strong>📥 Download vCard:</strong> <a href="${s3Data.urls.vcard}" download style="color: #0288d1; text-decoration: none;">Save to Contacts</a></p>
+                <p><strong>📱 View Online:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.html)}" target="_blank" style="color: #0288d1; text-decoration: none;">${transformS3UrlToDomain(s3Data.urls.html)}</a></p>
+                <p><strong>📥 Download vCard:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.vcard)}" download style="color: #0288d1; text-decoration: none;">Save to Contacts</a></p>
                 <p><strong>📁 S3 Folder ID:</strong> ${s3Data.folderId}</p>
               </div>
 

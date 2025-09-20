@@ -1,33 +1,39 @@
 import { useLocation, Link } from "react-router";
+import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-
-// Function to transform S3 URLs to domain-based URLs
-function transformS3UrlToDomain(s3Url: string): string {
-  if (!s3Url) return s3Url;
-  
-  // Extract bucket name from S3 URL
-  // Pattern: https://bucketname.s3.region.amazonaws.com/path
-  const s3Match = s3Url.match(/https:\/\/([^\.]+)\.s3\.[^\/]+\.amazonaws\.com\/(.+)/);
-  
-  if (s3Match) {
-    const bucketName = s3Match[1];
-    const path = s3Match[2];
-    
-    // Convert bucket name to domain format
-    // If bucket name contains dots, it's likely already a domain
-    // Otherwise, we might need to add .com or handle differently
-    const domain = bucketName.includes('.') ? bucketName : `${bucketName}.com`;
-    
-    return `https://${domain}/${path}`;
-  }
-  
-  return s3Url;
-}
+import { transformS3UrlToDomain } from "~/lib/utils";
 
 export default function AdminSuccess() {
   const location = useLocation();
   const { creationDetails, contactName, contactEmail } = location.state || {};
+  const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
+
+  const handleCopy = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedStates(prev => ({ ...prev, [key]: true }));
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [key]: false }));
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      setCopiedStates(prev => ({ ...prev, [key]: true }));
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [key]: false }));
+      }, 2000);
+    }
+  };
 
   if (!creationDetails) {
     return (
@@ -121,11 +127,14 @@ export default function AdminSuccess() {
                     />
                     <Button
                       size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(transformS3UrlToDomain(creationDetails.s3Urls.html));
-                      }}
+                      onClick={() => handleCopy(transformS3UrlToDomain(creationDetails.s3Urls.html), 'html')}
+                      className={`transition-all duration-200 ${
+                        copiedStates.html 
+                          ? 'bg-green-500 hover:bg-green-600 text-white' 
+                          : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }`}
                     >
-                      Copy
+                      {copiedStates.html ? '✓ Copied!' : 'Copy'}
                     </Button>
                     <Button
                       size="sm"
@@ -152,11 +161,14 @@ export default function AdminSuccess() {
                     />
                     <Button
                       size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(transformS3UrlToDomain(creationDetails.s3Urls.vcard));
-                      }}
+                      onClick={() => handleCopy(transformS3UrlToDomain(creationDetails.s3Urls.vcard), 'vcard')}
+                      className={`transition-all duration-200 ${
+                        copiedStates.vcard 
+                          ? 'bg-green-500 hover:bg-green-600 text-white' 
+                          : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }`}
                     >
-                      Copy
+                      {copiedStates.vcard ? '✓ Copied!' : 'Copy'}
                     </Button>
                     <Button
                       size="sm"

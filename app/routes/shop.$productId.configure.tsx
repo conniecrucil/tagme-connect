@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
@@ -14,6 +14,7 @@ import SortableActionsList from "~/components/SortableActionsList";
 export default function ConfigureProduct() {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const [quantity, setQuantity] = useState(1);
 
   // Use configuration context
   const {
@@ -169,7 +170,7 @@ export default function ConfigureProduct() {
       const cartItem = {
         productId,
         productType: productId === 'tag-basic-card' ? 'basic' : 'core',
-        quantity: 1,
+        quantity: quantity,
         configuration,
         price: productId === 'tag-basic-card' ? 40 : 47,
         id: `${productId === 'tag-basic-card' ? 'basic' : 'core'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
@@ -188,8 +189,8 @@ export default function ConfigureProduct() {
 
       toast({
         variant: "success",
-        title: "Configuration Saved",
-        description: "Your card configuration has been saved and added to cart!",
+        title: "Added to Cart",
+        description: "Your card configuration has been added to cart!",
       });
 
       // Navigate to cart
@@ -244,7 +245,7 @@ export default function ConfigureProduct() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form id="configuration-form" onSubmit={handleSubmit}>
             <div className="grid lg:grid-cols-2 gap-12">
               {/* Left Panel - Form */}
               <div className="space-y-8">
@@ -715,173 +716,204 @@ export default function ConfigureProduct() {
                 )}
               </div>
 
-              {/* Right Panel - Preview */}
+              {/* Right Panel - Preview Only */}
               <div className="space-y-8">
+                {/* Preview Card */}
                 <Card className="sticky top-8">
                   <CardHeader>
                     <CardTitle>Preview</CardTitle>
                     <CardDescription>Your card preview</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {isBasicCard ? (
-                      /* Basic Card Preview - Simple Link Card */
-                      <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', margin: '0 auto' }}>
-                        {/* Header Section */}
-                        <div className="w-full h-32 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="w-16 h-16 bg-green-600 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                              </svg>
+                    <div className="min-h-[600px] flex items-center justify-center">
+                      {isBasicCard ? (
+                        /* Basic Card Preview - Simple Link Card */
+                        <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', width: '100%' }}>
+                          {/* Header Section */}
+                          <div className="w-full h-32 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="w-16 h-16 bg-green-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                </svg>
+                              </div>
+                              <h2 className="text-lg font-semibold text-gray-800">Smart Link</h2>
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-800">Smart Link</h2>
+                          </div>
+
+                          {/* Content Section */}
+                          <div className="p-6 text-center">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">TAG Basic Card</h3>
+                            <p className="text-gray-600 mb-4">One Link. Endless Possibilities.</p>
+                            
+                            {vCardData.website ? (
+                              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <p className="text-sm text-gray-700 mb-2">This card will redirect to:</p>
+                                <a 
+                                  href={vCardData.website} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-green-600 hover:text-green-700 font-medium break-all"
+                                >
+                                  {vCardData.website}
+                                </a>
+                              </div>
+                            ) : (
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <p className="text-sm text-gray-500">Enter a website URL to see the preview</p>
+                              </div>
+                            )}
+                            
+                            <div className="mt-4 text-xs text-gray-500">
+                              <p>Tap the NFC card to visit the website</p>
+                            </div>
                           </div>
                         </div>
-
-                        {/* Content Section */}
-                        <div className="p-6 text-center">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">TAG Basic Card</h3>
-                          <p className="text-gray-600 mb-4">One Link. Endless Possibilities.</p>
-                          
-                          {vCardData.website ? (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                              <p className="text-sm text-gray-700 mb-2">This card will redirect to:</p>
-                              <a 
-                                href={vCardData.website} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-green-600 hover:text-green-700 font-medium break-all"
-                              >
-                                {vCardData.website}
-                              </a>
-                            </div>
-                          ) : (
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                              <p className="text-sm text-gray-500">Enter a website URL to see the preview</p>
-                            </div>
-                          )}
-                          
-                          <div className="mt-4 text-xs text-gray-500">
-                            <p>Tap the NFC card to visit the website</p>
+                      ) : (
+                        /* Core Card Preview - Full Contact Card */
+                        <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', width: '100%' }}>
+                          {/* Header Section */}
+                          <div
+                            className="w-full h-32 relative flex items-center justify-center"
+                            style={{
+                              backgroundColor: '#e4eaea',
+                              backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center'
+                            }}
+                          >
+                            {images.logo.url && !logoOrHeader && (
+                              <img
+                                src={images.logo.url}
+                                alt="Brand Logo"
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                           </div>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Core Card Preview - Full Contact Card */
-                      <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', margin: '0 auto' }}>
-                        {/* Header Section */}
-                        <div
-                          className="w-full h-32 relative flex items-center justify-center"
-                          style={{
-                            backgroundColor: '#e4eaea',
-                            backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                          }}
-                        >
-                          {images.logo.url && !logoOrHeader && (
-                            <img
-                              src={images.logo.url}
-                              alt="Brand Logo"
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
 
-                        {/* Profile Section */}
-                        <div className="p-4 text-center">
-                          {/* Profile Photo */}
-                          <div className="relative -mt-16 mb-4">
-                            <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto flex items-center justify-center overflow-hidden">
-                              {images.photo.url ? (
-                                <img src={images.photo.url} alt="Profile" className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="text-gray-600 text-xs">Photo</span>
+                          {/* Profile Section */}
+                          <div className="p-4 text-center">
+                            {/* Profile Photo */}
+                            <div className="relative -mt-16 mb-4">
+                              <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto flex items-center justify-center overflow-hidden">
+                                {images.photo.url ? (
+                                  <img src={images.photo.url} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-gray-600 text-xs">Photo</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Name and Title */}
+                            <h1 className="text-lg font-bold mb-2">
+                              {vCardData.prefix && `${vCardData.prefix} `}{vCardData.fname} {vCardData.lname}
+                            </h1>
+                            {vCardData.title && (
+                              <p className="text-gray-600 mb-1 text-sm">{vCardData.title}</p>
+                            )}
+                            {vCardData.biz && (
+                              <p className="text-gray-600 mb-4 text-sm">{vCardData.biz}</p>
+                            )}
+
+                            {/* Contact Information */}
+                            <div className="space-y-2 text-left text-sm">
+                              {vCardData.email && (
+                                <div className="flex items-center gap-2">
+                                  <span className="w-4 h-4 text-gray-500">✉</span>
+                                  <span>{vCardData.email}</span>
+                                </div>
                               )}
+                              {vCardData.phone && (
+                                <div className="flex items-center gap-2">
+                                  <span className="w-4 h-4 text-gray-500">📞</span>
+                                  <span>{vCardData.phone}</span>
+                                </div>
+                              )}
+                              {vCardData.website && (
+                                <div className="flex items-center gap-2">
+                                  <span className="w-4 h-4 text-gray-500">🌐</span>
+                                  <a href={vCardData.website} className="text-blue-600 hover:underline">{vCardData.website}</a>
+                                </div>
+                              )}
+
+                              {/* Primary Actions */}
+                              {primaryActions.filter(action => action.value).map((action, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                  <ActionIcon name={action.name} className="w-4 h-4 text-gray-500" />
+                                  <span>{action.value}</span>
+                                </div>
+                              ))}
+
+                              {/* Secondary Actions */}
+                              {secondaryActions.filter(action => action.value).map((action, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                  <ActionIcon name={action.name} className="w-4 h-4 text-gray-500" />
+                                  <span>{action.value}</span>
+                                </div>
+                              ))}
                             </div>
+
+                            {/* Description */}
+                            {vCardData.desc && (
+                              <div className="mt-4 pt-2 border-t border-gray-200">
+                                <p className="text-xs text-gray-600 text-left">{vCardData.desc}</p>
+                              </div>
+                            )}
                           </div>
-
-                          {/* Name and Title */}
-                          <h1 className="text-lg font-bold mb-2">
-                            {vCardData.prefix && `${vCardData.prefix} `}{vCardData.fname} {vCardData.lname}
-                          </h1>
-                          {vCardData.title && (
-                            <p className="text-gray-600 mb-1 text-sm">{vCardData.title}</p>
-                          )}
-                          {vCardData.biz && (
-                            <p className="text-gray-600 mb-4 text-sm">{vCardData.biz}</p>
-                          )}
-
-                          {/* Contact Information */}
-                          <div className="space-y-2 text-left text-sm">
-                            {vCardData.email && (
-                              <div className="flex items-center gap-2">
-                                <span className="w-4 h-4 text-gray-500">✉</span>
-                                <span>{vCardData.email}</span>
-                              </div>
-                            )}
-                            {vCardData.phone && (
-                              <div className="flex items-center gap-2">
-                                <span className="w-4 h-4 text-gray-500">📞</span>
-                                <span>{vCardData.phone}</span>
-                              </div>
-                            )}
-                            {vCardData.website && (
-                              <div className="flex items-center gap-2">
-                                <span className="w-4 h-4 text-gray-500">🌐</span>
-                                <a href={vCardData.website} className="text-blue-600 hover:underline">{vCardData.website}</a>
-                              </div>
-                            )}
-
-                            {/* Primary Actions */}
-                            {primaryActions.filter(action => action.value).map((action, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <ActionIcon name={action.name} className="w-4 h-4 text-gray-500" />
-                                <span>{action.value}</span>
-                              </div>
-                            ))}
-
-                            {/* Secondary Actions */}
-                            {secondaryActions.filter(action => action.value).map((action, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <ActionIcon name={action.name} className="w-4 h-4 text-gray-500" />
-                                <span>{action.value}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Description */}
-                          {vCardData.desc && (
-                            <div className="mt-4 pt-2 border-t border-gray-200">
-                              <p className="text-xs text-gray-600 text-left">{vCardData.desc}</p>
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
             </div>
-
-            {/* Submit Buttons */}
-            <div className="flex justify-end space-x-4 mt-8">
-              <Link to={`/shop/${productId}`}>
-                <Button variant="outline">
-                  Cancel
-                </Button>
-              </Link>
-              <Button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving Configuration...' : 'Save Configuration'}
-              </Button>
-            </div>
           </form>
+
         </div>
       </section>
+
+      {/* Fixed Purchase Section - Lower Right */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Card className="w-80 shadow-xl border-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Purchase</CardTitle>
+            <CardDescription className="text-sm">Add your configured card to cart</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                Quantity:
+              </label>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                >
+                  -
+                </button>
+                <span className="w-12 text-center font-medium">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              form="configuration-form"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium transition-colors"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Adding to Cart...' : `Add to Cart - $${(47 * quantity).toFixed(2)}`}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

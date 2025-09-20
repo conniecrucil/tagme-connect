@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
+import { transformS3UrlToDomain } from "~/lib/utils";
 
 export default function AdminNotificationTemplate() {
   // Sample data for preview
@@ -151,13 +152,13 @@ export default function AdminNotificationTemplate() {
               
               <div style="background: #fff; padding: 20px; border-radius: 8px; margin: 15px 0;">
                 <h5>Live Contact Card:</h5>
-                <p><strong>Website URL:</strong> <a href="${sampleData.s3Data.urls.html}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold;">${sampleData.s3Data.urls.html}</a></p>
+                <p><strong>Website URL:</strong> <a href="${transformS3UrlToDomain(sampleData.s3Data.urls.html)}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold;">${transformS3UrlToDomain(sampleData.s3Data.urls.html)}</a></p>
                 <p style="font-size: 14px; color: #666; margin: 8px 0;">This is a fully functional mobile-optimized contact card website</p>
               </div>
               
               <div style="background: #fff; padding: 20px; border-radius: 8px; margin: 15px 0;">
                 <h5>vCard Download:</h5>
-                <p><strong>vCard File:</strong> <a href="${sampleData.s3Data.urls.vcard}" target="_blank" style="color: #10b981; text-decoration: none;">${sampleData.s3Data.urls.vcard}</a></p>
+                <p><strong>vCard File:</strong> <a href="${transformS3UrlToDomain(sampleData.s3Data.urls.vcard)}" target="_blank" style="color: #10b981; text-decoration: none;">${transformS3UrlToDomain(sampleData.s3Data.urls.vcard)}</a></p>
                 <p style="font-size: 14px; color: #666; margin: 8px 0;">Direct download link for contact import</p>
               </div>
               
