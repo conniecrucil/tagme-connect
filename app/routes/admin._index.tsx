@@ -86,6 +86,20 @@ export default function AdminIndex() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Email Templates</CardTitle>
+              <CardDescription>
+                Preview and manage email templates used in the system.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/email-templates">View Templates</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Support</CardTitle>
               <CardDescription>
                 Access support tools, view tickets, and manage customer inquiries.
