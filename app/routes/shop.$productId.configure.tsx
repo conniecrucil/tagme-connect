@@ -171,21 +171,29 @@ export default function ConfigureProduct() {
         productType: productId === 'tag-basic-card' ? 'basic' : 'core',
         quantity: 1,
         configuration,
-        price: productId === 'tag-basic-card' ? 40 : 47
+        price: productId === 'tag-basic-card' ? 40 : 47,
+        id: `${productId === 'tag-basic-card' ? 'basic' : 'core'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
       };
 
       const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
       existingCart.push(cartItem);
       localStorage.setItem('cart', JSON.stringify(existingCart));
 
+      // Clear the cached configuration since it's now in the cart
+      const storageKey = `configuration-${productId}`;
+      localStorage.removeItem(storageKey);
+
+      // Dispatch custom event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+
       toast({
         variant: "success",
         title: "Configuration Saved",
-        description: "Your card configuration has been saved successfully.",
+        description: "Your card configuration has been saved and added to cart!",
       });
 
-      // Navigate back to product page
-      navigate(`/shop/${productId}`);
+      // Navigate to cart
+      navigate('/cart');
     } catch (error) {
       console.error('Error validating configuration:', error);
       console.log(error);

@@ -107,7 +107,8 @@ export default function AdminContactBuilder() {
         value: '',
         type: type,
         color: actionConfig.color,
-        placeholder: actionConfig.placeholder
+        placeholder: actionConfig.placeholder,
+        label: actionConfig.label
       };
       
       if (type === 'primary') {
@@ -704,24 +705,29 @@ export default function AdminContactBuilder() {
             ))}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {primaryActions.map((action, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <ActionIcon name={action.name} className="w-5 h-5" />
-                <Input
-                  value={action.value}
-                  onChange={(e) => updateActionValue('primary', index, e.target.value)}
-                  placeholder={action.placeholder}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeAction('primary', index)}
-                >
-                  Remove
-                </Button>
+              <div key={index} className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  {action.label || action.name}
+                </label>
+                <div className="flex items-center gap-2">
+                  <ActionIcon name={action.name} className="w-5 h-5" />
+                  <Input
+                    value={action.value}
+                    onChange={(e) => updateActionValue('primary', index, e.target.value)}
+                    placeholder={action.placeholder}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeAction('primary', index)}
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -751,24 +757,29 @@ export default function AdminContactBuilder() {
             ))}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {secondaryActions.map((action, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <ActionIcon name={action.name} className="w-5 h-5" />
-                <Input
-                  value={action.value}
-                  onChange={(e) => updateActionValue('secondary', index, e.target.value)}
-                  placeholder={action.placeholder}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeAction('secondary', index)}
-                >
-                  Remove
-                </Button>
+              <div key={index} className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  {action.label || action.name}
+                </label>
+                <div className="flex items-center gap-2">
+                  <ActionIcon name={action.name} className="w-5 h-5" />
+                  <Input
+                    value={action.value}
+                    onChange={(e) => updateActionValue('secondary', index, e.target.value)}
+                    placeholder={action.placeholder}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeAction('secondary', index)}
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

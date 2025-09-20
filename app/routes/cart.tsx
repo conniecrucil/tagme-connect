@@ -12,6 +12,7 @@ interface CartItem {
   configuration?: any;
   url?: string;
   price: number;
+  id: string; // Unique identifier for each cart item configuration
 }
 
 export default function Cart() {
@@ -32,12 +33,25 @@ export default function Cart() {
     updatedCart[index].quantity = newQuantity;
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
+    
+    // Dispatch custom event to update header cart count
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const removeItem = (index: number) => {
+    const itemToRemove = cart[index];
     const updatedCart = cart.filter((_, i) => i !== index);
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
+    
+    // Clear the cached configuration for this item since it's being removed from cart
+    if (itemToRemove) {
+      const storageKey = `configuration-${itemToRemove.productId}`;
+      localStorage.removeItem(storageKey);
+    }
+    
+    // Dispatch custom event to update header cart count
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const getTotalPrice = () => {
@@ -111,7 +125,7 @@ export default function Cart() {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
               {cart.map((item, index) => (
-                <Card key={index}>
+                <Card key={item.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -142,9 +156,12 @@ export default function Cart() {
                         <h4 className="font-semibold text-gray-900 mb-2">Configuration:</h4>
                         <div className="text-sm text-gray-600 space-y-1">
                           {item.productType === 'basic' ? (
-                            <p><strong>Website URL:</strong> {item.url}</p>
+                            <div>
+                              <p><strong>Website URL:</strong> {item.url}</p>
+                              <p className="text-xs text-gray-500 mt-1">This card will redirect to the specified URL when tapped.</p>
+                            </div>
                           ) : (
-                            <>
+                            <div>
                               <p><strong>Name:</strong> {item.configuration?.name || 'Not set'}</p>
                               <p><strong>Email:</strong> {item.configuration?.email || 'Not set'}</p>
                               <p><strong>Phone:</strong> {item.configuration?.phone || 'Not set'}</p>
@@ -154,7 +171,17 @@ export default function Cart() {
                               {item.configuration?.title && (
                                 <p><strong>Title:</strong> {item.configuration.title}</p>
                               )}
-                            </>
+                              {item.configuration?.website && (
+                                <p><strong>Website:</strong> {item.configuration.website}</p>
+                              )}
+                              {item.configuration?.primaryActions && item.configuration.primaryActions.length > 0 && (
+                                <p><strong>Primary Actions:</strong> {item.configuration.primaryActions.length} configured</p>
+                              )}
+                              {item.configuration?.secondaryActions && item.configuration.secondaryActions.length > 0 && (
+                                <p><strong>Social Links:</strong> {item.configuration.secondaryActions.length} configured</p>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1">Complete digital profile with automatic contact saving.</p>
+                            </div>
                           )}
                         </div>
                       </div>

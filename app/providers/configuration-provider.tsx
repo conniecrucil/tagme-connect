@@ -30,6 +30,7 @@ export interface Action {
   type: string;
   color?: string;
   placeholder?: string;
+  label?: string;
 }
 
 export interface ImageData {
@@ -260,7 +261,8 @@ export function ConfigurationProvider({
       value: "",
       type: actionName,
       color: actionConfig?.color || '#6B7280',
-      placeholder: actionConfig?.placeholder || `Enter ${actionName}`
+      placeholder: actionConfig?.placeholder || `Enter ${actionName}`,
+      label: actionConfig?.label || actionName
     };
 
     if (type === 'primary') {

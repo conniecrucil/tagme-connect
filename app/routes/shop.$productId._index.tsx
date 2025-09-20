@@ -66,7 +66,7 @@ export default function ProductDetail() {
     }
   }, [productId]);
 
-  const handlePurchase = () => {
+  const handleAddToCart = () => {
     if (!productId) return;
 
     if (productId === 'tag-basic-card') {
@@ -81,13 +81,19 @@ export default function ProductDetail() {
         productType: 'basic',
         quantity: quantity,
         url: url.trim(),
-        price: 40
+        price: 40,
+        id: `basic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
       };
 
       const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
       existingCart.push(cartItem);
       localStorage.setItem('cart', JSON.stringify(existingCart));
 
+      // Dispatch custom event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+
+      // Show success message and navigate to cart
+      alert('Item added to cart!');
       navigate('/cart');
     } else {
       // For core card, check for configuration
@@ -119,16 +125,25 @@ export default function ProductDetail() {
           productType: 'core',
           quantity: quantity,
           configuration,
-          price: 47
+          price: 47,
+          id: `core-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
         };
 
         const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
         existingCart.push(cartItem);
         localStorage.setItem('cart', JSON.stringify(existingCart));
 
+        // Clear the cached configuration since it's now in the cart
+        localStorage.removeItem(storageKey);
+
+        // Dispatch custom event to update header cart count
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
+
+        // Show success message and navigate to cart
+        alert('Item added to cart!');
         navigate('/cart');
       } catch (error) {
-        console.error('Error processing purchase:', error);
+        console.error('Error processing add to cart:', error);
         navigate('configure');
       }
     }
@@ -278,10 +293,10 @@ export default function ProductDetail() {
                     </div>
 
                     <button
-                      onClick={handlePurchase}
+                      onClick={handleAddToCart}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg rounded"
                     >
-                      Purchase - $40.00
+                      Add to Cart - ${(40 * quantity).toFixed(2)}
                     </button>
                   </div>
                 </div>
@@ -330,10 +345,10 @@ export default function ProductDetail() {
                       </div>
 
                       <button
-                        onClick={handlePurchase}
+                        onClick={handleAddToCart}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg rounded"
                       >
-                        Purchase - $47.00
+                        Add to Cart - ${(47 * quantity).toFixed(2)}
                       </button>
                     </div>
                   )}
