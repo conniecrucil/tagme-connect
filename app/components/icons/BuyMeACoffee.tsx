@@ -7,8 +7,11 @@ interface BuyMeACoffeeIconProps {
 export const BuyMeACoffeeIcon: React.FC<BuyMeACoffeeIconProps> = ({ className = "w-6 h-6" }) => {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M23.317 11.566c0 6.427-5.207 11.634-11.634 11.634S.049 17.993.049 11.566C.049 5.139 5.256-.068 11.683-.068s11.634 5.207 11.634 11.634z"/>
-      <path d="M16.5 7.5h-1.5V6h-3v1.5H10.5c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5h6c.83 0 1.5-.67 1.5-1.5V9c0-.83-.67-1.5-1.5-1.5zM15 16.5H9V9.75h6v6.75z"/>
+      {/* Buy Me a Coffee logo - coffee cup */}
+      <path d="M20.5 3H4C2.9 3 2 3.9 2 5v11c0 1.1.9 2 2 2h14.5c.8 0 1.5-.7 1.5-1.5v-10C22 3.7 21.3 3 20.5 3zM4 5h16v11H4V5zm15.5 11c0 .3-.2.5-.5.5H4c-.3 0-.5-.2-.5-.5V5c0-.3.2-.5.5-.5h15c.3 0 .5.2.5.5v11z"/>
+      <path d="M6 7h8v1H6zm0 2h8v1H6zm0 2h6v1H6zm10 2h2v1h-2zm-2 0h2v1h-2zm-2 0h2v1h-2z"/>
+      <path d="M8 6h6c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1H8c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1zm1 2v6h4V8H9z"/>
+      <path d="M18 19h2v2h-2zm-2 0h2v2h-2zm-2 0h2v2h-2z"/>
     </svg>
   );
 };

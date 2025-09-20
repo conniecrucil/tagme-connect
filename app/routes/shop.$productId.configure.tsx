@@ -9,6 +9,7 @@ import { ActionIcon } from "~/components/Icon";
 import { useToast } from "~/components/ui/use-toast";
 import { useConfiguration } from "~/providers/configuration-provider";
 import { primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions } from "~/providers/configuration-provider";
+import SortableActionsList from "~/components/SortableActionsList";
 
 export default function ConfigureProduct() {
   const { productId } = useParams();
@@ -25,6 +26,8 @@ export default function ConfigureProduct() {
     addAction,
     removeAction,
     updateActionValue,
+    reorderActions,
+    moveAction,
     logoOrHeader,
     setLogoOrHeader,
     filterPrimary,
@@ -607,45 +610,13 @@ export default function ConfigureProduct() {
                       </CardHeader>
                       <CardContent>
                         {/* Current Primary Actions with Drag Handles */}
-                        <div className="space-y-3">
-                          {primaryActions.map((action, index) => (
-                            <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                              {/* Drag Handle */}
-                              <div className="flex flex-col space-y-1 cursor-grab">
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                              </div>
-                              
-                              {/* Action Icon */}
-                              <div
-                                className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
-                                style={{ backgroundColor: action.color }}
-                              >
-                                <ActionIcon name={action.name} className="w-5 h-5 text-white" />
-                              </div>
-                              
-                              {/* Input Field */}
-                              <Input
-                                className="flex-1"
-                                value={action.value}
-                                onChange={(e) => updateActionValue('primary', index, e.target.value)}
-                                placeholder={action.placeholder}
-                              />
-                              
-                              {/* Remove Button */}
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeAction('primary', index)}
-                                className="w-8 h-8 p-0"
-                              >
-                                ✕
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
+                        <SortableActionsList
+                          actions={primaryActions}
+                          type="primary"
+                          moveAction={moveAction}
+                          updateActionValue={updateActionValue}
+                          removeAction={removeAction}
+                        />
 
                         {/* Search and Available Actions */}
                         <div className="mt-6">
@@ -690,45 +661,13 @@ export default function ConfigureProduct() {
                       </CardHeader>
                       <CardContent>
                         {/* Current Secondary Actions with Drag Handles */}
-                        <div className="space-y-3">
-                          {secondaryActions.map((action, index) => (
-                            <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                              {/* Drag Handle */}
-                              <div className="flex flex-col space-y-1 cursor-grab">
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                              </div>
-                              
-                              {/* Action Icon */}
-                              <div
-                                className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
-                                style={{ backgroundColor: action.color }}
-                              >
-                                <ActionIcon name={action.name} className="w-5 h-5 text-white" />
-                              </div>
-                              
-                              {/* Input Field */}
-                              <Input
-                                className="flex-1"
-                                value={action.value}
-                                onChange={(e) => updateActionValue('secondary', index, e.target.value)}
-                                placeholder={action.placeholder}
-                              />
-                              
-                              {/* Remove Button */}
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeAction('secondary', index)}
-                                className="w-8 h-8 p-0"
-                              >
-                                ✕
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
+                        <SortableActionsList
+                          actions={secondaryActions}
+                          type="secondary"
+                          moveAction={moveAction}
+                          updateActionValue={updateActionValue}
+                          removeAction={removeAction}
+                        />
 
                         {/* Search and Available Actions */}
                         <div className="mt-6">

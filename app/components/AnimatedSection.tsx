@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useScrollAnimation } from '../lib/useScrollAnimation';
 
 interface AnimatedSectionProps {
@@ -21,7 +21,7 @@ export function AnimatedSection({
 
   return (
     <div 
-      ref={ref}
+      ref={ref as React.RefObject<HTMLDivElement>}
       className={`transition-all duration-700 ${animationClass} ${className}`}
       style={delayStyle}
     >
