@@ -303,14 +303,24 @@ export default function ProductDetail() {
               ) : (
                 // Core Card - Configuration Flow
                 <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-2">Ready to Order?</h4>
-                    <p className="text-sm text-blue-700">
-                      {hasConfiguration
-                        ? "Your card is configured and ready to purchase!"
-                        : "Configure your card with your personal information to complete your order."
-                      }
+                  {/* Mobile-First Site Explanation */}
+                  <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+                    <h3 className="font-semibold text-green-900 mb-3">Mobile-First Digital Directory</h3>
+                    <p className="text-sm text-green-800 mb-3">
+                      Your TAG Core card connects to a mobile-first website that serves as a comprehensive directory of your personal information. This creates a seamless networking experience that makes connections much easier.
                     </p>
+                    <div className="text-sm text-green-700 space-y-2">
+                      <p><strong>How it works:</strong></p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Tap the card with any NFC-enabled device</li>
+                        <li>Instantly access your mobile-optimized profile page</li>
+                        <li>View and save your contact information with one tap</li>
+                        <li>Access your social media links and website</li>
+                      </ul>
+                      <p className="mt-3">
+                        <strong>Perfect for:</strong> Networking events, business meetings, conferences, and any situation where you want to quickly share your information.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Configuration Button */}
