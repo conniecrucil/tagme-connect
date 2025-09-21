@@ -10,7 +10,8 @@ interface OrderDetails {
   items: Array<{
     productType: 'basic' | 'core';
     quantity: number;
-    configuration: any;
+    configuration?: any;
+    url?: string;
   }>;
 }
 
@@ -49,30 +50,81 @@ export default function Confirmation() {
     const sessionId = searchParams.get('session_id');
     
     if (sessionId) {
-      // In a real implementation, you would fetch order details from your backend
-      // For now, we'll simulate with data from localStorage
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-      
-      if (cart.length > 0) {
+      try {
+        // In a real implementation, you would fetch order details from your backend
+        // For now, we'll simulate with data from localStorage
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+        
+        if (cart.length > 0) {
+        // Get customer email from the first item - handle both basic and core cards
+        const firstItem = cart[0];
+        let customerEmail: string;
+        
+        if (firstItem.productType === 'basic') {
+          // For basic cards, we need to get email from customer info stored during checkout
+          // This should be available in localStorage or from the session
+          const storedCustomerInfo = localStorage.getItem('customerInfo');
+          if (storedCustomerInfo) {
+            const parsed = JSON.parse(storedCustomerInfo);
+            customerEmail = parsed.email;
+          } else {
+            throw new Error('Customer email is required but not found for basic card order');
+          }
+        } else {
+          customerEmail = firstItem.configuration?.email;
+          if (!customerEmail) {
+            throw new Error('Customer email is required but not found in card configuration');
+          }
+        }
+        
         const orderData = {
           sessionId,
-          customerEmail: cart[0].configuration.email,
+          customerEmail,
           totalAmount,
           items: cart.map((item: any) => ({
             productType: item.productType,
             quantity: item.quantity,
-            configuration: item.configuration
+            configuration: item.configuration,
+            url: item.url // Include URL for basic cards
           }))
         };
         
         setOrderDetails(orderData);
         
-        // Send purchase emails
-        sendPurchaseEmails(sessionId, cart, cart[0].configuration);
+        // Send purchase emails - create customer info object for both card types
+        let customerInfo: any;
+        
+        if (firstItem.productType === 'basic') {
+          // For basic cards, use stored customer info
+          const storedCustomerInfo = localStorage.getItem('customerInfo');
+          if (storedCustomerInfo) {
+            const parsed = JSON.parse(storedCustomerInfo);
+            customerInfo = {
+              email: customerEmail,
+              name: parsed.name || 'Customer',
+              phone: parsed.phone || ''
+            };
+          } else {
+            throw new Error('Customer information is required but not found for basic card order');
+          }
+        } else {
+          // For core cards, use configuration data
+          customerInfo = firstItem.configuration;
+          if (!customerInfo || !customerInfo.email) {
+            throw new Error('Customer configuration is required but not found for core card order');
+          }
+        }
+        
+        sendPurchaseEmails(sessionId, cart, customerInfo);
         
         // Clear the cart after successful order
         localStorage.removeItem('cart');
+        }
+      } catch (error) {
+        console.error('Error processing order confirmation:', error);
+        // Set orderDetails to null to show error state
+        setOrderDetails(null);
       }
     }
     
@@ -199,12 +251,12 @@ export default function Confirmation() {
                           <>
                             <p><strong>Website URL:</strong> 
                               <a 
-                                href={item.configuration.website} 
+                                href={item.url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-green-600 hover:text-green-700 ml-1"
                               >
-                                {item.configuration.website}
+                                {item.url}
                               </a>
                             </p>
                             <p className="text-xs text-gray-500 mt-2">
@@ -214,13 +266,13 @@ export default function Confirmation() {
                         ) : (
                           /* Core Card - Show Contact Details */
                           <>
-                            <p><strong>Name:</strong> {item.configuration.name}</p>
-                            <p><strong>Email:</strong> <a href={`mailto:${item.configuration.email}`} className="text-blue-600 hover:underline">{item.configuration.email}</a></p>
-                            <p><strong>Phone:</strong> <a href={`tel:${item.configuration.phone}`} className="text-blue-600 hover:underline">{item.configuration.phone}</a></p>
-                            {item.configuration.company && (
+                            <p><strong>Name:</strong> {item.configuration?.name || 'Not provided'}</p>
+                            <p><strong>Email:</strong> <a href={`mailto:${item.configuration?.email}`} className="text-blue-600 hover:underline">{item.configuration?.email || 'Not provided'}</a></p>
+                            <p><strong>Phone:</strong> <a href={`tel:${item.configuration?.phone}`} className="text-blue-600 hover:underline">{item.configuration?.phone || 'Not provided'}</a></p>
+                            {item.configuration?.company && (
                               <p><strong>Company:</strong> {item.configuration.company}</p>
                             )}
-                            {item.configuration.title && (
+                            {item.configuration?.title && (
                               <p><strong>Title:</strong> {item.configuration.title}</p>
                             )}
                           </>

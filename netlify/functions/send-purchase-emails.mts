@@ -26,6 +26,14 @@ export default async (req: Request, context: Context) => {
       });
     }
 
+    // Validate customer email is provided
+    if (!customerInfo.email || !customerInfo.email.trim()) {
+      return new Response(JSON.stringify({ error: 'Customer email is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     // Create a mock session object for compatibility with existing functions
     const session = {
       id: sessionId,
@@ -67,9 +75,14 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
         quantity: parseInt(session.metadata.totalItems) || 1,
         price: parseFloat(session.metadata.totalAmount) || 40
       }];
+      // Validate that we have required customer email
+      if (!session.metadata.customerEmail || !session.metadata.customerEmail.trim()) {
+        throw new Error('Customer email is required but not found in session metadata');
+      }
+      
       customerInfo = {
         name: session.metadata.customerName || 'Customer',
-        email: session.metadata.customerEmail || 'customer@example.com',
+        email: session.metadata.customerEmail,
         phone: ''
       };
     }
@@ -192,9 +205,11 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
                   Item Total: $${((item.productType === 'basic' ? 40 : 47) * item.quantity).toFixed(2)}
                   ${item.configuration ? `
                     ${item.productType === 'basic' ? 
-                      `<br><em>Website URL: <a href="${item.configuration.website}" target="_blank" style="color: #10b981;">${item.configuration.website}</a></em>` :
+                      `<br><em>Website URL: <a href="${item.url || item.configuration.website}" target="_blank" style="color: #10b981;">${item.url || item.configuration.website}</a></em>` :
                       `<br><em>Configured for: ${item.configuration.name || 'Contact'}</em>`
                     }
+                  ` : item.productType === 'basic' && item.url ? `
+                    <br><em>Website URL: <a href="${item.url}" target="_blank" style="color: #10b981;">${item.url}</a></em>
                   ` : ''}
                 </div>
               `).join('')}
@@ -231,7 +246,7 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
                     ${cart.filter((item: any) => item.productType === 'basic').map((item: any, index: number) => `
                       <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: #fff;">
                         <h4 style="margin: 0 0 10px 0; color: #10b981;">Basic Card ${index + 1}</h4>
-                        <p style="margin: 5px 0;"><strong>🌐 Website URL:</strong> <a href="${item.configuration.website}" target="_blank" style="color: #10b981; text-decoration: none;">${item.configuration.website}</a></p>
+                        <p style="margin: 5px 0;"><strong>🌐 Website URL:</strong> <a href="${item.url || item.configuration?.website}" target="_blank" style="color: #10b981; text-decoration: none;">${item.url || item.configuration?.website}</a></p>
                         <p style="margin: 5px 0; font-size: 12px; color: #666;">When someone taps this card, they'll be redirected to your website!</p>
                       </div>
                     `).join('')}
@@ -376,7 +391,7 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
                 <h3>🔗 Basic Card Configuration</h3>
                 <div class="card-config">
                   <h4>Website URL:</h4>
-                  <p><strong>Target URL:</strong> <a href="${item.configuration?.website}" target="_blank" style="color: #10b981;">${item.configuration?.website}</a></p>
+                  <p><strong>Target URL:</strong> <a href="${item.url || item.configuration?.website}" target="_blank" style="color: #10b981;">${item.url || item.configuration?.website}</a></p>
                   <p style="background: #e0f2fe; padding: 10px; border-radius: 4px; margin-top: 10px;">
                     <strong>Note:</strong> This basic card will redirect users directly to the specified website when tapped.
                   </p>
@@ -430,7 +445,7 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
                 <div class="card-config">
                   <p><strong>No attachments required</strong> - Basic cards only need the website URL configuration.</p>
                   <p style="background: #e0f2fe; padding: 10px; border-radius: 4px; margin-top: 10px;">
-                    <strong>Production Note:</strong> The NFC card will be programmed to redirect to: <a href="${item.configuration?.website}" target="_blank" style="color: #10b981;">${item.configuration?.website}</a>
+                    <strong>Production Note:</strong> The NFC card will be programmed to redirect to: <a href="${item.url || item.configuration?.website}" target="_blank" style="color: #10b981;">${item.url || item.configuration?.website}</a>
                   </p>
                 </div>
               `}
@@ -482,7 +497,7 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
                   
                   <div style="background: #fff; padding: 15px; border-radius: 8px; margin: 10px 0;">
                     <h5>🌐 Target Website:</h5>
-                    <p><strong>Website URL:</strong> <a href="${item.configuration?.website}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold;">${item.configuration?.website}</a></p>
+                    <p><strong>Website URL:</strong> <a href="${item.url || item.configuration?.website}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold;">${item.url || item.configuration?.website}</a></p>
                     <p style="font-size: 12px; color: #666; margin: 5px 0;">This is where users will be redirected when they tap the NFC card</p>
                   </div>
                   
