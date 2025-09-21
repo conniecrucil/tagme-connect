@@ -6,6 +6,7 @@ import { Input } from "../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
 import { ActionIcon } from "../components/Icon";
+import { allAvailableActions } from "../lib/actions-config";
 
 interface VCardData {
   prefix: string;
@@ -208,39 +209,8 @@ END:VCARD`;
     window.URL.revokeObjectURL(url);
   };
 
-  const availableActions = [
-    // Primary Actions (Communication & Basic Info)
-    { name: 'email', label: 'Email', color: '#6B7280', placeholder: 'Enter email address' },
-    { name: 'call', label: 'Phone', color: '#6B7280', placeholder: 'Enter phone number' },
-    { name: 'Mobile', label: 'Mobile', color: '#6B7280', placeholder: 'Enter mobile number' },
-    { name: 'website', label: 'Website', color: '#6B7280', placeholder: 'Enter website URL' },
-    { name: 'location', label: 'Location', color: '#6B7280', placeholder: 'Enter location' },
-    { name: 'calendar', label: 'Calendar', color: '#6B7280', placeholder: 'Enter calendar link' },
-    { name: 'whatsApp', label: 'WhatsApp', color: '#25D366', placeholder: 'Enter WhatsApp number' },
-    { name: 'WeChat', label: 'WeChat', color: '#07C160', placeholder: 'Enter WeChat ID' },
-    { name: 'messenger', label: 'Messenger', color: '#0084FF', placeholder: 'Enter Messenger username' },
-    { name: 'signal', label: 'Signal', color: '#3A76F0', placeholder: 'Enter Signal number' },
-    { name: 'fax', label: 'Fax', color: '#6B7280', placeholder: 'Enter fax number' },
-    { name: 'Home', label: 'Home', color: '#6B7280', placeholder: 'Enter home phone' },
-    { name: 'Office', label: 'Office', color: '#6B7280', placeholder: 'Enter office phone' },
-    
-    // Secondary Actions (Social Media & Platforms)
-    { name: 'facebook', label: 'Facebook', color: '#1877f2', placeholder: 'Enter Facebook URL' },
-    { name: 'instagram', label: 'Instagram', color: '#405de6', placeholder: 'Enter Instagram URL' },
-    { name: 'twitter', label: 'Twitter/X', color: '#000000', placeholder: 'Enter Twitter URL' },
-    { name: 'linkedin', label: 'LinkedIn', color: '#0077b5', placeholder: 'Enter LinkedIn URL' },
-    { name: 'youtube', label: 'YouTube', color: '#ff0000', placeholder: 'Enter YouTube URL' },
-    { name: 'tiktok', label: 'TikTok', color: '#ffffff', placeholder: 'Enter TikTok URL' },
-    { name: 'snapchat', label: 'Snapchat', color: '#fffc00', placeholder: 'Enter Snapchat URL' },
-    { name: 'twitch', label: 'Twitch', color: '#9146ff', placeholder: 'Enter Twitch URL' },
-    { name: 'vimeo', label: 'Vimeo', color: '#1ab7ea', placeholder: 'Enter Vimeo URL' },
-    { name: 'spotify', label: 'Spotify', color: '#1ed760', placeholder: 'Enter Spotify URL' },
-    { name: 'discord', label: 'Discord', color: '#7289da', placeholder: 'Enter Discord URL' },
-    { name: 'telegram', label: 'Telegram', color: '#0088cc', placeholder: 'Enter Telegram URL' },
-    { name: 'reddit', label: 'Reddit', color: '#ff5700', placeholder: 'Enter Reddit URL' },
-    { name: 'pinterest', label: 'Pinterest', color: '#bd081c', placeholder: 'Enter Pinterest URL' },
-    { name: 'github', label: 'GitHub', color: '#333333', placeholder: 'Enter GitHub URL' },
-  ];
+  // Use shared actions configuration
+  const availableActions = allAvailableActions;
 
   const filteredPrimaryActions = availableActions.filter(action =>
     action.label.toLowerCase().includes(filterPrimary.toLowerCase())

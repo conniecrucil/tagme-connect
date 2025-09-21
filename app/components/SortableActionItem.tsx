@@ -68,6 +68,7 @@ export default function SortableActionItem({
           {action.label || action.name}
         </label>
         <Input
+          type={action.placeholder?.startsWith('https://') ? 'url' : 'text'}
           value={action.value}
           onChange={(e) => updateActionValue(type, index, e.target.value)}
           placeholder={action.placeholder}

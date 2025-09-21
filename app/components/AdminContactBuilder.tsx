@@ -403,7 +403,7 @@ export default function AdminContactBuilder() {
                 id="title"
                 value={vCardData.title}
                 onChange={(e) => updateVCardField('title', e.target.value)}
-                placeholder="Job title or position"
+                placeholder="founder"
               />
             </div>
           </div>

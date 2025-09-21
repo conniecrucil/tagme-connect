@@ -539,7 +539,7 @@ export default function ConfigureProduct() {
                             id="title"
                             value={vCardData.title}
                             onChange={(e) => handleInputChange('title', e.target.value)}
-                            placeholder="Software Engineer"
+                            placeholder="founder"
                           />
                         </div>
 
@@ -820,13 +820,13 @@ export default function ConfigureProduct() {
                               {vCardData.email && (
                                 <div className="flex items-center gap-2">
                                   <span className="w-4 h-4 text-gray-500">✉</span>
-                                  <span>{vCardData.email}</span>
+                                  <a href={`mailto:${vCardData.email}`} className="text-blue-600 hover:underline">{vCardData.email}</a>
                                 </div>
                               )}
                               {vCardData.phone && (
                                 <div className="flex items-center gap-2">
                                   <span className="w-4 h-4 text-gray-500">📞</span>
-                                  <span>{vCardData.phone}</span>
+                                  <a href={`tel:${vCardData.phone}`} className="text-blue-600 hover:underline">{vCardData.phone}</a>
                                 </div>
                               )}
                               {vCardData.website && (

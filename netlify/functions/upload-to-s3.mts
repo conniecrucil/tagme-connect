@@ -197,15 +197,14 @@ function generateContactCardHTML(data: ContactCardData): string {
       
       .logo {
         position: absolute;
-        bottom: 0;
+        top: 50%;
         left: 50%;
-        transform: translateX(-50%) translateY(50%);
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background: white;
-        padding: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateX(-50%) translateY(-50%);
+        width: 350px;
+        height: 100px;
+        background: transparent;
+        padding: 0;
+        box-shadow: none;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -214,8 +213,8 @@ function generateContactCardHTML(data: ContactCardData): string {
       .logo img {
         width: 100%;
         height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
+        border-radius: 0;
+        object-fit: contain;
       }
       
       .profile {

@@ -102,35 +102,35 @@ export default function MobileCardPreview({
       <div className="px-4 pb-4">
         {/* Email */}
         {vCardData.email && (
-          <div className="flex items-center py-3 border-b border-gray-100">
+          <a href={`mailto:${vCardData.email}`} className="flex items-center py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <ActionIcon name="email" className="w-5 h-5 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Email</div>
               <div className="text-sm text-gray-800">{vCardData.email}</div>
             </div>
-          </div>
+          </a>
         )}
 
         {/* Phone */}
         {vCardData.phone && (
-          <div className="flex items-center py-3 border-b border-gray-100">
+          <a href={`tel:${vCardData.phone}`} className="flex items-center py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <ActionIcon name="call" className="w-5 h-5 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Phone</div>
               <div className="text-sm text-gray-800">{vCardData.phone}</div>
             </div>
-          </div>
+          </a>
         )}
 
         {/* Mobile */}
         {vCardData.mobile && (
-          <div className="flex items-center py-3 border-b border-gray-100">
+          <a href={`tel:${vCardData.mobile}`} className="flex items-center py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <ActionIcon name="Mobile" className="w-5 h-5 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Mobile</div>
               <div className="text-sm text-gray-800">{vCardData.mobile}</div>
             </div>
-          </div>
+          </a>
         )}
 
         {/* Website */}

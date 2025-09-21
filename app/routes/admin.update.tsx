@@ -340,12 +340,12 @@ export default function AdminUpdate() {
                   </div>
                   <div>
                     <Label htmlFor="title">Job Title</Label>
-                    <Input
-                      id="title"
-                      value={contactData.title || ''}
-                      onChange={(e) => updateContactField('title', e.target.value)}
-                      placeholder="Job title"
-                    />
+                      <Input
+                        id="title"
+                        value={contactData.title || ''}
+                        onChange={(e) => updateContactField('title', e.target.value)}
+                        placeholder="founder"
+                      />
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="website">Website</Label>

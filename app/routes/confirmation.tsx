@@ -215,8 +215,8 @@ export default function Confirmation() {
                           /* Core Card - Show Contact Details */
                           <>
                             <p><strong>Name:</strong> {item.configuration.name}</p>
-                            <p><strong>Email:</strong> {item.configuration.email}</p>
-                            <p><strong>Phone:</strong> {item.configuration.phone}</p>
+                            <p><strong>Email:</strong> <a href={`mailto:${item.configuration.email}`} className="text-blue-600 hover:underline">{item.configuration.email}</a></p>
+                            <p><strong>Phone:</strong> <a href={`tel:${item.configuration.phone}`} className="text-blue-600 hover:underline">{item.configuration.phone}</a></p>
                             {item.configuration.company && (
                               <p><strong>Company:</strong> {item.configuration.company}</p>
                             )}
