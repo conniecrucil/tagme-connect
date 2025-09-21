@@ -26,6 +26,9 @@ interface ContactCardData {
   country?: string;
   socialMedia?: Record<string, string>;
   customMessage?: string;
+  primaryActions?: Array<{ name: string; value: string; color?: string }>;
+  secondaryActions?: Array<{ name: string; value: string; color?: string }>;
+  logoOrHeader?: boolean;
   images?: {
     logo?: { url?: string; blob?: string; ext?: string; mime?: string };
     photo?: { url?: string; blob?: string; ext?: string; mime?: string };
@@ -501,9 +504,43 @@ function generateContactCardHTML(data: ContactCardData): string {
     `);
   }
 
-  // Generate social media links
-  const socialLinks = [];
-  if (data.socialMedia) {
+  // Generate social media links from primary and secondary actions
+  const socialLinks: string[] = [];
+  
+  // Add primary actions
+  if (data.primaryActions) {
+    data.primaryActions.forEach((action) => {
+      if (action.value) {
+        socialLinks.push(`
+          <a href="${action.value}" class="social-link" target="_blank">
+            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
+              ${getSocialIcon(action.name)}
+            </svg>
+            ${action.name.charAt(0).toUpperCase() + action.name.slice(1)}
+          </a>
+        `);
+      }
+    });
+  }
+  
+  // Add secondary actions
+  if (data.secondaryActions) {
+    data.secondaryActions.forEach((action) => {
+      if (action.value) {
+        socialLinks.push(`
+          <a href="${action.value}" class="social-link" target="_blank">
+            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
+              ${getSocialIcon(action.name)}
+            </svg>
+            ${action.name.charAt(0).toUpperCase() + action.name.slice(1)}
+          </a>
+        `);
+      }
+    });
+  }
+  
+  // Fallback to legacy socialMedia object if no actions are provided
+  if (socialLinks.length === 0 && data.socialMedia) {
     Object.entries(data.socialMedia).forEach(([platform, url]) => {
       if (url) {
         socialLinks.push(`
@@ -550,7 +587,23 @@ function generateContactCardHTML(data: ContactCardData): string {
     ${data.title ? `"jobTitle": "${data.title}",` : ''}
     ${images?.photo?.url ? `"image": "${images.photo.url}",` : ''}
     "sameAs": [
-      ${data.socialMedia ? Object.values(data.socialMedia).filter(url => url).map(url => `"${url}"`).join(',') : ''}
+      ${(() => {
+        const urls: string[] = [];
+        if (data.primaryActions) {
+          data.primaryActions.forEach(action => {
+            if (action.value) urls.push(`"${action.value}"`);
+          });
+        }
+        if (data.secondaryActions) {
+          data.secondaryActions.forEach(action => {
+            if (action.value) urls.push(`"${action.value}"`);
+          });
+        }
+        if (urls.length === 0 && data.socialMedia) {
+          Object.values(data.socialMedia).filter(url => url).forEach(url => urls.push(`"${url}"`));
+        }
+        return urls.join(',');
+      })()}
     ]
   }
   </script>
@@ -560,8 +613,8 @@ function generateContactCardHTML(data: ContactCardData): string {
 <body>
   <div class="contact-card">
     <!-- Header Section -->
-    <div class="header">
-      ${images?.logo?.url ? `
+    <div class="header" ${images?.cover?.url && data.logoOrHeader ? `style="background-image: url('${images.cover.url}'); background-size: cover; background-position: center;"` : ''}>
+      ${images?.logo?.url && !data.logoOrHeader ? `
         <div class="logo">
           <img src="${images.logo.url}" alt="Logo">
         </div>
