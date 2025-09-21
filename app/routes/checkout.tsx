@@ -4,12 +4,13 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { toast } from "sonner";
 
 interface CartItem {
   productId: string;
   productType: 'basic' | 'core';
   quantity: number;
-  configuration: any;
+  configuration?: any;
   price: number;
 }
 
@@ -32,9 +33,9 @@ export default function Checkout() {
     if (cartData.length > 0 && cartData[0].configuration) {
       const config = cartData[0].configuration;
       setCustomerInfo({
-        name: config.name || '',
-        email: config.email || '',
-        phone: config.phone || ''
+        name: config?.name || '',
+        email: config?.email || '',
+        phone: config?.phone || ''
       });
     }
     
@@ -55,21 +56,30 @@ export default function Checkout() {
   const handleCheckout = async () => {
     // Validate required fields
     if (!customerInfo.email.trim()) {
-      alert('Please enter your email address');
+      toast.error('Please enter your email address');
       return;
     }
     
     if (!customerInfo.phone.trim()) {
-      alert('Please enter your phone number');
+      toast.error('Please enter your phone number');
       return;
     }
 
-    // Use customer info from form, or fallback to cart configuration, or defaults
+    // Use customer info from form, or fallback to cart configuration
     const finalCustomerInfo = {
       name: customerInfo.name || cart[0]?.configuration?.name || 'Customer',
-      email: customerInfo.email || cart[0]?.configuration?.email || 'customer@example.com',
-      phone: customerInfo.phone || cart[0]?.configuration?.phone || '+1 (555) 123-4567'
+      email: customerInfo.email || cart[0]?.configuration?.email,
+      phone: customerInfo.phone || cart[0]?.configuration?.phone || ''
     };
+
+    // Validate that we have a valid email
+    if (!finalCustomerInfo.email || !finalCustomerInfo.email.trim()) {
+      toast.error('Email address is required to complete your order');
+      return;
+    }
+
+    // Store customer info for use in confirmation page
+    localStorage.setItem('customerInfo', JSON.stringify(finalCustomerInfo));
 
     setIsProcessing(true);
 
@@ -91,11 +101,11 @@ export default function Checkout() {
         // Redirect to Stripe Checkout
         window.location.href = result.url;
       } else {
-        alert(`Checkout failed: ${result.error}`);
+        toast.error(`Checkout failed: ${result.error}`);
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      alert('An error occurred during checkout. Please try again.');
+      toast.error('An error occurred during checkout. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -224,7 +234,7 @@ export default function Checkout() {
                             {item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'}
                           </div>
                           <div className="text-sm text-gray-600">
-                            {item.configuration.name}
+                            {item.configuration?.name || 'No name provided'}
                           </div>
                           {item.quantity > 1 && (
                             <div className="text-sm text-gray-600">
