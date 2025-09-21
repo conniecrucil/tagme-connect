@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  netlify-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8888:8888"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+    stdin_open: true
+    tty: true
+
+  playwright-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    depends_on:
+      - netlify-dev
+    volumes:
+      - .:/app
+    environment:
+      - CI=true
+    command: npx playwright test

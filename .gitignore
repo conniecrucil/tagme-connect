@@ -12,3 +12,7 @@
 .env
 
 temp-cart-data/
+
+# Playwright test outputs
+/playwright-report/
+/test-results/
