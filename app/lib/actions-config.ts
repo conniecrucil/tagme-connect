@@ -71,3 +71,4 @@ export const getPrimaryActions = (): ActionConfig[] => {
 export const getSecondaryActions = (): ActionConfig[] => {
   return secondaryActionsConfig;
 };
+
