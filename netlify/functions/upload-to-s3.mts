@@ -5,10 +5,10 @@ import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
 
 // Initialize S3 client
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.APP_AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
@@ -51,10 +51,10 @@ export default async (req: Request, context: Context) => {
 
     // Generate unique folder ID
     const folderId = uuidv4();
-    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
     
     if (!bucketName) {
-      throw new Error('AWS_S3_BUCKET_NAME environment variable is required');
+      throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
     }
 
     // Generate vCard content
@@ -92,26 +92,26 @@ export default async (req: Request, context: Context) => {
         const logoKey = `${folderId}/logo.${logo.ext || 'jpg'}`;
         const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
-        imageUrls.logo = `${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
+        imageUrls.logo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
       }
       
       if (photo?.blob) {
         const photoKey = `${folderId}/photo.${photo.ext || 'jpg'}`;
         const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
-        imageUrls.photo = `${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
+        imageUrls.photo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
       }
       
       if (cover?.blob) {
         const coverKey = `${folderId}/cover.${cover.ext || 'jpg'}`;
         const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
-        imageUrls.cover = `${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
+        imageUrls.cover = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
       }
     }
 
     // Return the public URLs
-    const baseUrl = `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${folderId}`;
+    const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${folderId}`;
     
     return new Response(JSON.stringify({
       success: true,

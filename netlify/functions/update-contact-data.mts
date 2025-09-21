@@ -4,10 +4,10 @@ import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
 
 // Initialize S3 client
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.APP_AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
@@ -59,10 +59,10 @@ export default async (req: Request, context: Context) => {
       });
     }
 
-    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
     
     if (!bucketName) {
-      throw new Error('AWS_S3_BUCKET_NAME environment variable is required');
+      throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
     }
 
     // Verify the contact card exists
@@ -154,26 +154,26 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
         const logoKey = `${uuid}/logo.${logo.ext || 'jpg'}`;
         const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
-        imageUrls.logo = `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
+        imageUrls.logo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
       }
       
       if (photo?.blob) {
         const photoKey = `${uuid}/photo.${photo.ext || 'jpg'}`;
         const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
-        imageUrls.photo = `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
+        imageUrls.photo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
       }
       
       if (cover?.blob) {
         const coverKey = `${uuid}/cover.${cover.ext || 'jpg'}`;
         const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
-        imageUrls.cover = `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
+        imageUrls.cover = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
       }
     }
 
     // Return the public URLs
-    const baseUrl = `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}`;
+    const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}`;
     
     return {
       urls: {

@@ -19,10 +19,10 @@ This document outlines all the environment variables required for the Netlify PO
 - `COMPANY_WEBSITE` - Your company website URL
 
 ### AWS S3 Configuration (NEW)
-- `AWS_ACCESS_KEY_ID` - Your AWS access key ID
-- `AWS_SECRET_ACCESS_KEY` - Your AWS secret access key
-- `AWS_REGION` - AWS region for your S3 bucket (e.g., us-east-1)
-- `AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards
+- `APP_AWS_ACCESS_KEY_ID` - Your AWS access key ID
+- `APP_AWS_SECRET_ACCESS_KEY` - Your AWS secret access key
+- `APP_AWS_REGION` - AWS region for your S3 bucket (e.g., us-east-1)
+- `APP_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards
 
 ### Admin Authentication
 - `ADMIN_USER` - Username for admin access
@@ -45,10 +45,10 @@ ADMIN_EMAIL=admin@yourdomain.com
 SUPPORT_EMAIL=support@yourdomain.com
 COMPANY_NAME=Your Company Name
 COMPANY_WEBSITE=https://yourdomain.com
-AWS_ACCESS_KEY_ID=your_aws_access_key_id
-AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-AWS_REGION=us-east-1
-AWS_S3_BUCKET_NAME=your-s3-bucket-name
+APP_AWS_ACCESS_KEY_ID=your_aws_access_key_id
+APP_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+APP_AWS_REGION=us-east-1
+APP_AWS_S3_BUCKET_NAME=your-s3-bucket-name
 ADMIN_USER=admin
 ADMIN_PASS=your_secure_admin_password
 NETLIFY_SITE_URL=https://your-site.netlify.app

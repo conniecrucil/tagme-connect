@@ -57,12 +57,12 @@ export default async (req: Request, context: Context) => {
       uuid = urlParts[urlParts.length - 2]; // UUID is the second-to-last part
     } else {
       // It's just a UUID, construct the URL using the bucket name
-      const bucketName = process.env.AWS_S3_BUCKET_NAME;
+      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
       if (!bucketName) {
-        throw new Error('AWS_S3_BUCKET_NAME environment variable is required when providing UUID');
+        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required when providing UUID');
       }
       uuid = contactUrl;
-      htmlUrl = `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}/index.html`;
+      htmlUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}/index.html`;
     }
 
     // Fetch the HTML content directly from the public URL
