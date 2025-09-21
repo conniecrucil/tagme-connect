@@ -6,12 +6,21 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { PostHogProvider } from 'posthog-js/react';
 import { Header } from "./components/Header";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Footer } from "./components/Footer";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "https://7184a4ca4bd3c0d242e0297974ff3ce0@o258608.ingest.us.sentry.io/4510055747223552",
+  // Setting this option to true will send default PII data to Sentry.
+  // For example, automatic IP address collection on events
+  sendDefaultPii: true
+});
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -66,18 +75,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-      <Header />
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-        <Footer />
-        <Toaster />
-        <SonnerToaster
-          position="top-right"
-          expand={false}
-          richColors
-          closeButton
-        />
+        <PostHogProvider
+          apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+          options={{
+            api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+            defaults: '2025-05-24',
+            capture_exceptions: true,
+            debug: import.meta.env.MODE === "development",
+          }}
+        >
+          <Header />
+          {children}
+          <ScrollRestoration />
+          <Scripts />
+          <Footer />
+          <Toaster />
+          <SonnerToaster
+            position="top-right"
+            expand={false}
+            richColors
+            closeButton
+          />
+        </PostHogProvider>
       </body>
     </html>
   );

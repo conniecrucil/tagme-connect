@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { primaryActionsConfig, secondaryActionsConfig, allAvailableActions } from "~/lib/actions-config";
+import { PostHogProvider } from 'posthog-js/react';
 
 // Types for the configuration
 export interface VCardData {
@@ -509,8 +510,18 @@ export function ConfigurationProvider({
   };
 
   return (
-    <ConfigurationContext.Provider value={contextValue}>
-      {children}
-    </ConfigurationContext.Provider>
+    <PostHogProvider
+      apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+      options={{
+        api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+        defaults: '2025-05-24',
+        capture_exceptions: true,
+        debug: import.meta.env.MODE === "development",
+      }}
+    >
+      <ConfigurationContext.Provider value={contextValue}>
+        {children}
+      </ConfigurationContext.Provider>
+    </PostHogProvider>
   );
 }
