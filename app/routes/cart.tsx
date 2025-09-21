@@ -216,13 +216,7 @@ export default function Cart() {
 
                       {/* Edit Configuration Button */}
                       <div className="pt-2">
-                        {item.productType === 'basic' ? (
-                          <Link to={`/shop/${item.productId}`}>
-                            <Button variant="outline" size="sm">
-                              Edit URL
-                            </Button>
-                          </Link>
-                        ) : (
+                        {item.productType === 'core' && (
                           <Link to={`/shop/${item.productId}/configure`}>
                             <Button variant="outline" size="sm">
                               Edit Configuration
