@@ -1,6 +1,7 @@
 import { Link, useParams, useNavigate } from "react-router";
 import { useConfiguration } from "~/providers/configuration-provider";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function ProductDetail() {
   const { product } = useConfiguration();
@@ -23,44 +24,32 @@ export default function ProductDetail() {
     }
   };
 
-  // Check if there's existing configuration or URL
+  // Check if there's existing configuration
   useEffect(() => {
-    if (productId) {
-      if (productId === 'tag-basic-card') {
-        // For basic card, check for URL
-        const urlKey = `url-${productId}`;
-        const storedUrl = localStorage.getItem(urlKey);
-        if (storedUrl) {
-          setUrl(storedUrl);
-          const isValid = validateUrl(storedUrl);
-          setIsValidUrl(isValid);
-          setHasConfiguration(isValid);
-        }
-      } else {
-        // For core card, check for configuration
-        const storageKey = `configuration-${productId}`;
-        const stored = localStorage.getItem(storageKey);
-        if (stored) {
-          try {
-            const { configuration, timestamp } = JSON.parse(stored);
-            
-            // Check if configuration has expired (1 hour = 3600000 ms)
-            const oneHour = 60 * 60 * 1000;
-            const isExpired = timestamp && (Date.now() - timestamp) > oneHour;
-            
-            if (isExpired) {
-              console.log('Configuration expired, clearing stored data');
-              localStorage.removeItem(storageKey);
-              setHasConfiguration(false);
-              return;
-            }
-            
-            // Check if configuration has meaningful data
-            const hasData = configuration.fname || configuration.lname || configuration.email || configuration.phone;
-            setHasConfiguration(hasData);
-          } catch (error) {
-            console.error('Error parsing stored configuration:', error);
+    if (productId && productId !== 'tag-basic-card') {
+      // For core card, check for configuration
+      const storageKey = `configuration-${productId}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const { configuration, timestamp } = JSON.parse(stored);
+          
+          // Check if configuration has expired (1 hour = 3600000 ms)
+          const oneHour = 60 * 60 * 1000;
+          const isExpired = timestamp && (Date.now() - timestamp) > oneHour;
+          
+          if (isExpired) {
+            console.log('Configuration expired, clearing stored data');
+            localStorage.removeItem(storageKey);
+            setHasConfiguration(false);
+            return;
           }
+          
+          // Check if configuration has meaningful data
+          const hasData = configuration.fname || configuration.lname || configuration.email || configuration.phone;
+          setHasConfiguration(hasData);
+        } catch (error) {
+          console.error('Error parsing stored configuration:', error);
         }
       }
     }
@@ -72,7 +61,7 @@ export default function ProductDetail() {
     if (productId === 'tag-basic-card') {
       // For basic card, check if URL is valid
       if (!validateUrl(url)) {
-        alert('Please enter a valid URL (must start with http:// or https://)');
+        toast.error('Please enter a valid URL (must start with http:// or https://)');
         return;
       }
       
@@ -93,7 +82,7 @@ export default function ProductDetail() {
       window.dispatchEvent(new CustomEvent('cartUpdated'));
 
       // Show success message and navigate to cart
-      alert('Item added to cart!');
+      toast.success('Item added to cart!');
       navigate('/cart');
     } else {
       // For core card, check for configuration
@@ -140,7 +129,7 @@ export default function ProductDetail() {
         window.dispatchEvent(new CustomEvent('cartUpdated'));
 
         // Show success message and navigate to cart
-        alert('Item added to cart!');
+        toast.success('Item added to cart!');
         navigate('/cart');
       } catch (error) {
         console.error('Error processing add to cart:', error);
@@ -156,28 +145,13 @@ export default function ProductDetail() {
     // Validate URL and update state
     const isValid = validateUrl(newUrl);
     setIsValidUrl(isValid);
-    
-    // Save URL to localStorage
-    if (productId === 'tag-basic-card') {
-      const urlKey = `url-${productId}`;
-      if (newUrl.trim()) {
-        localStorage.setItem(urlKey, newUrl.trim());
-        setHasConfiguration(isValid);
-      } else {
-        localStorage.removeItem(urlKey);
-        setHasConfiguration(false);
-      }
-    }
+    setHasConfiguration(isValid);
   };
 
   const handleClearUrl = () => {
     setUrl("");
     setIsValidUrl(false);
-    if (productId === 'tag-basic-card') {
-      const urlKey = `url-${productId}`;
-      localStorage.removeItem(urlKey);
-      setHasConfiguration(false);
-    }
+    setHasConfiguration(false);
   };
 
   if (!product) return null;
