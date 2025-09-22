@@ -50,82 +50,139 @@ export default function Confirmation() {
     const sessionId = searchParams.get('session_id');
     
     if (sessionId) {
-      try {
-        // In a real implementation, you would fetch order details from your backend
-        // For now, we'll simulate with data from localStorage
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-        
-        if (cart.length > 0) {
-        // Get customer email from the first item - handle both basic and core cards
-        const firstItem = cart[0];
-        let customerEmail: string;
-        
-        if (firstItem.productType === 'basic') {
-          // For basic cards, we need to get email from customer info stored during checkout
-          // This should be available in localStorage or from the session
-          const storedCustomerInfo = localStorage.getItem('customerInfo');
-          if (storedCustomerInfo) {
-            const parsed = JSON.parse(storedCustomerInfo);
-            customerEmail = parsed.email;
-          } else {
-            throw new Error('Customer email is required but not found for basic card order');
+      const fetchOrderData = async () => {
+        try {
+          console.log('Fetching Stripe session data for:', sessionId);
+          
+          // Try to retrieve the Stripe session to get shipping address and customer info
+          let stripeData = null;
+          try {
+            const stripeResponse = await fetch('/.netlify/functions/get-stripe-session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ sessionId }),
+            });
+
+            console.log('Stripe response status:', stripeResponse.status);
+
+            if (stripeResponse.ok) {
+              stripeData = await stripeResponse.json();
+              console.log('Retrieved Stripe data:', stripeData);
+            } else {
+              const errorText = await stripeResponse.text();
+              console.warn('Stripe session retrieval failed, falling back to localStorage:', errorText);
+            }
+          } catch (stripeError) {
+            console.warn('Stripe session retrieval error, falling back to localStorage:', stripeError);
           }
-        } else {
-          customerEmail = firstItem.configuration?.email;
-          if (!customerEmail) {
-            throw new Error('Customer email is required but not found in card configuration');
-          }
-        }
-        
-        const orderData = {
-          sessionId,
-          customerEmail,
-          totalAmount,
-          items: cart.map((item: any) => ({
-            productType: item.productType,
-            quantity: item.quantity,
-            configuration: item.configuration,
-            url: item.url // Include URL for basic cards
-          }))
-        };
-        
-        setOrderDetails(orderData);
-        
-        // Send purchase emails - create customer info object for both card types
-        let customerInfo: any;
-        
-        if (firstItem.productType === 'basic') {
-          // For basic cards, use stored customer info
-          const storedCustomerInfo = localStorage.getItem('customerInfo');
-          if (storedCustomerInfo) {
-            const parsed = JSON.parse(storedCustomerInfo);
-            customerInfo = {
-              email: customerEmail,
-              name: parsed.name || 'Customer',
-              phone: parsed.phone || ''
+          
+          // Get cart data from localStorage
+          const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+          const totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+          
+          if (cart.length > 0) {
+            // Use customer email from Stripe session data if available, otherwise fall back to original logic
+            let customerEmail: string;
+            
+            if (stripeData?.customerInfo?.email) {
+              customerEmail = stripeData.customerInfo.email;
+            } else {
+              // Fall back to original logic
+              const firstItem = cart[0];
+              
+              if (firstItem.productType === 'basic') {
+                // For basic cards, we need to get email from customer info stored during checkout
+                const storedCustomerInfo = localStorage.getItem('customerInfo');
+                if (storedCustomerInfo) {
+                  const parsed = JSON.parse(storedCustomerInfo);
+                  customerEmail = parsed.email;
+                } else {
+                  throw new Error('Customer email is required but not found for basic card order');
+                }
+              } else {
+                // For core cards, try to get email from configuration first, then fall back to stored customer info
+                customerEmail = firstItem.configuration?.email;
+                if (!customerEmail) {
+                  // Fall back to stored customer info if core card doesn't have email
+                  const storedCustomerInfo = localStorage.getItem('customerInfo');
+                  if (storedCustomerInfo) {
+                    const parsed = JSON.parse(storedCustomerInfo);
+                    customerEmail = parsed.email;
+                  } else {
+                    throw new Error('Customer email is required but not found in card configuration or stored customer info');
+                  }
+                }
+              }
+            }
+            
+            if (!customerEmail) {
+              throw new Error('Customer email is required but not found');
+            }
+            
+            const orderData = {
+              sessionId,
+              customerEmail,
+              totalAmount,
+              items: cart.map((item: any) => ({
+                productType: item.productType,
+                quantity: item.quantity,
+                configuration: item.configuration,
+                url: item.url // Include URL for basic cards
+              }))
             };
-          } else {
-            throw new Error('Customer information is required but not found for basic card order');
+            
+            setOrderDetails(orderData);
+            
+            // Create customer info object combining Stripe data with stored data
+            const firstItem = cart[0];
+            let customerInfo: any;
+            
+            if (firstItem.productType === 'basic') {
+              // For basic cards, use stored customer info but override with Stripe data if available
+              const storedCustomerInfo = localStorage.getItem('customerInfo');
+              const parsed = storedCustomerInfo ? JSON.parse(storedCustomerInfo) : {};
+              customerInfo = {
+                email: customerEmail,
+                name: stripeData?.customerInfo?.name || parsed.name || 'Customer',
+                phone: stripeData?.customerInfo?.phone || parsed.phone || '',
+                shipping: stripeData?.shippingAddress || null // Include shipping address from Stripe if available
+              };
+            } else {
+              // For core cards, use configuration data if available, otherwise fall back to stored customer info
+              if (firstItem.configuration && firstItem.configuration.email) {
+                customerInfo = {
+                  ...firstItem.configuration,
+                  email: customerEmail, // Use email from Stripe or fallback
+                  shipping: stripeData?.shippingAddress || null // Include shipping address from Stripe if available
+                };
+              } else {
+                // Fall back to stored customer info if core card doesn't have complete configuration
+                const storedCustomerInfo = localStorage.getItem('customerInfo');
+                const parsed = storedCustomerInfo ? JSON.parse(storedCustomerInfo) : {};
+                customerInfo = {
+                  email: customerEmail,
+                  name: stripeData?.customerInfo?.name || parsed.name || 'Customer',
+                  phone: stripeData?.customerInfo?.phone || parsed.phone || '',
+                  shipping: stripeData?.shippingAddress || null // Include shipping address from Stripe if available
+                };
+              }
+            }
+            
+            sendPurchaseEmails(sessionId, customerInfo, cart);
+            
+            // Clear the cart after successful order
+            localStorage.removeItem('cart');
           }
-        } else {
-          // For core cards, use configuration data
-          customerInfo = firstItem.configuration;
-          if (!customerInfo || !customerInfo.email) {
-            throw new Error('Customer configuration is required but not found for core card order');
-          }
+        } catch (error) {
+          console.error('Error processing order confirmation:', error);
+          // Set orderDetails to null to show error state
+          setOrderDetails(null);
         }
-        
-        sendPurchaseEmails(sessionId, cart, customerInfo);
-        
-        // Clear the cart after successful order
-        localStorage.removeItem('cart');
-        }
-      } catch (error) {
-        console.error('Error processing order confirmation:', error);
-        // Set orderDetails to null to show error state
-        setOrderDetails(null);
-      }
+      };
+      
+      fetchOrderData();
     }
     
     setIsLoading(false);
@@ -247,7 +304,7 @@ export default function Confirmation() {
                       </div>
                       <div className="text-sm text-gray-600 space-y-1">
                         {item.productType === 'basic' ? (
-                          /* Basic Card - Show Website URL */
+                          /* Basic Card - Show Website URL and Logo */
                           <>
                             <p><strong>Website URL:</strong> 
                               <a 
@@ -259,12 +316,22 @@ export default function Confirmation() {
                                 {item.url}
                               </a>
                             </p>
+                            {item.configuration?.images?.logo?.url && (
+                              <div className="mt-2">
+                                <p className="font-medium text-gray-700 mb-1">Logo Preview:</p>
+                                <img 
+                                  src={item.configuration.images.logo.url} 
+                                  alt="Logo preview" 
+                                  className="max-h-16 max-w-full object-contain border rounded"
+                                />
+                              </div>
+                            )}
                             <p className="text-xs text-gray-500 mt-2">
                               This card will redirect users to the website above when tapped.
                             </p>
                           </>
                         ) : (
-                          /* Core Card - Show Contact Details */
+                          /* Core Card - Show Contact Details and Logo */
                           <>
                             <p><strong>Name:</strong> {item.configuration?.name || 'Not provided'}</p>
                             <p><strong>Email:</strong> <a href={`mailto:${item.configuration?.email}`} className="text-blue-600 hover:underline">{item.configuration?.email || 'Not provided'}</a></p>
@@ -274,6 +341,16 @@ export default function Confirmation() {
                             )}
                             {item.configuration?.title && (
                               <p><strong>Title:</strong> {item.configuration.title}</p>
+                            )}
+                            {item.configuration?.images?.logo?.url && (
+                              <div className="mt-2">
+                                <p className="font-medium text-gray-700 mb-1">Logo Preview:</p>
+                                <img 
+                                  src={item.configuration.images.logo.url} 
+                                  alt="Logo preview" 
+                                  className="max-h-16 max-w-full object-contain border rounded"
+                                />
+                              </div>
                             )}
                           </>
                         )}

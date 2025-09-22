@@ -47,7 +47,9 @@ export default async (req: Request, context: Context) => {
           return sum + (price * item.quantity);
         }, 0).toString()
       },
-      shipping: customerInfo.shipping || null
+      shipping: customerInfo.shipping ? {
+        address: customerInfo.shipping
+      } : null
     };
 
     await handleCheckoutSessionCompleted(session, cart, customerInfo);
@@ -311,20 +313,39 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
   try {
     // Handle customer images if they exist
     let customerImages = [];
+    let logoZipUrl = null;
+    
+    // Handle logo zip upload for both basic and core cards
+    if (item.configuration?.images?.logo?.blob) {
+      try {
+        const logoZipResponse = await fetch(`${process.env.NETLIFY_SITE_URL}/.netlify/functions/upload-logo-zip`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageData: item.configuration.images.logo,
+            sessionId: session.id,
+            cardNumber: cardNumber
+          }),
+        });
+
+        if (logoZipResponse.ok) {
+          const logoZipData = await logoZipResponse.json();
+          logoZipUrl = logoZipData.zipUrl;
+        } else {
+          console.error('Failed to upload logo zip:', await logoZipResponse.text());
+        }
+      } catch (error) {
+        console.error('Error uploading logo zip:', error);
+      }
+    }
     
     if (item.configuration && item.productType === 'core') {
       
       // Handle customer images if they exist
       if (item.configuration.images) {
         const { logo, photo, cover } = item.configuration.images;
-        
-        if (logo?.blob) {
-          customerImages.push({
-            filename: `logo-${session.id}-${cardNumber}.${logo.ext || 'jpg'}`,
-            content: logo.blob.split(',')[1], // Remove data:image/jpeg;base64, prefix
-            contentType: logo.mime || 'image/jpeg'
-          });
-        }
         
         if (photo?.blob) {
           customerImages.push({
@@ -349,16 +370,30 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
       ? (item.url || item.configuration?.website) 
       : (s3Data ? transformS3UrlToDomain(s3Data.urls.html) : 'Not generated');
     
-    const logoUrl = item.configuration?.images?.logo?.blob 
-      ? `Customer uploaded logo (attached as logo-${session.id}-${cardNumber}.${item.configuration.images.logo.ext || 'jpg'})`
+    const logoUrl = logoZipUrl 
+      ? `<a href="${logoZipUrl}" target="_blank" style="color: #10b981;">download zip</a>`
       : 'None specified';
+
+    // Get customer contact information
+    const customerName = customerData?.name || 'Not provided';
+    const customerEmail = customerData?.email || 'Not provided';
+    const customerPhone = customerData?.phone || 'Not provided';
+
+    // Get configuration details for core cards
+    const configuration = item.configuration || {};
+    const contactName = configuration.name || 'Not provided';
+    const contactEmail = configuration.email || 'Not provided';
+    const contactPhone = configuration.phone || 'Not provided';
+    const contactTitle = configuration.title || 'Not provided';
+    const contactCompany = configuration.company || 'Not provided';
+    const contactWebsite = configuration.website || 'Not provided';
 
     const emailHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
-          <title>New Order - Card ${cardNumber}</title>
+          <title>New Order - ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'} #${cardNumber}</title>
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -367,6 +402,14 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
             .order-details { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
             .card-config { background: #fff; border: 1px solid #ddd; padding: 20px; margin: 15px 0; border-radius: 8px; }
             .section-title { color: #10b981; font-size: 18px; font-weight: bold; margin: 25px 0 15px 0; }
+            .success-box { border: 2px solid #10b981; background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 15px 0; }
+            .warning-box { border: 2px solid #f59e0b; background: #fffbeb; padding: 20px; border-radius: 8px; margin: 15px 0; }
+            .info-box { background: #e0f2fe; padding: 20px; border-radius: 8px; border-left: 4px solid #0288d1; margin: 15px 0; }
+            .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+            .contact-section { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+            .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+            .status-success { background: #10b981; color: white; }
+            .status-pending { background: #f59e0b; color: white; }
           </style>
         </head>
         <body>
@@ -382,30 +425,79 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
                 hour: '2-digit',
                 minute: '2-digit'
               })}</p>
+              <span class="status-badge status-success">NEW ORDER</span>
             </div>
             
             <div class="content">
-              <h2>Order Information</h2>
+              <h2 class="section-title">Order Information</h2>
               <div class="order-details">
                 <p><strong>Order Number:</strong> ${session.id}</p>
                 <p><strong>Product:</strong> ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'}</p>
                 <p><strong>Card Instance:</strong> ${cardNumber} of ${item.quantity}</p>
+                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
               </div>
 
-              <h3>Card Instructions</h3>
+              <h3 class="section-title">Customer Information</h3>
+              <div class="card-config">
+                <p><strong>Customer Name:</strong> ${customerName}</p>
+                <p><strong>Customer Email:</strong> <a href="mailto:${customerEmail}" style="color: #10b981;">${customerEmail}</a></p>
+                <p><strong>Customer Phone:</strong> ${customerPhone}</p>
+              </div>
+
+              ${item.productType === 'core' ? `
+                <h3 class="section-title">Contact Card Configuration</h3>
+                <div class="card-config">
+                  <p><strong>Contact Name:</strong> ${contactName}</p>
+                  <p><strong>Contact Email:</strong> <a href="mailto:${contactEmail}" style="color: #10b981;">${contactEmail}</a></p>
+                  <p><strong>Contact Phone:</strong> ${contactPhone}</p>
+                  <p><strong>Title:</strong> ${contactTitle}</p>
+                  <p><strong>Company:</strong> ${contactCompany}</p>
+                  <p><strong>Website:</strong> ${contactWebsite ? `<a href="${contactWebsite}" target="_blank" style="color: #10b981;">${contactWebsite}</a>` : 'Not provided'}</p>
+                </div>
+              ` : ''}
+
+              <h3 class="section-title">Card Instructions</h3>
               <div class="card-config">
                 <p><strong>Quantity:</strong> ${item.quantity}</p>
                 <p><strong>Website Location:</strong> <a href="${websiteLocation}" target="_blank" style="color: #10b981;">${websiteLocation}</a></p>
                 <p><strong>Logo Location:</strong> ${logoUrl}</p>
               </div>
 
-              <h3>Shipping Address</h3>
+              <h3 class="section-title">Shipping Address</h3>
               <div class="card-config">
                 <p><strong>Address:</strong> ${session.shipping?.address?.line1 || 'Not provided'}</p>
                 <p><strong>City:</strong> ${session.shipping?.address?.city || 'Not provided'}</p>
                 <p><strong>State:</strong> ${session.shipping?.address?.state || 'Not provided'}</p>
                 <p><strong>Postal Code:</strong> ${session.shipping?.address?.postal_code || 'Not provided'}</p>
                 <p><strong>Country:</strong> ${session.shipping?.address?.country || 'Not provided'}</p>
+              </div>
+
+              ${s3Data ? `
+                <div class="success-box">
+                  <h4 style="margin: 0 0 10px 0; color: #10b981;">✅ Digital Card Generated Successfully</h4>
+                  <p style="margin: 5px 0;"><strong>Live URL:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.html)}" target="_blank" style="color: #10b981;">${transformS3UrlToDomain(s3Data.urls.html)}</a></p>
+                  <p style="margin: 5px 0;"><strong>vCard Download:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.vcard)}" target="_blank" style="color: #10b981;">Download vCard</a></p>
+                </div>
+              ` : `
+                <div class="warning-box">
+                  <h4 style="margin: 0 0 10px 0; color: #f59e0b;">⚠️ Digital Card Not Generated</h4>
+                  <p style="margin: 5px 0;">This appears to be a basic card or the digital card generation failed.</p>
+                </div>
+              `}
+
+              <div class="info-box">
+                <h4 style="margin: 0 0 10px 0; color: #0288d1;">📋 Production Notes</h4>
+                <p style="margin: 5px 0;">• Physical card production should begin within 24 hours</p>
+                <p style="margin: 5px 0;">• Expected shipping time: 15-20 business days</p>
+                <p style="margin: 5px 0;">• Customer will receive tracking information once shipped</p>
+                ${logoZipUrl ? '<p style="margin: 5px 0;">• Logo files are available for download in the zip file above</p>' : ''}
               </div>
             </div>
           </div>
@@ -420,7 +512,7 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
       html: emailHtml
     });
 
-    console.log(`Admin notification email sent for card ${cardNumber} - no attachments`);
+    console.log(`Admin notification email sent for card ${cardNumber} - comprehensive template`);
   } catch (error) {
     console.error(`Error sending admin notification email for card ${cardNumber}:`, error);
   }

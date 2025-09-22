@@ -163,6 +163,16 @@ export default function Cart() {
                           {item.productType === 'basic' ? (
                             <div>
                               <p><strong>Website URL:</strong> {item.url}</p>
+                              {item.configuration?.images?.logo?.url && (
+                                <div className="mt-2">
+                                  <p className="font-medium text-gray-700 mb-1">Logo Preview:</p>
+                                  <img 
+                                    src={item.configuration.images.logo.url} 
+                                    alt="Logo preview" 
+                                    className="max-h-12 max-w-full object-contain border rounded"
+                                  />
+                                </div>
+                              )}
                               <p className="text-xs text-gray-500 mt-1">This card will redirect to the specified URL when tapped.</p>
                             </div>
                           ) : (
@@ -178,6 +188,16 @@ export default function Cart() {
                               )}
                               {item.configuration?.website && (
                                 <p><strong>Website:</strong> {item.configuration.website}</p>
+                              )}
+                              {item.configuration?.images?.logo?.url && (
+                                <div className="mt-2">
+                                  <p className="font-medium text-gray-700 mb-1">Logo Preview:</p>
+                                  <img 
+                                    src={item.configuration.images.logo.url} 
+                                    alt="Logo preview" 
+                                    className="max-h-12 max-w-full object-contain border rounded"
+                                  />
+                                </div>
                               )}
                               {item.configuration?.primaryActions && item.configuration.primaryActions.length > 0 && (
                                 <p><strong>Primary Actions:</strong> {item.configuration.primaryActions.length} configured</p>
@@ -216,13 +236,11 @@ export default function Cart() {
 
                       {/* Edit Configuration Button */}
                       <div className="pt-2">
-                        {item.productType === 'core' && (
-                          <Link to={`/shop/${item.productId}/configure`}>
-                            <Button variant="outline" size="sm">
-                              Edit Configuration
-                            </Button>
-                          </Link>
-                        )}
+                        <Link to={`/shop/${item.productId}/configure`}>
+                          <Button variant="outline" size="sm">
+                            Edit Configuration
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </CardContent>

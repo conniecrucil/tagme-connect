@@ -93,10 +93,11 @@ export default function ConfigureProduct() {
       let configuration;
 
       if (isBasicCard) {
-        // Basic card configuration - only website URL
+        // Basic card configuration - website URL and logo
         configuration = {
           website: vCardData.website,
-          productType: 'basic'
+          productType: 'basic',
+          images: images
         };
 
         // Simple validation for basic card
@@ -172,6 +173,7 @@ export default function ConfigureProduct() {
         productType: productId === 'tag-basic-card' ? 'basic' : 'core',
         quantity: quantity,
         configuration,
+        url: isBasicCard ? vCardData.website : undefined, // Include URL for basic cards
         price: productId === 'tag-basic-card' ? 40 : 47,
         id: `${productId === 'tag-basic-card' ? 'basic' : 'core'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
       };
@@ -250,29 +252,32 @@ export default function ConfigureProduct() {
               {/* Left Panel - Form */}
               <div className="space-y-8">
                 {isBasicCard ? (
-                  /* Basic Card Configuration - Simple Website URL */
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Website URL</CardTitle>
-                      <CardDescription>Enter the website URL you want your card to link to</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="website">Website URL</Label>
-                        <Input
-                          id="website"
-                          type="url"
-                          value={vCardData.website}
-                          onChange={(e) => handleInputChange('website', e.target.value)}
-                          placeholder="https://example.com"
-                          required
-                        />
-                        <p className="text-sm text-gray-600">
-                          This is the URL that people will be redirected to when they tap your NFC card.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  /* Basic Card Configuration - Website URL and Logo Upload */
+                  <>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Website URL</CardTitle>
+                        <CardDescription>Enter the website URL you want your card to link to</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="website">Website URL</Label>
+                          <Input
+                            id="website"
+                            type="url"
+                            value={vCardData.website}
+                            onChange={(e) => handleInputChange('website', e.target.value)}
+                            placeholder="https://example.com"
+                            required
+                          />
+                          <p className="text-sm text-gray-600">
+                            This is the URL that people will be redirected to when they tap your NFC card.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                  </>
                 ) : (
                   /* Core Card Configuration - Full Form */
                   <>
@@ -383,11 +388,22 @@ export default function ConfigureProduct() {
                                 <input
                                   ref={fileInputRefs.cover}
                                   type="file"
-                                  accept="image/*"
+                                  accept="image/jpeg,image/jpg,image/png"
                                   className="hidden"
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleImageUpload('cover', file);
+                                    if (file) {
+                                      // Validate file type
+                                      if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Invalid File Type",
+                                          description: "Please upload a JPG or PNG image.",
+                                        });
+                                        return;
+                                      }
+                                      handleImageUpload('cover', file);
+                                    }
                                   }}
                                 />
                               </div>
@@ -422,11 +438,22 @@ export default function ConfigureProduct() {
                                 <input
                                   ref={fileInputRefs.logo}
                                   type="file"
-                                  accept="image/*"
+                                  accept="image/jpeg,image/jpg,image/png"
                                   className="hidden"
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleImageUpload('logo', file);
+                                    if (file) {
+                                      // Validate file type
+                                      if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Invalid File Type",
+                                          description: "Please upload a JPG or PNG image.",
+                                        });
+                                        return;
+                                      }
+                                      handleImageUpload('logo', file);
+                                    }
                                   }}
                                 />
                               </div>
@@ -471,11 +498,22 @@ export default function ConfigureProduct() {
                                 <input
                                   ref={fileInputRefs.photo}
                                   type="file"
-                                  accept="image/*"
+                                  accept="image/jpeg,image/jpg,image/png"
                                   className="hidden"
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleImageUpload('photo', file);
+                                    if (file) {
+                                      // Validate file type
+                                      if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Invalid File Type",
+                                          description: "Please upload a JPG or PNG image.",
+                                        });
+                                        return;
+                                      }
+                                      handleImageUpload('photo', file);
+                                    }
                                   }}
                                 />
                               </div>
@@ -731,14 +769,22 @@ export default function ConfigureProduct() {
                         <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', width: '100%' }}>
                           {/* Header Section */}
                           <div className="w-full h-32 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
-                            <div className="text-center">
-                              <div className="w-16 h-16 bg-green-600 rounded-full mx-auto mb-2 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                </svg>
+                            {images.logo.url ? (
+                              <img
+                                src={images.logo.url}
+                                alt="Logo preview"
+                                className="max-h-20 max-w-full object-contain"
+                              />
+                            ) : (
+                              <div className="text-center">
+                                <div className="w-16 h-16 bg-green-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                  </svg>
+                                </div>
+                                <h2 className="text-lg font-semibold text-gray-800">Smart Link</h2>
                               </div>
-                              <h2 className="text-lg font-semibold text-gray-800">Smart Link</h2>
-                            </div>
+                            )}
                           </div>
 
                           {/* Content Section */}

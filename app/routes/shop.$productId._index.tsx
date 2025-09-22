@@ -1,7 +1,8 @@
 import { Link, useParams, useNavigate } from "react-router";
 import { useConfiguration } from "~/providers/configuration-provider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { Button } from "~/components/ui/button";
 
 export default function ProductDetail() {
   const { product } = useConfiguration();
@@ -11,6 +12,8 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [url, setUrl] = useState("");
   const [isValidUrl, setIsValidUrl] = useState(false);
+  const [logoImage, setLogoImage] = useState<{url: string, blob: string, ext: string, mime: string} | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Function to validate URL
   const validateUrl = (urlString: string): boolean => {
@@ -21,6 +24,38 @@ export default function ProductDetail() {
       return url.protocol === 'http:' || url.protocol === 'https:';
     } catch {
       return false;
+    }
+  };
+
+  // Logo upload functions
+  const handleLogoUpload = (file: File) => {
+    // Validate file type
+    if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+      toast.error('Please upload a JPG or PNG image.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataURI = e.target?.result as string;
+      const ext = dataURI.split(',')[0].split(':')[1].split('/')[1];
+
+      const imageData = {
+        url: dataURI,
+        blob: dataURI,
+        ext: ext,
+        mime: file.type,
+      };
+
+      setLogoImage(imageData);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeLogo = () => {
+    setLogoImage(null);
+    if (logoInputRef.current) {
+      logoInputRef.current.value = '';
     }
   };
 
@@ -70,6 +105,11 @@ export default function ProductDetail() {
         productType: 'basic',
         quantity: quantity,
         url: url.trim(),
+        configuration: {
+          website: url.trim(),
+          productType: 'basic',
+          images: logoImage ? { logo: logoImage } : {}
+        },
         price: 40,
         id: `basic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
       };
@@ -109,11 +149,20 @@ export default function ProductDetail() {
           return;
         }
         
+        // Add logo to configuration if uploaded
+        const updatedConfiguration = {
+          ...configuration,
+          images: {
+            ...configuration.images,
+            logo: logoImage || configuration.images?.logo || null
+          }
+        };
+
         const cartItem = {
           productId,
           productType: 'core',
           quantity: quantity,
-          configuration,
+          configuration: updatedConfiguration,
           price: 47,
           id: `core-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
         };
@@ -243,6 +292,57 @@ export default function ProductDetail() {
                     </div>
                   </div>
 
+                  {/* Logo Upload Section */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Logo Upload (Optional):
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Recommended size: 1050×600 pixels (or 1083×633 with bleed)
+                    </p>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      {logoImage ? (
+                        <div className="space-y-2">
+                          <img
+                            src={logoImage.url}
+                            alt="Logo preview"
+                            className="max-h-16 mx-auto rounded"
+                          />
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={removeLogo}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => logoInputRef.current?.click()}
+                          >
+                            Upload Logo
+                          </Button>
+                          <input
+                            ref={logoInputRef}
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleLogoUpload(file);
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Quantity and Purchase Controls */}
                   <div className="space-y-4 mt-6">
                     <div className="flex items-center justify-between">
@@ -295,6 +395,57 @@ export default function ProductDetail() {
                       <p className="mt-3">
                         <strong>Perfect for:</strong> Networking events, business meetings, conferences, and any situation where you want to quickly share your information.
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Logo Upload Section */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Logo Upload (Optional):
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Recommended size: 1050×600 pixels (or 1083×633 with bleed)
+                    </p>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      {logoImage ? (
+                        <div className="space-y-2">
+                          <img
+                            src={logoImage.url}
+                            alt="Logo preview"
+                            className="max-h-16 mx-auto rounded"
+                          />
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={removeLogo}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => logoInputRef.current?.click()}
+                          >
+                            Upload Logo
+                          </Button>
+                          <input
+                            ref={logoInputRef}
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleLogoUpload(file);
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 
