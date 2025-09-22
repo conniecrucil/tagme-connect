@@ -488,8 +488,9 @@ function generateContactCardHTML(data: ContactCardData): string {
     `);
   }
 
-  // Generate social media links from primary and secondary actions
-  const socialLinks: string[] = [];
+  // Generate action buttons from primary and secondary actions
+  const primaryActionButtons: string[] = [];
+  const secondaryActionButtons: string[] = [];
   
   // Add primary actions
   if (data.primaryActions) {
@@ -505,12 +506,11 @@ function generateContactCardHTML(data: ContactCardData): string {
           href = `tel:${action.value}`;
         }
         
-        socialLinks.push(`
-          <a href="${href}" class="social-link" target="_blank">
-            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
+        primaryActionButtons.push(`
+          <a href="${href}" class="action-button" style="background-color: ${action.color || '#10b981'};" target="_blank">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor">
               ${getSocialIcon(action.name)}
             </svg>
-            ${action.name.charAt(0).toUpperCase() + action.name.slice(1)}
           </a>
         `);
       }
@@ -531,12 +531,11 @@ function generateContactCardHTML(data: ContactCardData): string {
           href = `tel:${action.value}`;
         }
         
-        socialLinks.push(`
-          <a href="${href}" class="social-link" target="_blank">
-            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
+        secondaryActionButtons.push(`
+          <a href="${href}" class="action-button" style="background-color: ${action.color || '#6b7280'};" target="_blank">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor">
               ${getSocialIcon(action.name)}
             </svg>
-            ${action.name.charAt(0).toUpperCase() + action.name.slice(1)}
           </a>
         `);
       }

@@ -63,13 +63,15 @@ export interface ConfigurationContextType {
     logo: ImageData;
     photo: ImageData;
     cover: ImageData;
+    cardDesign: ImageData;
   };
   setImages: React.Dispatch<React.SetStateAction<{
     logo: ImageData;
     photo: ImageData;
     cover: ImageData;
+    cardDesign: ImageData;
   }>>;
-  updateImage: (type: 'logo' | 'photo' | 'cover', imageData: ImageData) => void;
+  updateImage: (type: 'logo' | 'photo' | 'cover' | 'cardDesign', imageData: ImageData) => void;
 
   // Actions
   primaryActions: Action[];
@@ -176,10 +178,12 @@ export function ConfigurationProvider({
     logo: ImageData;
     photo: ImageData;
     cover: ImageData;
+    cardDesign: ImageData;
   }>({
     logo: { url: null, blob: null, ext: null, mime: null, resized: null },
     photo: { url: null, blob: null, ext: null, mime: null, resized: null },
     cover: { url: null, blob: null, ext: null, mime: null, resized: null },
+    cardDesign: { url: null, blob: null, ext: null, mime: null, resized: null },
   });
 
   const [primaryActions, setPrimaryActions] = useState<Action[]>([]);
@@ -203,7 +207,7 @@ export function ConfigurationProvider({
     }));
   };
 
-  const updateImage = (type: 'logo' | 'photo' | 'cover', imageData: ImageData) => {
+  const updateImage = (type: 'logo' | 'photo' | 'cover' | 'cardDesign', imageData: ImageData) => {
     console.log('updateImage called with type:', type, 'imageData:', imageData);
     setImages(prev => {
       const newImages = {
@@ -467,6 +471,7 @@ export function ConfigurationProvider({
         logo: { url: null, blob: null, ext: null, mime: null, resized: null },
         photo: { url: null, blob: null, ext: null, mime: null, resized: null },
         cover: { url: null, blob: null, ext: null, mime: null, resized: null },
+        cardDesign: { url: null, blob: null, ext: null, mime: null, resized: null },
       });
 
       setPrimaryActions([]);

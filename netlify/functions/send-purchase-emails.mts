@@ -179,31 +179,31 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
 
 async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any, s3Data: any = null) {
   try {
-    // Handle logo zip upload for both basic and core cards
-    let logoZipUrl = null;
+    // Handle card design zip upload for both basic and core cards
+    let cardDesignZipUrl = null;
     
-    if (item.configuration?.images?.logo?.blob) {
+    if (item.configuration?.images?.cardDesign?.blob) {
       try {
-        const logoZipResponse = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8888'}/.netlify/functions/upload-logo-zip`, {
+        const cardDesignZipResponse = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8888'}/.netlify/functions/upload-logo-zip`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            imageData: item.configuration.images.logo,
+            imageData: item.configuration.images.cardDesign,
             sessionId: session.id,
             cardNumber: cardNumber
           }),
         });
 
-        if (logoZipResponse.ok) {
-          const logoZipData = await logoZipResponse.json();
-          logoZipUrl = logoZipData.zipUrl;
+        if (cardDesignZipResponse.ok) {
+          const cardDesignZipData = await cardDesignZipResponse.json();
+          cardDesignZipUrl = cardDesignZipData.zipUrl;
         } else {
-          console.error('Failed to upload logo zip:', await logoZipResponse.text());
+          console.error('Failed to upload card design zip:', await cardDesignZipResponse.text());
         }
       } catch (error) {
-        console.error('Error uploading logo zip:', error);
+        console.error('Error uploading card design zip:', error);
       }
     }
     
@@ -213,7 +213,7 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
       item,
       cardNumber,
       s3Data,
-      logoZipUrl
+      cardDesignZipUrl
     });
 
     await resend.emails.send({

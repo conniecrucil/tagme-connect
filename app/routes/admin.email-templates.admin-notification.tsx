@@ -103,7 +103,7 @@ export default function AdminNotificationTemplate() {
                 <h4>Card Set ${index + 1}: ${card.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'}</h4>
                 <p><strong>Quantity:</strong> ${card.quantity}</p>
                 <p><strong>Website Location:</strong> <a href="${card.website}" target="_blank" style="color: #10b981;">${card.website}</a></p>
-                <p><strong>Logo Location:</strong> ${card.logoUrl ? `<a href="${card.logoUrl}" target="_blank" style="color: #10b981;">${card.logoUrl}</a>` : 'None specified'}</p>
+                <p><strong>Card Design Location:</strong> ${card.logoUrl ? `<a href="${card.logoUrl}" target="_blank" style="color: #10b981;">${card.logoUrl}</a>` : 'None specified'}</p>
               </div>
             `).join('')}
 

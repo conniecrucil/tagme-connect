@@ -17,15 +17,14 @@ export function meta({ params }: { params: { productId: string } }) {
 }
 
 export default function ProductDetail() {
-  const { product } = useConfiguration();
+  const { product, images, updateImage } = useConfiguration();
   const { productId } = useParams();
   const navigate = useNavigate();
   const [hasConfiguration, setHasConfiguration] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [url, setUrl] = useState("");
   const [isValidUrl, setIsValidUrl] = useState(false);
-  const [logoImage, setLogoImage] = useState<{url: string, blob: string, ext: string, mime: string} | null>(null);
-  const logoInputRef = useRef<HTMLInputElement>(null);
+  const cardDesignInputRef = useRef<HTMLInputElement>(null);
 
   // Function to validate URL
   const validateUrl = (urlString: string): boolean => {
@@ -39,8 +38,8 @@ export default function ProductDetail() {
     }
   };
 
-  // Logo upload functions
-  const handleLogoUpload = (file: File) => {
+  // Card design upload functions
+  const handleCardDesignUpload = (file: File) => {
     // Validate file type
     if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
       toast.error('Please upload a JPG or PNG image.');
@@ -57,17 +56,19 @@ export default function ProductDetail() {
         blob: dataURI,
         ext: ext,
         mime: file.type,
+        resized: null
       };
 
-      setLogoImage(imageData);
+      updateImage('cardDesign', imageData);
     };
     reader.readAsDataURL(file);
   };
 
-  const removeLogo = () => {
-    setLogoImage(null);
-    if (logoInputRef.current) {
-      logoInputRef.current.value = '';
+  const removeCardDesign = () => {
+    const emptyImageData = { url: null, blob: null, ext: null, mime: null, resized: null };
+    updateImage('cardDesign', emptyImageData);
+    if (cardDesignInputRef.current) {
+      cardDesignInputRef.current.value = '';
     }
   };
 
@@ -120,7 +121,7 @@ export default function ProductDetail() {
         configuration: {
           website: url.trim(),
           productType: 'basic',
-          images: logoImage ? { logo: logoImage } : {}
+          images: images
         },
         price: 40,
         id: `basic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
@@ -299,20 +300,20 @@ export default function ProductDetail() {
                     </div>
                   </div>
 
-                  {/* Logo Upload Section */}
+                  {/* Card Design Upload Section */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
-                      Logo Upload (Optional):
+                      Card Design Upload (Optional):
                     </label>
                     <p className="text-xs text-gray-500">
-                      Recommended size: 1050×600 pixels (or 1083×633 with bleed)
+                      Upload the design that will appear on your physical card. Recommended size: 1050×600 pixels (or 1083×633 with bleed)
                     </p>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      {logoImage ? (
+                      {images.cardDesign.url ? (
                         <div className="space-y-2">
                           <img
-                            src={logoImage.url}
-                            alt="Logo preview"
+                            src={images.cardDesign.url}
+                            alt="Card design preview"
                             className="max-h-16 mx-auto rounded"
                           />
                           <div className="flex gap-2 justify-center">
@@ -320,7 +321,7 @@ export default function ProductDetail() {
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={removeLogo}
+                              onClick={removeCardDesign}
                             >
                               Remove
                             </Button>
@@ -331,18 +332,18 @@ export default function ProductDetail() {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => logoInputRef.current?.click()}
+                            onClick={() => cardDesignInputRef.current?.click()}
                           >
-                            Upload Logo
+                            Upload Card Design
                           </Button>
                           <input
-                            ref={logoInputRef}
+                            ref={cardDesignInputRef}
                             type="file"
                             accept="image/jpeg,image/jpg,image/png"
                             className="hidden"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
-                              if (file) handleLogoUpload(file);
+                              if (file) handleCardDesignUpload(file);
                             }}
                           />
                         </div>
@@ -405,20 +406,20 @@ export default function ProductDetail() {
                     </div>
                   </div>
 
-                  {/* Logo Upload Section */}
+                  {/* Card Design Upload Section */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
-                      Logo Upload (Optional):
+                      Card Design Upload (Optional):
                     </label>
                     <p className="text-xs text-gray-500">
-                      Recommended size: 1050×600 pixels (or 1083×633 with bleed)
+                      Upload the design that will appear on your physical card. Recommended size: 1050×600 pixels (or 1083×633 with bleed)
                     </p>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      {logoImage ? (
+                      {images.cardDesign.url ? (
                         <div className="space-y-2">
                           <img
-                            src={logoImage.url}
-                            alt="Logo preview"
+                            src={images.cardDesign.url}
+                            alt="Card design preview"
                             className="max-h-16 mx-auto rounded"
                           />
                           <div className="flex gap-2 justify-center">
@@ -426,7 +427,7 @@ export default function ProductDetail() {
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={removeLogo}
+                              onClick={removeCardDesign}
                             >
                               Remove
                             </Button>
@@ -437,18 +438,18 @@ export default function ProductDetail() {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => logoInputRef.current?.click()}
+                            onClick={() => cardDesignInputRef.current?.click()}
                           >
-                            Upload Logo
+                            Upload Card Design
                           </Button>
                           <input
-                            ref={logoInputRef}
+                            ref={cardDesignInputRef}
                             type="file"
                             accept="image/jpeg,image/jpg,image/png"
                             className="hidden"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
-                              if (file) handleLogoUpload(file);
+                              if (file) handleCardDesignUpload(file);
                             }}
                           />
                         </div>

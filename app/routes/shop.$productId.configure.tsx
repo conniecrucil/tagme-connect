@@ -60,13 +60,14 @@ export default function ConfigureProduct() {
     logo: useRef<HTMLInputElement>(null),
     photo: useRef<HTMLInputElement>(null),
     cover: useRef<HTMLInputElement>(null),
+    cardDesign: useRef<HTMLInputElement>(null),
   };
 
   const handleInputChange = (field: keyof typeof vCardData, value: string) => {
     updateVCardField(field, value);
   };
 
-  const handleImageUpload = (type: 'logo' | 'photo' | 'cover', file: File) => {
+  const handleImageUpload = (type: 'logo' | 'photo' | 'cover' | 'cardDesign', file: File) => {
     console.log('handleImageUpload called with type:', type, 'file:', file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -91,7 +92,7 @@ export default function ConfigureProduct() {
     reader.readAsDataURL(file);
   };
 
-  const removeImage = (type: 'logo' | 'photo' | 'cover') => {
+  const removeImage = (type: 'logo' | 'photo' | 'cover' | 'cardDesign') => {
     const emptyImageData = { url: null, blob: null, ext: null, mime: null, resized: null };
     updateImage(type, emptyImageData);
 
@@ -501,6 +502,72 @@ export default function ConfigureProduct() {
                               </div>
                             )
                           )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Card Design Upload Section */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Card Design Upload</CardTitle>
+                        <CardDescription>Upload the design that will appear on your physical card</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <Label>Card Design Upload (Optional)</Label>
+                          <p className="text-sm text-gray-500">
+                            Upload the design that will appear on your physical card. Recommended size: 1050×600 pixels (or 1083×633 with bleed)
+                          </p>
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                            {images.cardDesign.url ? (
+                              <div className="space-y-2">
+                                <img
+                                  src={images.cardDesign.url}
+                                  alt="Card design preview"
+                                  className="max-h-20 mx-auto rounded"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeImage('cardDesign')}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ) : (
+                              <div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => fileInputRefs.cardDesign.current?.click()}
+                                >
+                                  Upload Card Design
+                                </Button>
+                                <input
+                                  ref={fileInputRefs.cardDesign}
+                                  type="file"
+                                  accept="image/jpeg,image/jpg,image/png"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      // Validate file type
+                                      if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Invalid File Type",
+                                          description: "Please upload a JPG or PNG image.",
+                                        });
+                                        return;
+                                      }
+                                      handleImageUpload('cardDesign', file);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

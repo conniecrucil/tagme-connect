@@ -450,12 +450,12 @@ export default function Confirmation() {
                                 {item.url}
                               </a>
                             </p>
-                            {item.configuration?.images?.logo?.url && (
+                            {item.configuration?.images?.cardDesign?.url && (
                               <div className="mt-2">
-                                <p className="font-medium text-gray-700 mb-1">Logo Preview:</p>
+                                <p className="font-medium text-gray-700 mb-1">Card Design Preview:</p>
                                 <img 
-                                  src={item.configuration.images.logo.url} 
-                                  alt="Logo preview" 
+                                  src={item.configuration.images.cardDesign.url} 
+                                  alt="Card design preview" 
                                   className="max-h-16 max-w-full object-contain border rounded"
                                 />
                               </div>
@@ -465,7 +465,7 @@ export default function Confirmation() {
                             </p>
                           </>
                         ) : (
-                          /* Core Card - Show Contact Details and Logo */
+                          /* Core Card - Show Contact Details and Card Design */
                           <>
                             <p><strong>Name:</strong> {item.configuration?.name || 'Not provided'}</p>
                             <p><strong>Email:</strong> <a href={`mailto:${item.configuration?.email}`} className="text-blue-600 hover:underline">{item.configuration?.email || 'Not provided'}</a></p>
@@ -476,12 +476,12 @@ export default function Confirmation() {
                             {item.configuration?.title && (
                               <p><strong>Title:</strong> {item.configuration.title}</p>
                             )}
-                            {item.configuration?.images?.logo?.url && (
+                            {item.configuration?.images?.cardDesign?.url && (
                               <div className="mt-2">
-                                <p className="font-medium text-gray-700 mb-1">Logo Preview:</p>
+                                <p className="font-medium text-gray-700 mb-1">Card Design Preview:</p>
                                 <img 
-                                  src={item.configuration.images.logo.url} 
-                                  alt="Logo preview" 
+                                  src={item.configuration.images.cardDesign.url} 
+                                  alt="Card design preview" 
                                   className="max-h-16 max-w-full object-contain border rounded"
                                 />
                               </div>

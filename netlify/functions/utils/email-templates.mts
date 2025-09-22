@@ -54,7 +54,7 @@ export interface AdminNotificationEmailData {
       vcard: string;
     };
   } | null;
-  logoZipUrl?: string;
+  cardDesignZipUrl?: string;
 }
 
 export interface AdminContactCreationEmailData {
@@ -245,15 +245,15 @@ export function generateCustomerConfirmationEmail(data: CustomerConfirmationEmai
  * Generates admin notification email HTML template
  */
 export function generateAdminNotificationEmail(data: AdminNotificationEmailData): string {
-  const { session, customerData, item, cardNumber, s3Data, logoZipUrl } = data;
+  const { session, customerData, item, cardNumber, s3Data, cardDesignZipUrl } = data;
 
-  // Determine website location and logo URL
+  // Determine website location and card design URL
   const websiteLocation = item.productType === 'basic' 
     ? (item.url || item.configuration?.website) 
     : (s3Data ? transformS3UrlToDomain(s3Data.urls.html) : 'Not generated');
   
-  const logoUrl = logoZipUrl 
-    ? `<a href="${logoZipUrl}" target="_blank" style="color: #10b981;">download zip</a>`
+  const cardDesignUrl = cardDesignZipUrl 
+    ? `<a href="${cardDesignZipUrl}" target="_blank" style="color: #10b981;">download zip</a>`
     : 'None specified';
 
   // Get customer contact information
@@ -349,7 +349,7 @@ export function generateAdminNotificationEmail(data: AdminNotificationEmailData)
             <div class="card-config">
               <p><strong>Quantity:</strong> ${item.quantity}</p>
               <p><strong>Website Location:</strong> <a href="${websiteLocation}" target="_blank" style="color: #10b981;">${websiteLocation}</a></p>
-              <p><strong>Logo Location:</strong> ${logoUrl}</p>
+              <p><strong>Card Design Location:</strong> ${cardDesignUrl}</p>
             </div>
 
             <h3 class="section-title">Shipping Address</h3>
@@ -379,7 +379,7 @@ export function generateAdminNotificationEmail(data: AdminNotificationEmailData)
               <p style="margin: 5px 0;">• Physical card production should begin within 24 hours</p>
               <p style="margin: 5px 0;">• Expected shipping time: 15-20 business days</p>
               <p style="margin: 5px 0;">• Customer will receive tracking information once shipped</p>
-              ${logoZipUrl ? '<p style="margin: 5px 0;">• Logo files are available for download in the zip file above</p>' : ''}
+              ${cardDesignZipUrl ? '<p style="margin: 5px 0;">• Card design files are available for download in the zip file above</p>' : ''}
             </div>
           </div>
         </div>
