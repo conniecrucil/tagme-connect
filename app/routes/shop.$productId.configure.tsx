@@ -11,6 +11,18 @@ import { useConfiguration } from "~/providers/configuration-provider";
 import { primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions } from "~/providers/configuration-provider";
 import SortableActionsList from "~/components/SortableActionsList";
 
+export function meta({ params }: { params: { productId: string } }) {
+  const productName = params.productId === 'tag-basic-card' ? 'TAG Basic Card' : 'TAG Core Card';
+  const description = params.productId === 'tag-basic-card' 
+    ? 'Configure your TAG Basic Card with website URL and logo. Create a simple smart link card for instant connections.'
+    : 'Configure your TAG Core Card with complete contact details, social links, and professional information. Build your digital business card.';
+  
+  return [
+    { title: `Configure ${productName} - TagMe Connections` },
+    { name: "description", content: description },
+  ];
+}
+
 export default function ConfigureProduct() {
   const { productId } = useParams();
   const navigate = useNavigate();

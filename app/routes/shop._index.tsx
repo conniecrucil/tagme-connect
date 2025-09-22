@@ -3,6 +3,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "~/components/ui/button";
 import { AnimatedImage } from "~/components/AnimatedImage";
 
+export function meta() {
+  return [
+    { title: "Shop - TagMe Connections" },
+    { name: "description", content: "Shop smart NFC business cards. Choose between TAG Basic Card for simple links or TAG Core Card for complete digital profiles. Connect instantly with tap technology." },
+  ];
+}
+
 export default function Shop() {
   const products = [
     {

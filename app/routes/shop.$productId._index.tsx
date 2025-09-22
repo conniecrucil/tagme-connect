@@ -4,6 +4,18 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 
+export function meta({ params }: { params: { productId: string } }) {
+  const productName = params.productId === 'tag-basic-card' ? 'TAG Basic Card' : 'TAG Core Card';
+  const description = params.productId === 'tag-basic-card' 
+    ? 'TAG Basic Card - One custom NFC card with personalized smart link. Perfect for simple website redirects and instant connections.'
+    : 'TAG Core Card - Complete digital profile with automatic contact saving. One-tap access to your full professional information.';
+  
+  return [
+    { title: `${productName} - TagMe Connections` },
+    { name: "description", content: description },
+  ];
+}
+
 export default function ProductDetail() {
   const { product } = useConfiguration();
   const { productId } = useParams();
