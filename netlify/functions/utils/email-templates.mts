@@ -333,17 +333,6 @@ export function generateAdminNotificationEmail(data: AdminNotificationEmailData)
               <p><strong>Customer Phone:</strong> ${customerPhone}</p>
             </div>
 
-            ${item.productType === 'core' ? `
-              <h3 class="section-title">Contact Card Configuration</h3>
-              <div class="card-config">
-                <p><strong>Contact Name:</strong> ${contactName}</p>
-                <p><strong>Contact Email:</strong> <a href="mailto:${contactEmail}" style="color: #10b981;">${contactEmail}</a></p>
-                <p><strong>Contact Phone:</strong> ${contactPhone}</p>
-                <p><strong>Title:</strong> ${contactTitle}</p>
-                <p><strong>Company:</strong> ${contactCompany}</p>
-                <p><strong>Website:</strong> ${contactWebsite ? `<a href="${contactWebsite}" target="_blank" style="color: #10b981;">${contactWebsite}</a>` : 'Not provided'}</p>
-              </div>
-            ` : ''}
 
             <h3 class="section-title">Card Instructions</h3>
             <div class="card-config">
@@ -361,26 +350,6 @@ export function generateAdminNotificationEmail(data: AdminNotificationEmailData)
               <p><strong>Country:</strong> ${session.shipping?.address?.country || 'Not provided'}</p>
             </div>
 
-            ${s3Data ? `
-              <div class="success-box">
-                <h4 style="margin: 0 0 10px 0; color: #10b981;">✅ Digital Card Generated Successfully</h4>
-                <p style="margin: 5px 0;"><strong>Live URL:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.html)}" target="_blank" style="color: #10b981;">${transformS3UrlToDomain(s3Data.urls.html)}</a></p>
-                <p style="margin: 5px 0;"><strong>vCard Download:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.vcard)}" target="_blank" style="color: #10b981;">Download vCard</a></p>
-              </div>
-            ` : `
-              <div class="warning-box">
-                <h4 style="margin: 0 0 10px 0; color: #f59e0b;">⚠️ Digital Card Not Generated</h4>
-                <p style="margin: 5px 0;">This appears to be a basic card or the digital card generation failed.</p>
-              </div>
-            `}
-
-            <div class="info-box">
-              <h4 style="margin: 0 0 10px 0; color: #0288d1;">📋 Production Notes</h4>
-              <p style="margin: 5px 0;">• Physical card production should begin within 24 hours</p>
-              <p style="margin: 5px 0;">• Expected shipping time: 15-20 business days</p>
-              <p style="margin: 5px 0;">• Customer will receive tracking information once shipped</p>
-              ${cardDesignZipUrl ? '<p style="margin: 5px 0;">• Card design files are available for download in the zip file above</p>' : ''}
-            </div>
           </div>
         </div>
       </body>
