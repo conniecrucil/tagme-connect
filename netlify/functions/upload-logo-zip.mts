@@ -41,8 +41,8 @@ export default async (req: Request, context: any) => {
     const base64Data = imageData.blob.split(',')[1];
     const imageBuffer = Buffer.from(base64Data, 'base64');
     
-    // Determine file extension
-    const ext = imageData.ext || 'jpg';
+    // Determine file extension - clean up any base64 suffix
+    const ext = (imageData.ext || 'jpg').split(';')[0];
     const filename = `logo.${ext}`;
     
     // Add image to zip
@@ -53,7 +53,7 @@ export default async (req: Request, context: any) => {
     
     // Generate unique folder ID for this upload
     const folderId = uuidv4();
-    const zipKey = `logos/${folderId}.zip`;
+    const zipKey = `user-logos/${folderId}.zip`;
     
     // Upload zip to S3
     await uploadToS3(bucketName, zipKey, zipBuffer, 'application/zip');

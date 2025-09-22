@@ -89,21 +89,21 @@ export default async (req: Request, context: Context) => {
       const { logo, photo, cover } = contactData.images;
       
       if (logo?.blob) {
-        const logoKey = `${folderId}/logo.${logo.ext || 'jpg'}`;
+        const logoKey = `${folderId}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
         const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
         imageUrls.logo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
       }
       
       if (photo?.blob) {
-        const photoKey = `${folderId}/photo.${photo.ext || 'jpg'}`;
+        const photoKey = `${folderId}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
         const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
         imageUrls.photo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
       }
       
       if (cover?.blob) {
-        const coverKey = `${folderId}/cover.${cover.ext || 'jpg'}`;
+        const coverKey = `${folderId}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
         const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
         imageUrls.cover = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;

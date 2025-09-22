@@ -62,7 +62,10 @@ export default async (req: Request, context: Context) => {
     });
   } catch (error) {
     console.error('Error processing purchase emails:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -129,7 +132,7 @@ async function handlePaymentSucceeded(paymentIntent: any) {
 
 async function uploadContactCardToS3(sessionId: string, configuration: any, cardNumber: number) {
   try {
-    const response = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8888'}/.netlify/functions/upload-to-s3`, {
+    const response = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8889'}/.netlify/functions/upload-to-s3`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -181,7 +184,7 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
     
     if (item.configuration?.images?.logo?.blob) {
       try {
-        const logoZipResponse = await fetch(`${process.env.NETLIFY_SITE_URL}/.netlify/functions/upload-logo-zip`, {
+        const logoZipResponse = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8889'}/.netlify/functions/upload-logo-zip`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

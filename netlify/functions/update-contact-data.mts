@@ -151,21 +151,21 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
       
       // Upload new images if they have blob data
       if (logo?.blob) {
-        const logoKey = `${uuid}/logo.${logo.ext || 'jpg'}`;
+        const logoKey = `${uuid}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
         const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
         imageUrls.logo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
       }
       
       if (photo?.blob) {
-        const photoKey = `${uuid}/photo.${photo.ext || 'jpg'}`;
+        const photoKey = `${uuid}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
         const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
         imageUrls.photo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
       }
       
       if (cover?.blob) {
-        const coverKey = `${uuid}/cover.${cover.ext || 'jpg'}`;
+        const coverKey = `${uuid}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
         const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
         imageUrls.cover = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
