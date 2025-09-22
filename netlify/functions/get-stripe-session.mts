@@ -25,20 +25,30 @@ export default async (req: Request, context: Context) => {
 
     // Retrieve the Stripe checkout session
     console.log('Attempting to retrieve Stripe session:', sessionId);
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['shipping_details']
-    });
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
     console.log('Successfully retrieved session:', session.id);
 
     // Extract shipping address if available
-    const shippingAddress = session.shipping_details?.address ? {
-      line1: session.shipping_details.address.line1,
-      line2: session.shipping_details.address.line2,
-      city: session.shipping_details.address.city,
-      state: session.shipping_details.address.state,
-      postal_code: session.shipping_details.address.postal_code,
-      country: session.shipping_details.address.country,
-    } : null;
+    let shippingAddress = null;
+    
+    // Try to get shipping address from the session
+    if ((session as any).shipping?.address) {
+      shippingAddress = {
+        line1: (session as any).shipping.address.line1,
+        line2: (session as any).shipping.address.line2,
+        city: (session as any).shipping.address.city,
+        state: (session as any).shipping.address.state,
+        postal_code: (session as any).shipping.address.postal_code,
+        country: (session as any).shipping.address.country,
+      };
+    } else if (session.metadata?.shipping_address) {
+      // Fallback to metadata if available
+      try {
+        shippingAddress = JSON.parse(session.metadata.shipping_address);
+      } catch (e) {
+        console.log('Could not parse shipping address from metadata');
+      }
+    }
 
     // Extract customer information
     const customerInfo = {

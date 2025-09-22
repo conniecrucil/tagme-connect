@@ -2,6 +2,13 @@ import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
 import { transformS3UrlToDomain } from "~/lib/utils";
 
+export function meta() {
+  return [
+    { title: "Customer Confirmation Email Template - TagMe Connections" },
+    { name: "description", content: "Preview the customer confirmation email template sent after successful purchase of smart business cards." },
+  ];
+}
+
 export default function CustomerConfirmationTemplate() {
   // Sample data for preview
   const sampleData = {

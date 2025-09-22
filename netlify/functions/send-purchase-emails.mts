@@ -1,6 +1,8 @@
 import { Resend } from 'resend';
 import type { Context } from '@netlify/functions';
 import { transformS3UrlToDomain } from './utils/url-transform.js';
+import { inlineEmailCSS } from './utils/email-inline-css.js';
+import { generateCustomerConfirmationEmail, generateAdminNotificationEmail } from './utils/email-templates.mjs';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
@@ -152,155 +154,18 @@ async function uploadContactCardToS3(sessionId: string, configuration: any, card
 
 async function sendCustomerConfirmationEmail(session: any, customerData: any, cart: any, s3Urls: any[] = []) {
   try {
-    const totalAmount = cart.reduce((sum: number, item: any) => {
-      const price = item.productType === 'basic' ? 40 : 47;
-      return sum + (price * item.quantity);
-    }, 0);
-
-    const emailHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Order Confirmation</title>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #f8f9fa; padding: 30px 20px; text-align: center; border-bottom: 3px solid #10b981; }
-          .logo { max-width: 200px; height: auto; margin-bottom: 20px; }
-          .content { padding: 20px; }
-          .order-details { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
-          .item { margin: 15px 0; padding: 15px; border-bottom: 1px solid #eee; }
-          .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; background: #f8f9fa; }
-          .section-title { color: #10b981; font-size: 18px; font-weight: bold; margin: 25px 0 15px 0; }
-          .highlight-box { background: #e0f2fe; padding: 20px; border-radius: 8px; border-left: 4px solid #0288d1; margin: 20px 0; }
-          .step { display: flex; align-items: center; margin: 15px 0; }
-          .step-number { background: #10b981; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <img src="https://demo.bancroft.io/tagme-logo.png" alt="TagMe Connections" class="logo">
-            <h1 style="margin: 0; color: #10b981;">Order Confirmation</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px;">Thank you for your purchase, ${customerData.name}!</p>
-          </div>
-
-          <div class="content">
-            <h2 class="section-title">Order Summary</h2>
-            <div class="order-details">
-              <p><strong>Order Number:</strong> ${session.id}</p>
-              <p><strong>Order Date:</strong> ${new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</p>
-              <p><strong>Customer:</strong> ${customerData.name}</p>
-              <p><strong>Email:</strong> ${customerData.email}</p>
-              <p><strong>Total Items:</strong> ${cart.reduce((sum: number, item: any) => sum + item.quantity, 0)}</p>
-              <p><strong>Subtotal:</strong> $${totalAmount.toFixed(2)}</p>
-              <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>
-            </div>
-
-            <h3 class="section-title">Items Ordered</h3>
-            ${cart.map((item: any, index: number) => `
-              <div class="item">
-                <strong>${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'}</strong><br>
-                Quantity: ${item.quantity}<br>
-                Unit Price: $${item.productType === 'basic' ? '40.00' : '47.00'}<br>
-                Item Total: $${((item.productType === 'basic' ? 40 : 47) * item.quantity).toFixed(2)}
-                ${item.configuration ? `
-                  ${item.productType === 'basic' ?
-                    `<br><em>Website URL: <a href="${item.url || item.configuration.website}" target="_blank" style="color: #10b981;">${item.url || item.configuration.website}</a></em>` :
-                    `<br><em>Configured for: ${item.configuration.name || 'Contact'}</em>`
-                  }
-                ` : item.productType === 'basic' && item.url ? `
-                  <br><em>Website URL: <a href="${item.url}" target="_blank" style="color: #10b981;">${item.url}</a></em>
-                ` : ''}
-              </div>
-            `).join('')}
-
-            <h3>Shipping Information</h3>
-            <p>Your order will be processed and shipped within 15-20 business days.</p>
-            <p>You will receive a tracking number once your order ships.</p>
-
-            ${s3Urls.length > 0 ? `
-              <h3 class="section-title">Your Digital Contact Cards</h3>
-              <div class="order-details">
-                <p><strong>Great news!</strong> Your contact cards have been automatically generated and are live online. Share these links with anyone, anywhere!</p>
-                <div style="margin: 20px 0;">
-                  ${s3Urls.map((url, index) => `
-                    <div style="border: 1px solid #ddd; padding: 20px; margin: 15px 0; border-radius: 8px; background: #fff;">
-                      <h4 style="margin: 0 0 15px 0; color: #10b981;">Contact Card ${index + 1}</h4>
-                      <p style="margin: 8px 0;"><strong>View Online:</strong> <a href="${transformS3UrlToDomain(url.urls.html)}" target="_blank" style="color: #10b981; text-decoration: none;">${transformS3UrlToDomain(url.urls.html)}</a></p>
-                      <p style="margin: 8px 0;"><strong>Download vCard:</strong> <a href="${transformS3UrlToDomain(url.urls.vcard)}" download style="color: #10b981; text-decoration: none;">Save to Contacts</a></p>
-                      <p style="margin: 8px 0; font-size: 14px; color: #666;">Share this URL with anyone to let them save your contact information instantly!</p>
-                    </div>
-                  `).join('')}
-                </div>
-                <div class="highlight-box">
-                  <strong>Pro Tip:</strong> You can share these links via text message, email, or social media. When someone clicks the link on their phone, they'll see your contact card and can save it directly to their contacts!
-                </div>
-              </div>
-            ` : ''}
-
-            ${cart.some((item: any) => item.productType === 'basic') ? `
-              <h3 class="section-title">Your Basic Cards</h3>
-              <div class="order-details">
-                <p><strong>Simple and effective!</strong> Your basic cards are configured to redirect to your specified website URLs.</p>
-                <div style="margin: 20px 0;">
-                  ${cart.filter((item: any) => item.productType === 'basic').map((item: any, index: number) => `
-                    <div style="border: 1px solid #ddd; padding: 20px; margin: 15px 0; border-radius: 8px; background: #fff;">
-                      <h4 style="margin: 0 0 15px 0; color: #10b981;">Basic Card ${index + 1}</h4>
-                      <p style="margin: 8px 0;"><strong>Website URL:</strong> <a href="${item.url || item.configuration?.website}" target="_blank" style="color: #10b981; text-decoration: none;">${item.url || item.configuration?.website}</a></p>
-                      <p style="margin: 8px 0; font-size: 14px; color: #666;">When someone taps this card, they'll be redirected to your website!</p>
-                    </div>
-                  `).join('')}
-                </div>
-                <div class="highlight-box">
-                  <strong>Pro Tip:</strong> Basic cards are perfect for directing people to your website, portfolio, or any online destination. Simple, clean, and effective!
-                </div>
-              </div>
-            ` : ''}
-
-            <h3 class="section-title">What Happens Next</h3>
-            <div class="order-details">
-              <div class="step">
-                <div class="step-number">1</div>
-                <div><strong>Digital Cards Ready:</strong> Your contact cards are live and ready to share immediately!</div>
-              </div>
-              <div class="step">
-                <div class="step-number">2</div>
-                <div><strong>Physical Cards:</strong> We'll start production within 24 hours</div>
-              </div>
-              <div class="step">
-                <div class="step-number">3</div>
-                <div><strong>Shipping:</strong> Your physical cards will ship within 15-20 business days</div>
-              </div>
-              <div class="step">
-                <div class="step-number">4</div>
-                <div><strong>Tracking:</strong> You'll receive tracking information once your order ships</div>
-              </div>
-            </div>
-
-            <h3 class="section-title">Support</h3>
-            <p>If you have any questions about your order, please contact us at <a href="mailto:support@tagmeconnections.com" style="color: #10b981;">support@tagmeconnections.com</a></p>
-          </div>
-
-          <div class="footer">
-            <p>© TagMe Connections | https://tagmeconnections.com</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+    const emailHtml = generateCustomerConfirmationEmail({
+      session,
+      customerData,
+      cart,
+      s3Urls
+    });
 
     await resend.emails.send({
       from: emailFrom, // This should be your verified domain
       to: [customerData.email],
       subject: `Order Confirmation - ${session.id}`,
-      html: emailHtml,
+      html: inlineEmailCSS(emailHtml),
     });
 
     console.log('Customer confirmation email sent successfully');
@@ -311,11 +176,9 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
 
 async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any, s3Data: any = null) {
   try {
-    // Handle customer images if they exist
-    let customerImages = [];
+    // Handle logo zip upload for both basic and core cards
     let logoZipUrl = null;
     
-    // Handle logo zip upload for both basic and core cards
     if (item.configuration?.images?.logo?.blob) {
       try {
         const logoZipResponse = await fetch(`${process.env.NETLIFY_SITE_URL}/.netlify/functions/upload-logo-zip`, {
@@ -341,175 +204,20 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
       }
     }
     
-    if (item.configuration && item.productType === 'core') {
-      
-      // Handle customer images if they exist
-      if (item.configuration.images) {
-        const { logo, photo, cover } = item.configuration.images;
-        
-        if (photo?.blob) {
-          customerImages.push({
-            filename: `photo-${session.id}-${cardNumber}.${photo.ext || 'jpg'}`,
-            content: photo.blob.split(',')[1], // Remove data:image/jpeg;base64, prefix
-            contentType: photo.mime || 'image/jpeg'
-          });
-        }
-        
-        if (cover?.blob) {
-          customerImages.push({
-            filename: `cover-${session.id}-${cardNumber}.${cover.ext || 'jpg'}`,
-            content: cover.blob.split(',')[1], // Remove data:image/jpeg;base64, prefix
-            contentType: cover.mime || 'image/jpeg'
-          });
-        }
-      }
-    }
-
-    // Determine website location and logo URL
-    const websiteLocation = item.productType === 'basic' 
-      ? (item.url || item.configuration?.website) 
-      : (s3Data ? transformS3UrlToDomain(s3Data.urls.html) : 'Not generated');
-    
-    const logoUrl = logoZipUrl 
-      ? `<a href="${logoZipUrl}" target="_blank" style="color: #10b981;">download zip</a>`
-      : 'None specified';
-
-    // Get customer contact information
-    const customerName = customerData?.name || 'Not provided';
-    const customerEmail = customerData?.email || 'Not provided';
-    const customerPhone = customerData?.phone || 'Not provided';
-
-    // Get configuration details for core cards
-    const configuration = item.configuration || {};
-    const contactName = configuration.name || 'Not provided';
-    const contactEmail = configuration.email || 'Not provided';
-    const contactPhone = configuration.phone || 'Not provided';
-    const contactTitle = configuration.title || 'Not provided';
-    const contactCompany = configuration.company || 'Not provided';
-    const contactWebsite = configuration.website || 'Not provided';
-
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>New Order - ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'} #${cardNumber}</title>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #f8f9fa; padding: 30px 20px; text-align: center; border-bottom: 3px solid #10b981; }
-            .content { padding: 20px; }
-            .order-details { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
-            .card-config { background: #fff; border: 1px solid #ddd; padding: 20px; margin: 15px 0; border-radius: 8px; }
-            .section-title { color: #10b981; font-size: 18px; font-weight: bold; margin: 25px 0 15px 0; }
-            .success-box { border: 2px solid #10b981; background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 15px 0; }
-            .warning-box { border: 2px solid #f59e0b; background: #fffbeb; padding: 20px; border-radius: 8px; margin: 15px 0; }
-            .info-box { background: #e0f2fe; padding: 20px; border-radius: 8px; border-left: 4px solid #0288d1; margin: 15px 0; }
-            .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
-            .contact-section { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-            .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-            .status-success { background: #10b981; color: white; }
-            .status-pending { background: #f59e0b; color: white; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 style="margin: 0; color: #10b981;">New Order Notification</h1>
-              <p style="margin: 10px 0 0 0; font-size: 16px;"><strong>Card Instance #${cardNumber}</strong> of ${item.quantity}</p>
-              <p style="font-size: 14px; margin-top: 10px;">Order placed on ${new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</p>
-              <span class="status-badge status-success">NEW ORDER</span>
-            </div>
-            
-            <div class="content">
-              <h2 class="section-title">Order Information</h2>
-              <div class="order-details">
-                <p><strong>Order Number:</strong> ${session.id}</p>
-                <p><strong>Product:</strong> ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'}</p>
-                <p><strong>Card Instance:</strong> ${cardNumber} of ${item.quantity}</p>
-                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}</p>
-              </div>
-
-              <h3 class="section-title">Customer Information</h3>
-              <div class="card-config">
-                <p><strong>Customer Name:</strong> ${customerName}</p>
-                <p><strong>Customer Email:</strong> <a href="mailto:${customerEmail}" style="color: #10b981;">${customerEmail}</a></p>
-                <p><strong>Customer Phone:</strong> ${customerPhone}</p>
-              </div>
-
-              ${item.productType === 'core' ? `
-                <h3 class="section-title">Contact Card Configuration</h3>
-                <div class="card-config">
-                  <p><strong>Contact Name:</strong> ${contactName}</p>
-                  <p><strong>Contact Email:</strong> <a href="mailto:${contactEmail}" style="color: #10b981;">${contactEmail}</a></p>
-                  <p><strong>Contact Phone:</strong> ${contactPhone}</p>
-                  <p><strong>Title:</strong> ${contactTitle}</p>
-                  <p><strong>Company:</strong> ${contactCompany}</p>
-                  <p><strong>Website:</strong> ${contactWebsite ? `<a href="${contactWebsite}" target="_blank" style="color: #10b981;">${contactWebsite}</a>` : 'Not provided'}</p>
-                </div>
-              ` : ''}
-
-              <h3 class="section-title">Card Instructions</h3>
-              <div class="card-config">
-                <p><strong>Quantity:</strong> ${item.quantity}</p>
-                <p><strong>Website Location:</strong> <a href="${websiteLocation}" target="_blank" style="color: #10b981;">${websiteLocation}</a></p>
-                <p><strong>Logo Location:</strong> ${logoUrl}</p>
-              </div>
-
-              <h3 class="section-title">Shipping Address</h3>
-              <div class="card-config">
-                <p><strong>Address:</strong> ${session.shipping?.address?.line1 || 'Not provided'}</p>
-                <p><strong>City:</strong> ${session.shipping?.address?.city || 'Not provided'}</p>
-                <p><strong>State:</strong> ${session.shipping?.address?.state || 'Not provided'}</p>
-                <p><strong>Postal Code:</strong> ${session.shipping?.address?.postal_code || 'Not provided'}</p>
-                <p><strong>Country:</strong> ${session.shipping?.address?.country || 'Not provided'}</p>
-              </div>
-
-              ${s3Data ? `
-                <div class="success-box">
-                  <h4 style="margin: 0 0 10px 0; color: #10b981;">✅ Digital Card Generated Successfully</h4>
-                  <p style="margin: 5px 0;"><strong>Live URL:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.html)}" target="_blank" style="color: #10b981;">${transformS3UrlToDomain(s3Data.urls.html)}</a></p>
-                  <p style="margin: 5px 0;"><strong>vCard Download:</strong> <a href="${transformS3UrlToDomain(s3Data.urls.vcard)}" target="_blank" style="color: #10b981;">Download vCard</a></p>
-                </div>
-              ` : `
-                <div class="warning-box">
-                  <h4 style="margin: 0 0 10px 0; color: #f59e0b;">⚠️ Digital Card Not Generated</h4>
-                  <p style="margin: 5px 0;">This appears to be a basic card or the digital card generation failed.</p>
-                </div>
-              `}
-
-              <div class="info-box">
-                <h4 style="margin: 0 0 10px 0; color: #0288d1;">📋 Production Notes</h4>
-                <p style="margin: 5px 0;">• Physical card production should begin within 24 hours</p>
-                <p style="margin: 5px 0;">• Expected shipping time: 15-20 business days</p>
-                <p style="margin: 5px 0;">• Customer will receive tracking information once shipped</p>
-                ${logoZipUrl ? '<p style="margin: 5px 0;">• Logo files are available for download in the zip file above</p>' : ''}
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const emailHtml = generateAdminNotificationEmail({
+      session,
+      customerData,
+      item,
+      cardNumber,
+      s3Data,
+      logoZipUrl
+    });
 
     await resend.emails.send({
       from: emailFrom, // This should be your verified domain
       to: [adminEmail],
       subject: `New Order - ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'} #${cardNumber}`,
-      html: emailHtml
+      html: inlineEmailCSS(emailHtml)
     });
 
     console.log(`Admin notification email sent for card ${cardNumber} - comprehensive template`);

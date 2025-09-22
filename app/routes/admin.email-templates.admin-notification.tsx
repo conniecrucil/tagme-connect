@@ -2,6 +2,13 @@ import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
 import { transformS3UrlToDomain } from "~/lib/utils";
 
+export function meta() {
+  return [
+    { title: "Admin Notification Email Template - TagMe Connections" },
+    { name: "description", content: "Preview the admin notification email template sent when new contact cards are created through the admin system." },
+  ];
+}
+
 export default function AdminNotificationTemplate() {
   // Sample data for preview - showing multiple card types
   const sampleCards = [

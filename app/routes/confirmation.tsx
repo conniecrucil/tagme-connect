@@ -15,6 +15,13 @@ interface OrderDetails {
   }>;
 }
 
+export function meta() {
+  return [
+    { title: "Order Confirmation - TagMe Connections" },
+    { name: "description", content: "Thank you for your purchase. Your order has been successfully processed and you'll receive a confirmation email shortly." },
+  ];
+}
+
 export default function Confirmation() {
   const [searchParams] = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -170,7 +177,7 @@ export default function Confirmation() {
               }
             }
             
-            sendPurchaseEmails(sessionId, customerInfo, cart);
+            sendPurchaseEmails(sessionId, cart, customerInfo);
             
             // Clear the cart after successful order
             localStorage.removeItem('cart');
