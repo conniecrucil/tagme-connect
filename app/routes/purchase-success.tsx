@@ -2,6 +2,13 @@ import { Link, useSearchParams } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 
+export function meta() {
+  return [
+    { title: "Purchase Successful - TagMe Connections" },
+    { name: "description", content: "Your smart business card order has been confirmed! Your card is being prepared for production and will ship within 15-20 business days." },
+  ];
+}
+
 export default function PurchaseSuccess() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');

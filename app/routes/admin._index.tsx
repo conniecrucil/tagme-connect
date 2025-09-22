@@ -2,6 +2,13 @@ import { Link } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 
+export function meta() {
+  return [
+    { title: "Admin Dashboard - TagMe Connections" },
+    { name: "description", content: "Admin dashboard for managing TagMe contact card system. Create contacts, update existing cards, and manage email templates." },
+  ];
+}
+
 export default function AdminIndex() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">

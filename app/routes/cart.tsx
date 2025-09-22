@@ -15,6 +15,13 @@ interface CartItem {
   id: string; // Unique identifier for each cart item configuration
 }
 
+export function meta() {
+  return [
+    { title: "Shopping Cart - TagMe Connections" },
+    { name: "description", content: "Review your smart business card order. Manage quantities and configurations before proceeding to secure checkout." },
+  ];
+}
+
 export default function Cart() {
   const navigate = useNavigate();
   const [cart, setCart] = useState<CartItem[]>([]);

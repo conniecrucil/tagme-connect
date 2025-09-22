@@ -14,6 +14,13 @@ interface CartItem {
   price: number;
 }
 
+export function meta() {
+  return [
+    { title: "Checkout - TagMe Connections" },
+    { name: "description", content: "Complete your smart business card purchase securely with Stripe. Enter your shipping information and payment details." },
+  ];
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
   const [cart, setCart] = useState<CartItem[]>([]);
