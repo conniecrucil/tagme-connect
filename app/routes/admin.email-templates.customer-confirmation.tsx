@@ -94,7 +94,6 @@ export default function CustomerConfirmationTemplate() {
               <p><strong>Email:</strong> ${sampleData.customerData.email}</p>
               <p><strong>Total Items:</strong> ${sampleData.cart.reduce((sum: number, item: any) => sum + item.quantity, 0)}</p>
               <p><strong>Subtotal:</strong> $${totalAmount.toFixed(2)}</p>
-              <p><strong>Shipping:</strong> FREE</p>
               <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>
             </div>
 
