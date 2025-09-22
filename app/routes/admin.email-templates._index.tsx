@@ -2,6 +2,13 @@ import { Link } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 
+export function meta() {
+  return [
+    { title: "Email Templates - Admin - TagMe Connections" },
+    { name: "description", content: "Preview and manage email templates used in the TagMe system. View admin notifications and customer confirmation emails." },
+  ];
+}
+
 export default function AdminEmailTemplates() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
