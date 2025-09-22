@@ -60,12 +60,18 @@ test.describe('Basic Card Purchase Workflow', () => {
     } else {
       // Payment succeeded, we're back on the site
       console.log('Payment processing completed - back on site');
+
+      // Wait for confirmation page
+      await page.waitForURL('**/confirmation**', { timeout: 10000 });
+
+      // Verify we're on the confirmation page
+      await expect(page.locator('h1')).toContainText('Order Confirmed');
+
+      // Verify the website URL is displayed correctly
+      await expect(page.locator('text=https://bancroft.io')).toBeVisible();
+
+      // Verify customer email is displayed
+      await expect(page.locator('text=connectme-customer@mailinator.com')).toBeVisible();
     }
-    
-    // Verify the website URL is displayed correctly
-    await expect(page.locator('text=https://bancroft.io')).toBeVisible();
-    
-    // Verify customer email is displayed
-    await expect(page.locator('text=connectme-customer@mailinator.com')).toBeVisible();
   });
 });

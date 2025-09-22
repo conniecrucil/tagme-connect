@@ -62,7 +62,7 @@ test.describe('TAG Core Card Purchase Workflow', () => {
     await page.waitForURL('**/confirmation**', { timeout: 30000 });
     
     // Verify we're on the confirmation page
-    await expect(page.locator('h1')).toContainText('Purchase Successful');
+    await expect(page.locator('h1')).toContainText('Order Confirmed');
     
     // Verify the website URL is displayed correctly
     await expect(page.locator('text=https://bancroft.io')).toBeVisible();
