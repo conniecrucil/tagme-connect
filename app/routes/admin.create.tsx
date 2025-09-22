@@ -58,7 +58,7 @@ function AdminCreateForm() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataURI = e.target?.result as string;
-      const ext = dataURI.split(',')[0].split(':')[1].split('/')[1];
+      const ext = dataURI.split(',')[0].split(':')[1].split('/')[1].split(';')[0];
 
       const imageData = {
         url: dataURI,
