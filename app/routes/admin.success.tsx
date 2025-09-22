@@ -4,6 +4,13 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { transformS3UrlToDomain } from "~/lib/utils";
 
+export function meta() {
+  return [
+    { title: "Contact Created Successfully - Admin - TagMe Connections" },
+    { name: "description", content: "Contact card has been successfully created and uploaded to S3. View the generated URLs and share the contact information." },
+  ];
+}
+
 export default function AdminSuccess() {
   const location = useLocation();
   const { creationDetails, contactName, contactEmail } = location.state || {};

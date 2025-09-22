@@ -8,6 +8,13 @@ import { Textarea } from "~/components/ui/textarea";
 import { toast } from "sonner";
 import { ArrowLeft, Search, Loader2, ExternalLink } from "lucide-react";
 
+export function meta() {
+  return [
+    { title: "Update Contact - Admin - TagMe Connections" },
+    { name: "description", content: "Admin tool to retrieve and update existing TAG Core card sites by URL. Edit contact details and re-publish under the same UUID." },
+  ];
+}
+
 interface ContactCardData {
   name?: string;
   email?: string;

@@ -11,6 +11,13 @@ import { ConfigurationProvider, primaryActions as availablePrimaryActions, secon
 import SortableActionsList from "~/components/SortableActionsList";
 import MobileCardPreview from "~/components/MobileCardPreview";
 
+export function meta() {
+  return [
+    { title: "Create Contact - Admin - TagMe Connections" },
+    { name: "description", content: "Admin tool to create contact cards without purchasing. All cards will be uploaded to S3 and admin will be notified." },
+  ];
+}
+
 function AdminCreateForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
