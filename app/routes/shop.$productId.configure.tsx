@@ -10,6 +10,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { useConfiguration } from "~/providers/configuration-provider";
 import { primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions } from "~/providers/configuration-provider";
 import SortableActionsList from "~/components/SortableActionsList";
+import MobileCardPreview from "~/components/MobileCardPreview";
 
 export function meta({ params }: { params: { productId: string } }) {
   const productName = params.productId === 'tag-basic-card' ? 'TAG Basic Card' : 'TAG Core Card';
@@ -66,6 +67,7 @@ export default function ConfigureProduct() {
   };
 
   const handleImageUpload = (type: 'logo' | 'photo' | 'cover', file: File) => {
+    console.log('handleImageUpload called with type:', type, 'file:', file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataURI = e.target?.result as string;
@@ -79,6 +81,7 @@ export default function ConfigureProduct() {
         resized: null
       };
 
+      console.log('Calling updateImage with type:', type, 'imageData:', imageData);
       updateImage(type, imageData);
 
       if (type === 'photo') {
@@ -122,7 +125,31 @@ export default function ConfigureProduct() {
           return;
         }
       } else {
-        // Core card configuration - full contact details
+        // Core card configuration - update context with form data first
+        updateVCardField('fname', vCardData.fname);
+        updateVCardField('lname', vCardData.lname);
+        updateVCardField('email', vCardData.email);
+        updateVCardField('phone', vCardData.phone);
+        updateVCardField('biz', vCardData.biz);
+        updateVCardField('title', vCardData.title);
+        updateVCardField('website', vCardData.website);
+        updateVCardField('desc', vCardData.desc);
+        updateVCardField('prefix', vCardData.prefix);
+        updateVCardField('pronouns', vCardData.pronouns);
+        updateVCardField('street', vCardData.street);
+        updateVCardField('city', vCardData.city);
+        updateVCardField('state', vCardData.state);
+        updateVCardField('postal', vCardData.postal);
+        updateVCardField('country', vCardData.country);
+        updateVCardField('mobile', vCardData.mobile);
+        updateVCardField('photo', vCardData.photo);
+        
+        // Actions are already managed through the context
+        
+        // Update logoOrHeader
+        setLogoOrHeader(logoOrHeader);
+        
+        // Create configuration object for validation
         configuration = {
           name: `${vCardData.prefix ? vCardData.prefix + ' ' : ''}${vCardData.fname} ${vCardData.lname}`.trim(),
           email: vCardData.email,
@@ -179,12 +206,15 @@ export default function ConfigureProduct() {
       // Save to context (which handles localStorage)
       await saveConfiguration();
 
+      // Use the context's configuration which now has all the latest data including images
+      const finalConfiguration = configuration;
+
       // Add to cart
       const cartItem = {
         productId,
         productType: productId === 'tag-basic-card' ? 'basic' : 'core',
         quantity: quantity,
-        configuration,
+        configuration: finalConfiguration,
         url: isBasicCard ? vCardData.website : undefined, // Include URL for basic cards
         price: productId === 'tag-basic-card' ? 40 : 47,
         id: `${productId === 'tag-basic-card' ? 'basic' : 'core'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
@@ -828,97 +858,14 @@ export default function ConfigureProduct() {
                           </div>
                         </div>
                       ) : (
-                        /* Core Card Preview - Full Contact Card */
-                        <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', width: '100%' }}>
-                          {/* Header Section */}
-                          <div
-                            className="w-full h-32 relative flex items-center justify-center"
-                            style={{
-                              backgroundColor: '#e4eaea',
-                              backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center'
-                            }}
-                          >
-                            {images.logo.url && !logoOrHeader && (
-                              <img
-                                src={images.logo.url}
-                                alt="Brand Logo"
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                          </div>
-
-                          {/* Profile Section */}
-                          <div className="p-4 text-center">
-                            {/* Profile Photo */}
-                            <div className="relative -mt-16 mb-4">
-                              <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto flex items-center justify-center overflow-hidden">
-                                {images.photo.url ? (
-                                  <img src={images.photo.url} alt="Profile" className="w-full h-full object-cover" />
-                                ) : (
-                                  <span className="text-gray-600 text-xs">Photo</span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Name and Title */}
-                            <h1 className="text-lg font-bold mb-2">
-                              {vCardData.prefix && `${vCardData.prefix} `}{vCardData.fname} {vCardData.lname}
-                            </h1>
-                            {vCardData.title && (
-                              <p className="text-gray-600 mb-1 text-sm">{vCardData.title}</p>
-                            )}
-                            {vCardData.biz && (
-                              <p className="text-gray-600 mb-4 text-sm">{vCardData.biz}</p>
-                            )}
-
-                            {/* Contact Information */}
-                            <div className="space-y-2 text-left text-sm">
-                              {vCardData.email && (
-                                <div className="flex items-center gap-2">
-                                  <span className="w-4 h-4 text-gray-500">✉</span>
-                                  <a href={`mailto:${vCardData.email}`} className="text-blue-600 hover:underline">{vCardData.email}</a>
-                                </div>
-                              )}
-                              {vCardData.phone && (
-                                <div className="flex items-center gap-2">
-                                  <span className="w-4 h-4 text-gray-500">📞</span>
-                                  <a href={`tel:${vCardData.phone}`} className="text-blue-600 hover:underline">{vCardData.phone}</a>
-                                </div>
-                              )}
-                              {vCardData.website && (
-                                <div className="flex items-center gap-2">
-                                  <span className="w-4 h-4 text-gray-500">🌐</span>
-                                  <a href={vCardData.website} className="text-blue-600 hover:underline">{vCardData.website}</a>
-                                </div>
-                              )}
-
-                              {/* Primary Actions */}
-                              {primaryActions.filter(action => action.value).map((action, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                  <ActionIcon name={action.name} className="w-4 h-4 text-gray-500" />
-                                  <span>{action.value}</span>
-                                </div>
-                              ))}
-
-                              {/* Secondary Actions */}
-                              {secondaryActions.filter(action => action.value).map((action, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                  <ActionIcon name={action.name} className="w-4 h-4 text-gray-500" />
-                                  <span>{action.value}</span>
-                                </div>
-                              ))}
-                            </div>
-
-                            {/* Description */}
-                            {vCardData.desc && (
-                              <div className="mt-4 pt-2 border-t border-gray-200">
-                                <p className="text-xs text-gray-600 text-left">{vCardData.desc}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        /* Core Card Preview - Use MobileCardPreview Component */
+                        <MobileCardPreview
+                          vCardData={vCardData}
+                          images={images}
+                          primaryActions={primaryActions}
+                          secondaryActions={secondaryActions}
+                          logoOrHeader={logoOrHeader}
+                        />
                       )}
                     </div>
                   </CardContent>

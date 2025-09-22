@@ -226,16 +226,17 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .contact-card {
-        max-width: 400px;
+        max-width: 320px;
         margin: 0 auto;
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
         overflow: hidden;
       }
       
       .header {
-        height: 128px;
+        height: 80px;
         background: #e4eaea;
         position: relative;
         background-size: cover;
@@ -266,22 +267,22 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .profile {
-        padding: 48px 24px 24px;
+        padding: 12px;
         text-align: center;
       }
       
       .photo {
-        width: 120px;
-        height: 120px;
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
-        margin: 0 auto 16px;
-        border: 4px solid white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin: 0 auto 12px;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         background: #f0f0f0;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 48px;
+        font-size: 18px;
         color: #666;
       }
       
@@ -293,35 +294,40 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .name {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 700;
         color: #1a1a1a;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
       
       .title {
-        font-size: 16px;
+        font-size: 12px;
         color: #666;
         margin-bottom: 4px;
       }
       
       .company {
-        font-size: 16px;
+        font-size: 12px;
         color: #888;
-        margin-bottom: 24px;
+        margin-bottom: 8px;
       }
       
       .contact-info {
-        padding: 0 24px 24px;
+        padding: 0 12px 12px;
       }
       
       .contact-item {
         display: flex;
         align-items: center;
-        padding: 12px 0;
+        padding: 8px 0;
         border-bottom: 1px solid #f0f0f0;
         text-decoration: none;
         color: inherit;
+        transition: background-color 0.2s;
+      }
+      
+      .contact-item:hover {
+        background-color: #f9fafb;
       }
       
       .contact-item:last-child {
@@ -329,8 +335,8 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .contact-icon {
-        width: 24px;
-        height: 24px;
+        width: 16px;
+        height: 16px;
         margin-right: 12px;
         display: flex;
         align-items: center;
@@ -343,56 +349,55 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .contact-label {
-        font-weight: 600;
-        color: #333;
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 12px;
       }
       
       .contact-value {
-        color: #666;
+        color: #1f2937;
         margin-top: 2px;
+        font-size: 14px;
       }
       
-      .social-links {
-        padding: 24px;
-        background: #f8f9fa;
-        border-top: 1px solid #f0f0f0;
+      .actions-section {
+        padding: 12px;
       }
       
-      .social-links h3 {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        color: #333;
+      .actions-separator {
+        border-top: 1px solid #e5e7eb;
+        margin: 12px 0;
       }
       
-      .social-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      .actions-grid {
+        display: flex;
+        flex-wrap: wrap;
         gap: 12px;
+        justify-content: center;
+        margin-bottom: 16px;
       }
       
-      .social-link {
+      .action-button {
         display: flex;
         align-items: center;
-        padding: 12px;
-        background: white;
-        border-radius: 8px;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         text-decoration: none;
-        color: #333;
-        font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
       
-      .social-link:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      .action-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
       
-      .social-icon {
+      .action-icon {
         width: 20px;
         height: 20px;
-        margin-right: 8px;
+        color: white;
       }
       
       .custom-message {
@@ -510,8 +515,18 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.primaryActions) {
     data.primaryActions.forEach((action) => {
       if (action.value) {
+        let href = action.value;
+        if (action.name === 'whatsApp') {
+          // Format WhatsApp links as https://wa.me/[number]
+          const phoneNumber = action.value.replace(/[^\d+]/g, ''); // Remove all non-digit characters except +
+          href = `https://wa.me/${phoneNumber}`;
+        } else if (action.name === 'call' || action.name === 'Mobile' || action.name === 'phone' || action.name === 'Home' || action.name === 'Office' || action.name === 'fax' || action.name === 'signal') {
+          // Format phone links as tel:[number]
+          href = `tel:${action.value}`;
+        }
+        
         socialLinks.push(`
-          <a href="${action.value}" class="social-link" target="_blank">
+          <a href="${href}" class="social-link" target="_blank">
             <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
               ${getSocialIcon(action.name)}
             </svg>
@@ -526,8 +541,18 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.secondaryActions) {
     data.secondaryActions.forEach((action) => {
       if (action.value) {
+        let href = action.value;
+        if (action.name === 'whatsApp') {
+          // Format WhatsApp links as https://wa.me/[number]
+          const phoneNumber = action.value.replace(/[^\d+]/g, ''); // Remove all non-digit characters except +
+          href = `https://wa.me/${phoneNumber}`;
+        } else if (action.name === 'call' || action.name === 'Mobile' || action.name === 'phone' || action.name === 'Home' || action.name === 'Office' || action.name === 'fax' || action.name === 'signal') {
+          // Format phone links as tel:[number]
+          href = `tel:${action.value}`;
+        }
+        
         socialLinks.push(`
-          <a href="${action.value}" class="social-link" target="_blank">
+          <a href="${href}" class="social-link" target="_blank">
             <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
               ${getSocialIcon(action.name)}
             </svg>

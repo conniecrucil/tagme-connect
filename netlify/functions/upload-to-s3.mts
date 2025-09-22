@@ -178,16 +178,17 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .contact-card {
-        max-width: 400px;
+        max-width: 320px;
         margin: 0 auto;
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
         overflow: hidden;
       }
       
       .header {
-        height: 128px;
+        height: 80px;
         background: #e4eaea;
         position: relative;
         background-size: cover;
@@ -218,22 +219,22 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .profile {
-        padding: 48px 24px 24px;
+        padding: 12px;
         text-align: center;
       }
       
       .photo {
-        width: 120px;
-        height: 120px;
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
-        margin: 0 auto 16px;
-        border: 4px solid white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin: 0 auto 12px;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         background: #f0f0f0;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 48px;
+        font-size: 18px;
         color: #666;
       }
       
@@ -245,35 +246,40 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .name {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 700;
         color: #1a1a1a;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
       
       .title {
-        font-size: 16px;
+        font-size: 12px;
         color: #666;
         margin-bottom: 4px;
       }
       
       .company {
-        font-size: 16px;
+        font-size: 12px;
         color: #888;
-        margin-bottom: 24px;
+        margin-bottom: 8px;
       }
       
       .contact-info {
-        padding: 0 24px 24px;
+        padding: 0 12px 12px;
       }
       
       .contact-item {
         display: flex;
         align-items: center;
-        padding: 12px 0;
+        padding: 8px 0;
         border-bottom: 1px solid #f0f0f0;
         text-decoration: none;
         color: inherit;
+        transition: background-color 0.2s;
+      }
+      
+      .contact-item:hover {
+        background-color: #f9fafb;
       }
       
       .contact-item:last-child {
@@ -281,8 +287,8 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .contact-icon {
-        width: 24px;
-        height: 24px;
+        width: 16px;
+        height: 16px;
         margin-right: 12px;
         display: flex;
         align-items: center;
@@ -295,65 +301,64 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .contact-label {
-        font-weight: 600;
-        color: #333;
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 12px;
       }
       
       .contact-value {
-        color: #666;
+        color: #1f2937;
         margin-top: 2px;
+        font-size: 14px;
       }
       
-      .social-links {
-        padding: 24px;
-        background: #f8f9fa;
-        border-top: 1px solid #f0f0f0;
+      .actions-section {
+        padding: 12px;
       }
       
-      .social-links h3 {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        color: #333;
+      .actions-separator {
+        border-top: 1px solid #e5e7eb;
+        margin: 12px 0;
       }
       
-      .social-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      .actions-grid {
+        display: flex;
+        flex-wrap: wrap;
         gap: 12px;
+        justify-content: center;
+        margin-bottom: 16px;
       }
       
-      .social-link {
+      .action-button {
         display: flex;
         align-items: center;
-        padding: 12px;
-        background: white;
-        border-radius: 8px;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         text-decoration: none;
-        color: #333;
-        font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
       
-      .social-link:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      .action-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
       
-      .social-icon {
+      .action-icon {
         width: 20px;
         height: 20px;
-        margin-right: 8px;
+        color: white;
       }
       
       .custom-message {
-        padding: 24px;
-        background: #f8f9fa;
-        border-top: 1px solid #f0f0f0;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
         font-style: italic;
-        color: #666;
-        text-align: center;
+        color: #1f2937;
+        text-align: left;
+        font-size: 14px;
       }
       
       .download-btn {
@@ -422,7 +427,11 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.email) {
     contactItems.push(`
       <a href="mailto:${data.email}" class="contact-item">
-        <div class="contact-icon">📧</div>
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+        </div>
         <div class="contact-text">
           <div class="contact-label">Email</div>
           <div class="contact-value">${data.email}</div>
@@ -434,7 +443,11 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.phone) {
     contactItems.push(`
       <a href="tel:${data.phone}" class="contact-item">
-        <div class="contact-icon">📞</div>
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
+            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+          </svg>
+        </div>
         <div class="contact-text">
           <div class="contact-label">Phone</div>
           <div class="contact-value">${data.phone}</div>
@@ -443,10 +456,30 @@ function generateContactCardHTML(data: ContactCardData): string {
     `);
   }
   
+  if (data.mobile) {
+    contactItems.push(`
+      <a href="tel:${data.mobile}" class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
+            <path d="M17 1.01L7 1c-1.1 0-1.99.9-1.99 2v18c0 1.1.89 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+          </svg>
+        </div>
+        <div class="contact-text">
+          <div class="contact-label">Mobile</div>
+          <div class="contact-value">${data.mobile}</div>
+        </div>
+      </a>
+    `);
+  }
+  
   if (data.website) {
     contactItems.push(`
       <a href="${data.website}" class="contact-item" target="_blank">
-        <div class="contact-icon">🌐</div>
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
+            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>
+          </svg>
+        </div>
         <div class="contact-text">
           <div class="contact-label">Website</div>
           <div class="contact-value">${data.website.replace(/^https?:\/\//, '')}</div>
@@ -462,8 +495,18 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.primaryActions) {
     data.primaryActions.forEach((action) => {
       if (action.value) {
+        let href = action.value;
+        if (action.name === 'whatsApp') {
+          // Format WhatsApp links as https://wa.me/[number]
+          const phoneNumber = action.value.replace(/[^\d+]/g, ''); // Remove all non-digit characters except +
+          href = `https://wa.me/${phoneNumber}`;
+        } else if (action.name === 'call' || action.name === 'Mobile' || action.name === 'phone' || action.name === 'Home' || action.name === 'Office' || action.name === 'fax' || action.name === 'signal') {
+          // Format phone links as tel:[number]
+          href = `tel:${action.value}`;
+        }
+        
         socialLinks.push(`
-          <a href="${action.value}" class="social-link" target="_blank">
+          <a href="${href}" class="social-link" target="_blank">
             <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
               ${getSocialIcon(action.name)}
             </svg>
@@ -478,28 +521,22 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.secondaryActions) {
     data.secondaryActions.forEach((action) => {
       if (action.value) {
+        let href = action.value;
+        if (action.name === 'whatsApp') {
+          // Format WhatsApp links as https://wa.me/[number]
+          const phoneNumber = action.value.replace(/[^\d+]/g, ''); // Remove all non-digit characters except +
+          href = `https://wa.me/${phoneNumber}`;
+        } else if (action.name === 'call' || action.name === 'Mobile' || action.name === 'phone' || action.name === 'Home' || action.name === 'Office' || action.name === 'fax' || action.name === 'signal') {
+          // Format phone links as tel:[number]
+          href = `tel:${action.value}`;
+        }
+        
         socialLinks.push(`
-          <a href="${action.value}" class="social-link" target="_blank">
+          <a href="${href}" class="social-link" target="_blank">
             <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
               ${getSocialIcon(action.name)}
             </svg>
             ${action.name.charAt(0).toUpperCase() + action.name.slice(1)}
-          </a>
-        `);
-      }
-    });
-  }
-  
-  // Fallback to legacy socialMedia object if no actions are provided
-  if (socialLinks.length === 0 && data.socialMedia) {
-    Object.entries(data.socialMedia).forEach(([platform, url]) => {
-      if (url) {
-        socialLinks.push(`
-          <a href="${url}" class="social-link" target="_blank">
-            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
-              ${getSocialIcon(platform)}
-            </svg>
-            ${platform.charAt(0).toUpperCase() + platform.slice(1)}
           </a>
         `);
       }
@@ -590,22 +627,34 @@ function generateContactCardHTML(data: ContactCardData): string {
     <!-- Contact Information -->
     <div class="contact-info">
       ${contactItems.join('')}
+      
+      ${data.customMessage ? `
+        <div class="custom-message">
+          "${data.customMessage}"
+        </div>
+      ` : ''}
     </div>
 
-    <!-- Social Media Links -->
-    ${socialLinks.length > 0 ? `
-      <div class="social-links">
-        <h3>Connect with me</h3>
-        <div class="social-grid">
-          ${socialLinks.join('')}
-        </div>
-      </div>
-    ` : ''}
-
-    <!-- Custom Message -->
-    ${data.customMessage ? `
-      <div class="custom-message">
-        "${data.customMessage}"
+    <!-- Actions Section -->
+    ${(primaryActionButtons.length > 0 || secondaryActionButtons.length > 0) ? `
+      <div class="actions-section">
+        <hr class="actions-separator">
+        
+        ${primaryActionButtons.length > 0 ? `
+          <div class="actions-grid">
+            ${primaryActionButtons.join('')}
+          </div>
+        ` : ''}
+        
+        ${(primaryActionButtons.length > 0 && secondaryActionButtons.length > 0) ? `
+          <hr class="actions-separator">
+        ` : ''}
+        
+        ${secondaryActionButtons.length > 0 ? `
+          <div class="actions-grid">
+            ${secondaryActionButtons.join('')}
+          </div>
+        ` : ''}
       </div>
     ` : ''}
 

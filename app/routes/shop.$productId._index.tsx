@@ -161,14 +161,9 @@ export default function ProductDetail() {
           return;
         }
         
-        // Add logo to configuration if uploaded
-        const updatedConfiguration = {
-          ...configuration,
-          images: {
-            ...configuration.images,
-            logo: logoImage || configuration.images?.logo || null
-          }
-        };
+        
+        // Use the configuration as-is since it already contains the logo data
+        const updatedConfiguration = configuration;
 
         const cartItem = {
           productId,

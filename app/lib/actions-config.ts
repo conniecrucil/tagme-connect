@@ -16,7 +16,7 @@ export const primaryActionsConfig: ActionConfig[] = [
   { name: 'location', label: 'Location', color: '#6B7280', placeholder: '123 Main St, Vancouver, BC' },
   { name: 'calendar', label: 'Calendar', color: '#6B7280', placeholder: 'https://calendly.com/johndoe' },
   { name: 'call', label: 'Call', color: '#6B7280', placeholder: '+1 (555) 234-5678' },
-  { name: 'whatsApp', label: 'WhatsApp', color: '#25D366', placeholder: '+1 (555) 987-6543' },
+  { name: 'whatsApp', label: 'WhatsApp', color: '#25D366', placeholder: '+1234567890' },
   { name: 'messenger', label: 'Messenger', color: '#0084FF', placeholder: 'john.doe.messenger' },
   { name: 'telegram', label: 'Telegram', color: '#0088cc', placeholder: '@johndoe' },
   { name: 'website', label: 'Website', color: '#6B7280', placeholder: 'https://johndoe.com' },

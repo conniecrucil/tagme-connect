@@ -204,10 +204,15 @@ export function ConfigurationProvider({
   };
 
   const updateImage = (type: 'logo' | 'photo' | 'cover', imageData: ImageData) => {
-    setImages(prev => ({
-      ...prev,
-      [type]: imageData
-    }));
+    console.log('updateImage called with type:', type, 'imageData:', imageData);
+    setImages(prev => {
+      const newImages = {
+        ...prev,
+        [type]: imageData
+      };
+      console.log('Updated images state:', newImages);
+      return newImages;
+    });
   };
 
   const addAction = (type: 'primary' | 'secondary', actionName: string) => {
@@ -333,6 +338,8 @@ export function ConfigurationProvider({
         images: images,
         logoOrHeader: logoOrHeader
       };
+
+      console.log('Saving configuration with images:', images);
 
       // Save to localStorage
       const storageKey = `configuration-${productId}`;
