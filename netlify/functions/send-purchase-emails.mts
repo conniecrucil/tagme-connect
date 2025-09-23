@@ -14,6 +14,33 @@ const adminEmail = process.env.ADMIN_EMAIL || 'connectme-test@mailinator.com';
 // for the same session ID (e.g., page refresh, direct URL access, etc.)
 const sentEmails = new Set<string>();
 
+// Helper function to get base URL from request headers
+function getBaseUrlFromRequest(req: Request): string {
+  // Try to get the origin from request headers first
+  const origin = req.headers.get('origin');
+  if (origin) {
+    return origin;
+  }
+
+  // Try to extract from referer header
+  const referer = req.headers.get('referer');
+  if (referer) {
+    // Remove the path from referer to get just the base URL
+    return referer.replace(/\/[^\/]*$/, '');
+  }
+
+  // Try to get from host header and construct URL
+  const host = req.headers.get('host');
+  if (host) {
+    // Determine protocol based on host
+    const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+    return `${protocol}://${host}`;
+  }
+
+  // Fallback to environment variable or localhost
+  return process.env.NETLIFY_SITE_URL || 'http://localhost:8888';
+}
+
 export default async (req: Request, context: Context) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -71,7 +98,7 @@ export default async (req: Request, context: Context) => {
       } : null
     };
 
-    await handleCheckoutSessionCompleted(session, cart, customerInfo);
+    await handleCheckoutSessionCompleted(session, cart, customerInfo, req);
 
     // Mark emails as sent for this session
     sentEmails.add(sessionId);
@@ -92,7 +119,7 @@ export default async (req: Request, context: Context) => {
   }
 };
 
-async function handleCheckoutSessionCompleted(session: any, cart?: any, customerInfo?: any) {
+async function handleCheckoutSessionCompleted(session: any, cart?: any, customerInfo?: any, req?: Request) {
   try {
     // Use provided data or fallback to metadata
     if (!cart || !customerInfo) {
@@ -120,7 +147,7 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
       for (let i = 0; i < item.quantity; i++) {
         if (item.configuration && item.productType === 'core') {
           try {
-            const s3Response = await uploadContactCardToS3(session.id, item.configuration, i + 1);
+            const s3Response = await uploadContactCardToS3(session.id, item.configuration, i + 1, req);
             s3Urls.push(s3Response);
           } catch (error) {
             console.error(`Failed to upload card ${i + 1} to S3:`, error);
@@ -135,7 +162,7 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
     // Send admin notification emails (one per card)
     for (const item of cart) {
       for (let i = 0; i < item.quantity; i++) {
-        await sendAdminNotificationEmail(session, customerInfo, item, i + 1, s3Urls[i] || null);
+        await sendAdminNotificationEmail(session, customerInfo, item, i + 1, s3Urls[i] || null, req);
       }
     }
 
@@ -147,9 +174,10 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
 
 
 
-async function uploadContactCardToS3(sessionId: string, configuration: any, cardNumber: number) {
+async function uploadContactCardToS3(sessionId: string, configuration: any, cardNumber: number, req?: Request) {
   try {
-    const response = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8888'}/.netlify/functions/upload-to-s3`, {
+    const baseUrl = req ? getBaseUrlFromRequest(req) : (process.env.NETLIFY_SITE_URL || 'http://localhost:8888');
+    const response = await fetch(`${baseUrl}/.netlify/functions/upload-to-s3`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -194,14 +222,15 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
   }
 }
 
-async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any, s3Data: any = null) {
+async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any, s3Data: any = null, req?: Request) {
   try {
     // Handle card design zip upload for both basic and core cards
     let cardDesignZipUrl = null;
     
     if (item.configuration?.images?.cardDesign?.blob) {
       try {
-        const cardDesignZipResponse = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8888'}/.netlify/functions/upload-logo-zip`, {
+        const baseUrl = req ? getBaseUrlFromRequest(req) : (process.env.NETLIFY_SITE_URL || 'http://localhost:8888');
+        const cardDesignZipResponse = await fetch(`${baseUrl}/.netlify/functions/upload-logo-zip`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

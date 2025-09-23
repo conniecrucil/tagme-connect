@@ -9,6 +9,33 @@ const resend = new Resend(process.env.RESEND_API_KEY || '');
 const emailFrom = process.env.EMAIL_FROM || 'hello@brianbancroft.ca';
 const adminEmail = process.env.ADMIN_EMAIL || 'connectme-test@mailinator.com';
 
+// Helper function to get base URL from request headers
+function getBaseUrlFromRequest(req: Request): string {
+  // Try to get the origin from request headers first
+  const origin = req.headers.get('origin');
+  if (origin) {
+    return origin;
+  }
+
+  // Try to extract from referer header
+  const referer = req.headers.get('referer');
+  if (referer) {
+    // Remove the path from referer to get just the base URL
+    return referer.replace(/\/[^\/]*$/, '');
+  }
+
+  // Try to get from host header and construct URL
+  const host = req.headers.get('host');
+  if (host) {
+    // Determine protocol based on host
+    const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+    return `${protocol}://${host}`;
+  }
+
+  // Fallback to environment variable or localhost
+  return process.env.NETLIFY_SITE_URL || 'http://localhost:8888';
+}
+
 export default async (req: Request, context: Context) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -31,7 +58,7 @@ export default async (req: Request, context: Context) => {
     const sessionId = `admin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     // Upload contact card to S3
-    const s3Response = await uploadContactCardToS3(sessionId, configuration);
+    const s3Response = await uploadContactCardToS3(sessionId, configuration, req);
 
     // Send admin notification email
     await sendAdminNotificationEmail(sessionId, configuration, s3Response);
@@ -60,9 +87,10 @@ export default async (req: Request, context: Context) => {
   }
 };
 
-async function uploadContactCardToS3(sessionId: string, configuration: any) {
+async function uploadContactCardToS3(sessionId: string, configuration: any, req: Request) {
   try {
-    const response = await fetch(`${process.env.NETLIFY_SITE_URL || 'http://localhost:8888'}/.netlify/functions/upload-to-s3`, {
+    const baseUrl = getBaseUrlFromRequest(req);
+    const response = await fetch(`${baseUrl}/.netlify/functions/upload-to-s3`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
