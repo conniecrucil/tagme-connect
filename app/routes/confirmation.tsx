@@ -27,6 +27,7 @@ export default function Confirmation() {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedOrderId, setCopiedOrderId] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   const copyOrderId = async (orderId: string) => {
     try {
@@ -44,6 +45,18 @@ export default function Confirmation() {
   };
 
   const sendPurchaseEmails = async (sessionId: string, cart: any[], customerInfo: any) => {
+    // Check if emails have already been sent for this session
+    const emailSentKey = `emails_sent_${sessionId}`;
+    const emailsAlreadySent = localStorage.getItem(emailSentKey);
+    
+    if (emailsAlreadySent) {
+      console.log('Emails already sent for session:', sessionId);
+      setEmailStatus('sent');
+      return;
+    }
+
+    setEmailStatus('sending');
+    
     try {
       const response = await fetch('/.netlify/functions/send-purchase-emails', {
         method: 'POST',
@@ -63,8 +76,18 @@ export default function Confirmation() {
 
       const result = await response.json();
       console.log('Purchase emails sent successfully:', result);
+      
+      // Mark emails as sent in localStorage
+      localStorage.setItem(emailSentKey, JSON.stringify({
+        sent: true,
+        timestamp: Date.now(),
+        sessionId
+      }));
+      
+      setEmailStatus('sent');
     } catch (error) {
       console.error('Error sending purchase emails:', error);
+      setEmailStatus('error');
       // Don't show error to user as this is a background operation
     }
   };
@@ -73,6 +96,13 @@ export default function Confirmation() {
     const sessionId = searchParams.get('session_id');
     
     if (sessionId) {
+      // Check if emails have already been sent for this session
+      const emailSentKey = `emails_sent_${sessionId}`;
+      const emailsAlreadySent = localStorage.getItem(emailSentKey);
+      if (emailsAlreadySent) {
+        setEmailStatus('sent');
+      }
+
       const fetchOrderData = async () => {
         try {
           console.log('Fetching Stripe session data for:', sessionId);
@@ -402,12 +432,53 @@ export default function Confirmation() {
                     <span className="text-gray-600">Order Date:</span>
                     <span className="font-medium">{new Date().toLocaleDateString()}</span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Confirmation Email:</span>
+                    <div className="flex items-center gap-2">
+                      {emailStatus === 'sending' && (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                          <span className="text-sm text-gray-600">Sending...</span>
+                        </>
+                      )}
+                      {emailStatus === 'sent' && (
+                        <>
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-sm text-green-600 font-medium">Sent</span>
+                        </>
+                      )}
+                      {emailStatus === 'error' && (
+                        <>
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          <span className="text-sm text-red-600">Failed</span>
+                        </>
+                      )}
+                      {emailStatus === 'idle' && (
+                        <span className="text-sm text-gray-500">Pending</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-gray-900 mb-2">What's Next?</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• You'll receive a confirmation email shortly with specific timelines</li>
+                    {emailStatus === 'sent' && (
+                      <li>• ✅ Confirmation email sent with specific timelines</li>
+                    )}
+                    {emailStatus === 'sending' && (
+                      <li>• 📧 Sending confirmation email with specific timelines...</li>
+                    )}
+                    {emailStatus === 'error' && (
+                      <li>• ⚠️ Email sending failed - please contact support</li>
+                    )}
+                    {emailStatus === 'idle' && (
+                      <li>• 📧 You'll receive a confirmation email shortly with specific timelines</li>
+                    )}
                     <li>• Your order will be processed within 1-2 business days</li>
                     <li>• Production and shipping times vary by order type and will be detailed in your email</li>
                     <li>• You'll receive tracking information when shipped</li>
