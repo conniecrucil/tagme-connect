@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/com
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { ActionIcon } from "~/components/Icon";
+import { UnifiedIcon } from "~/components/UnifiedIcon";
 import { useToast } from "~/components/ui/use-toast";
 import { useConfiguration } from "~/providers/configuration-provider";
 import { primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions } from "~/providers/configuration-provider";
@@ -795,13 +795,12 @@ export default function ConfigureProduct() {
                                 onClick={() => addAction('primary', action.name)}
                                 className="flex flex-col items-center space-y-1 h-auto py-3"
                               >
-                                <div
-                                  className="w-8 h-8 flex items-center justify-center rounded-full"
+                                <span 
+                                  className="px-3 py-1 rounded-lg text-xs font-medium text-white"
                                   style={{ backgroundColor: action.color }}
                                 >
-                                  <ActionIcon name={action.name} className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="text-xs">{action.name}</span>
+                                  {action.name}
+                                </span>
                               </Button>
                             ))}
                           </div>
@@ -846,13 +845,12 @@ export default function ConfigureProduct() {
                                 onClick={() => addAction('secondary', action.name)}
                                 className="flex flex-col items-center space-y-1 h-auto py-3"
                               >
-                                <div
-                                  className="w-8 h-8 flex items-center justify-center rounded-full"
+                                <span 
+                                  className="px-3 py-1 rounded-lg text-xs font-medium text-white"
                                   style={{ backgroundColor: action.color }}
                                 >
-                                  <ActionIcon name={action.name} className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="text-xs">{action.name}</span>
+                                  {action.name}
+                                </span>
                               </Button>
                             ))}
                           </div>

@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
-import { ActionIcon } from "../components/Icon";
+import { UnifiedIcon } from "../components/UnifiedIcon";
 import { allAvailableActions } from "../lib/actions-config";
 
 interface VCardData {
@@ -582,10 +582,12 @@ END:VCARD`;
                       <div className="w-6 h-6 text-gray-500">⋮⋮</div>
                     </button>
                     <div
-                      className="w-12 h-12 flex items-center justify-center flex-shrink-0 mr-3 rounded-full"
+                      className="px-3 py-1 rounded-lg flex-shrink-0 mr-3"
                       style={{ backgroundColor: action.color }}
                     >
-                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
+                      <span className="text-xs font-medium text-white whitespace-nowrap">
+                        {action.name}
+                      </span>
                     </div>
                     <div className="w-full">
                       <Input
@@ -621,11 +623,13 @@ END:VCARD`;
                     <button
                       key={action.name}
                       onClick={() => addAction('primary', action.name)}
-                      className="w-12 h-12 flex items-center justify-center rounded-full hover:scale-110 focus:scale-110 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
+                      className="px-3 py-1 rounded-lg hover:scale-110 focus:scale-110 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
                       style={{ backgroundColor: action.color }}
                       title={action.label}
                     >
-                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
+                      <span className="text-xs font-medium text-white whitespace-nowrap">
+                        {action.name}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -643,10 +647,12 @@ END:VCARD`;
                       <div className="w-6 h-6 text-gray-500">⋮⋮</div>
                     </button>
                     <div
-                      className="w-12 h-12 flex items-center justify-center flex-shrink-0 mr-3 rounded-full"
+                      className="px-3 py-1 rounded-lg flex-shrink-0 mr-3"
                       style={{ backgroundColor: action.color }}
                     >
-                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
+                      <span className="text-xs font-medium text-white whitespace-nowrap">
+                        {action.name}
+                      </span>
                     </div>
                     <div className="w-full">
                       <Input
@@ -682,11 +688,13 @@ END:VCARD`;
                     <button
                       key={action.name}
                       onClick={() => addAction('secondary', action.name)}
-                      className="w-12 h-12 flex items-center justify-center rounded-full hover:scale-110 focus:scale-110 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
+                      className="px-3 py-1 rounded-lg hover:scale-110 focus:scale-110 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
                       style={{ backgroundColor: action.color }}
                       title={action.label}
                     >
-                      <ActionIcon name={action.name} className="w-6 h-6 text-white" />
+                      <span className="text-xs font-medium text-white whitespace-nowrap">
+                        {action.name}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -775,7 +783,7 @@ END:VCARD`;
                     {/* Primary Actions */}
                     {primaryActions.filter(action => action.value).map((action, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <ActionIcon name={action.name} className="w-6 h-6 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">{action.name}:</span>
                         <span className="text-sm">{action.value}</span>
                       </div>
                     ))}
@@ -783,7 +791,7 @@ END:VCARD`;
                     {/* Secondary Actions */}
                     {secondaryActions.filter(action => action.value).map((action, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <ActionIcon name={action.name} className="w-6 h-6 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">{action.name}:</span>
                         <span className="text-sm">{action.value}</span>
                       </div>
                     ))}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/com
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { ActionIcon } from "~/components/Icon";
+import { UnifiedIcon } from "~/components/UnifiedIcon";
 import { useToast } from "~/components/ui/use-toast";
 import { availableActions } from "~/providers/configuration-provider";
 import type { VCardData, Action, ImageData } from "~/providers/configuration-provider";
@@ -699,7 +699,6 @@ export default function AdminContactBuilder() {
                 onClick={() => addAction('primary', action.name)}
                 disabled={primaryActions.some(a => a.name === action.name)}
               >
-                <ActionIcon name={action.name} className="w-4 h-4 mr-2" />
                 {action.label}
               </Button>
             ))}
@@ -712,7 +711,6 @@ export default function AdminContactBuilder() {
                   {action.label || action.name}
                 </label>
                 <div className="flex items-center gap-2">
-                  <ActionIcon name={action.name} className="w-5 h-5" />
                   <Input
                     value={action.value}
                     onChange={(e) => updateActionValue('primary', index, e.target.value)}
@@ -751,7 +749,6 @@ export default function AdminContactBuilder() {
                 onClick={() => addAction('secondary', action.name)}
                 disabled={secondaryActions.some(a => a.name === action.name)}
               >
-                <ActionIcon name={action.name} className="w-4 h-4 mr-2" />
                 {action.label}
               </Button>
             ))}
@@ -764,7 +761,6 @@ export default function AdminContactBuilder() {
                   {action.label || action.name}
                 </label>
                 <div className="flex items-center gap-2">
-                  <ActionIcon name={action.name} className="w-5 h-5" />
                   <Input
                     value={action.value}
                     onChange={(e) => updateActionValue('secondary', index, e.target.value)}

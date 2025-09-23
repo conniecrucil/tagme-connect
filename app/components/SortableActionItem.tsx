@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
-import { ActionIcon } from '~/components/Icon';
+import { UnifiedIcon } from '~/components/UnifiedIcon';
 import type { Action } from '~/providers/configuration-provider';
 
 interface SortableActionItemProps {
@@ -56,10 +56,12 @@ export default function SortableActionItem({
       
       {/* Action Icon */}
       <div
-        className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 mt-2"
+        className="px-3 py-1 rounded-lg flex-shrink-0 mt-2"
         style={{ backgroundColor: action.color }}
       >
-        <ActionIcon name={action.name} className="w-5 h-5 text-white" />
+        <span className="text-xs font-medium text-white whitespace-nowrap">
+          {action.name}
+        </span>
       </div>
       
       {/* Input Field with Label */}

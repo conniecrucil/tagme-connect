@@ -1,4 +1,4 @@
-import { ActionIcon } from "~/components/Icon";
+import { UnifiedIcon } from "~/components/UnifiedIcon";
 import type { VCardData, Action, ImageData } from "~/providers/configuration-provider";
 
 interface MobileCardPreviewProps {
@@ -103,7 +103,6 @@ export default function MobileCardPreview({
         {/* Email */}
         {vCardData.email && (
           <a href={`mailto:${vCardData.email}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-            <ActionIcon name="email" className="w-4 h-4 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Email</div>
               <div className="text-sm text-gray-800">{vCardData.email}</div>
@@ -114,7 +113,6 @@ export default function MobileCardPreview({
         {/* Phone */}
         {vCardData.phone && (
           <a href={`tel:${vCardData.phone}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-            <ActionIcon name="call" className="w-4 h-4 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Phone</div>
               <div className="text-sm text-gray-800">{vCardData.phone}</div>
@@ -125,7 +123,6 @@ export default function MobileCardPreview({
         {/* Mobile */}
         {vCardData.mobile && (
           <a href={`tel:${vCardData.mobile}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-            <ActionIcon name="Mobile" className="w-4 h-4 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Mobile</div>
               <div className="text-sm text-gray-800">{vCardData.mobile}</div>
@@ -136,7 +133,6 @@ export default function MobileCardPreview({
         {/* Website */}
         {vCardData.website && (
           <a href={vCardData.website} target="_blank" rel="noopener noreferrer" className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-            <ActionIcon name="website" className="w-4 h-4 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Website</div>
               <div className="text-sm text-gray-800">{vCardData.website}</div>
@@ -147,7 +143,6 @@ export default function MobileCardPreview({
         {/* Address */}
         {fullAddress && (
           <div className="flex items-center py-2 border-b border-gray-100">
-            <ActionIcon name="location" className="w-4 h-4 text-gray-600 mr-3" />
             <div className="flex-1">
               <div className="text-xs font-medium text-gray-500">Address</div>
               <div className="text-sm text-gray-800">{fullAddress}</div>
@@ -193,11 +188,11 @@ export default function MobileCardPreview({
                     href={href}
                     target={isPhoneAction ? "_self" : "_blank"}
                     rel={isPhoneAction ? "" : "noopener noreferrer"}
-                    className="flex items-center justify-center w-10 h-10 rounded-full transition-all hover:scale-105 hover:shadow-md"
+                    className="flex items-center justify-center px-3 py-1.5 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-md"
                     style={{ backgroundColor: action.color }}
                     title={action.name}
                   >
-                    <ActionIcon name={action.name} className="w-5 h-5 text-white" />
+                    <UnifiedIcon name={action.name} className="text-xs font-semibold text-white whitespace-nowrap" />
                   </a>
                 );
               })}
@@ -232,11 +227,11 @@ export default function MobileCardPreview({
                     href={href}
                     target={isPhoneAction ? "_self" : "_blank"}
                     rel={isPhoneAction ? "" : "noopener noreferrer"}
-                    className="flex items-center justify-center w-10 h-10 rounded-full transition-all hover:scale-105 hover:shadow-md"
+                    className="flex items-center justify-center px-3 py-1.5 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-md"
                     style={{ backgroundColor: action.color }}
                     title={action.name}
                   >
-                    <ActionIcon name={action.name} className="w-5 h-5 text-white" />
+                    <UnifiedIcon name={action.name} className="text-xs font-semibold text-white whitespace-nowrap" />
                   </a>
                 );
               })}

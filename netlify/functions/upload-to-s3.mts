@@ -12,13 +12,70 @@ const s3Client = new S3Client({
   },
 });
 
+// Helper function to get display name for action buttons
+const getDisplayName = (name: string): string => {
+  const displayNames: Record<string, string> = {
+    // Primary actions
+    email: 'Email',
+    call: 'Call',
+    Mobile: 'Mobile',
+    website: 'Website',
+    location: 'Location',
+    calendar: 'Calendar',
+    Home: 'Home',
+    Office: 'Office',
+    fax: 'Fax',
+    signal: 'Signal',
+    messenger: 'Messenger',
+    whatsApp: 'WhatsApp',
+    telegram: 'Telegram',
+    weChat: 'WeChat',
+    matrix: 'Matrix',
+    
+    // Secondary actions
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    linkedin: 'LinkedIn',
+    youtube: 'YouTube',
+    x: 'X',
+    bluesky: 'Bluesky',
+    tiktok: 'TikTok',
+    snapchat: 'Snapchat',
+    twitch: 'Twitch',
+    vimeo: 'Vimeo',
+    spotify: 'Spotify',
+    discord: 'Discord',
+    reddit: 'Reddit',
+    pinterest: 'Pinterest',
+    github: 'GitHub',
+    apple: 'Apple',
+    behance: 'Behance',
+    dribbble: 'Dribbble',
+    artstation: 'ArtStation',
+    bemer: 'Bemer',
+    buymeacoffee: 'Buy Me a Coffee',
+    cashapp: 'Cash App',
+    coinbase: 'Coinbase',
+    yelp: 'Yelp',
+    npm: 'NPM'
+  };
+  
+  return displayNames[name] || name;
+};
+
 interface ContactCardData {
   name?: string;
   email?: string;
   phone?: string;
+  mobile?: string;
   company?: string;
   title?: string;
   website?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  postal?: string;
+  country?: string;
   socialMedia?: Record<string, string>;
   customMessage?: string;
   primaryActions?: Array<{ name: string; value: string; color?: string }>;
@@ -286,13 +343,13 @@ function generateContactCardHTML(data: ContactCardData): string {
         border-bottom: none;
       }
       
-      .contact-icon {
-        width: 16px;
-        height: 16px;
-        margin-right: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .contact-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
       }
       
       .contact-text {
@@ -330,26 +387,32 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .action-button {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+        padding: 8px 16px;
+        border-radius: 8px;
         text-decoration: none;
         transition: all 0.2s;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        min-width: auto;
+        height: auto;
       }
       
       .action-button:hover {
-        transform: scale(1.05);
+        transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
       
-      .action-icon {
-        width: 20px;
-        height: 20px;
+      .action-text {
+        font-size: 12px;
+        font-weight: 600;
         color: white;
+        text-align: center;
+        line-height: 1.2;
+        text-transform: none;
+        letter-spacing: 0.25px;
+        white-space: nowrap;
       }
       
       .custom-message {
@@ -407,18 +470,9 @@ function generateContactCardHTML(data: ContactCardData): string {
     </style>
   `;
 
-  // Generate social media icons (simplified SVG icons)
-  const getSocialIcon = (platform: string): string => {
-    const icons: Record<string, string> = {
-      linkedin: '<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>',
-      twitter: '<path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>',
-      facebook: '<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>',
-      instagram: '<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>',
-      youtube: '<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>',
-      website: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>'
-    };
-    
-    return icons[platform.toLowerCase()] || icons.website;
+  // Generate text labels for action buttons
+  const getActionLabel = (platform: string): string => {
+    return getDisplayName(platform);
   };
 
   // Generate contact items
@@ -427,11 +481,6 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.email) {
     contactItems.push(`
       <a href="mailto:${data.email}" class="contact-item">
-        <div class="contact-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
-            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-          </svg>
-        </div>
         <div class="contact-text">
           <div class="contact-label">Email</div>
           <div class="contact-value">${data.email}</div>
@@ -443,11 +492,6 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.phone) {
     contactItems.push(`
       <a href="tel:${data.phone}" class="contact-item">
-        <div class="contact-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
-            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-          </svg>
-        </div>
         <div class="contact-text">
           <div class="contact-label">Phone</div>
           <div class="contact-value">${data.phone}</div>
@@ -459,11 +503,6 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.mobile) {
     contactItems.push(`
       <a href="tel:${data.mobile}" class="contact-item">
-        <div class="contact-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
-            <path d="M17 1.01L7 1c-1.1 0-1.99.9-1.99 2v18c0 1.1.89 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
-          </svg>
-        </div>
         <div class="contact-text">
           <div class="contact-label">Mobile</div>
           <div class="contact-value">${data.mobile}</div>
@@ -475,11 +514,6 @@ function generateContactCardHTML(data: ContactCardData): string {
   if (data.website) {
     contactItems.push(`
       <a href="${data.website}" class="contact-item" target="_blank">
-        <div class="contact-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-600">
-            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>
-          </svg>
-        </div>
         <div class="contact-text">
           <div class="contact-label">Website</div>
           <div class="contact-value">${data.website.replace(/^https?:\/\//, '')}</div>
@@ -508,9 +542,7 @@ function generateContactCardHTML(data: ContactCardData): string {
         
         primaryActionButtons.push(`
           <a href="${href}" class="action-button" style="background-color: ${action.color || '#10b981'};" target="_blank">
-            <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor">
-              ${getSocialIcon(action.name)}
-            </svg>
+            <span class="action-text">${getActionLabel(action.name)}</span>
           </a>
         `);
       }
@@ -533,9 +565,7 @@ function generateContactCardHTML(data: ContactCardData): string {
         
         secondaryActionButtons.push(`
           <a href="${href}" class="action-button" style="background-color: ${action.color || '#6b7280'};" target="_blank">
-            <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor">
-              ${getSocialIcon(action.name)}
-            </svg>
+            <span class="action-text">${getActionLabel(action.name)}</span>
           </a>
         `);
       }
