@@ -89,104 +89,144 @@ interface ContactCardData {
 }
 
 export default async (req: Request, context: Context) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
-    const { contactData, sessionId } = await req.json();
-
-    if (!contactData || !sessionId) {
-      return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
-        status: 400,
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Generate unique folder ID
-    const folderId = uuidv4();
-    const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
-    
-    if (!bucketName) {
-      throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
+    try {
+      const { contactData, sessionId } = await req.json();
+
+      if (!contactData || !sessionId) {
+        console.error('Missing required parameters:', { contactData: !!contactData, sessionId: !!sessionId });
+        return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Generate unique folder ID
+      const folderId = uuidv4();
+      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      
+      if (!bucketName) {
+        console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
+        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
+      }
+
+      try {
+        // Generate vCard content
+        const vcardConfig: VCardConfig = {
+          name: contactData.name,
+          email: contactData.email,
+          phone: contactData.phone,
+          company: contactData.company,
+          title: contactData.title,
+          website: contactData.website,
+          socialMedia: contactData.socialMedia,
+          customMessage: contactData.customMessage
+        };
+
+        const vcardContent = generateVCard(vcardConfig);
+
+        // Generate HTML content for the contact card
+        const htmlContent = generateContactCardHTML(contactData);
+
+        // Upload vCard file
+        const vcardKey = `${folderId}/contact.vcf`;
+        await uploadToS3(bucketName, vcardKey, vcardContent, 'text/vcard');
+
+        // Upload HTML file
+        const htmlKey = `${folderId}/index.html`;
+        await uploadToS3(bucketName, htmlKey, htmlContent, 'text/html');
+
+        // Upload images if they exist
+        const imageUrls: Record<string, string> = {};
+        
+        if (contactData.images) {
+          const { logo, photo, cover } = contactData.images;
+          
+          if (logo?.blob) {
+            try {
+              const logoKey = `${folderId}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
+              const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
+              await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
+              imageUrls.logo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
+            } catch (logoError) {
+              console.error('Error uploading logo:', logoError);
+              // Continue without logo rather than failing completely
+            }
+          }
+          
+          if (photo?.blob) {
+            try {
+              const photoKey = `${folderId}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
+              const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
+              await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
+              imageUrls.photo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
+            } catch (photoError) {
+              console.error('Error uploading photo:', photoError);
+              // Continue without photo rather than failing completely
+            }
+          }
+          
+          if (cover?.blob) {
+            try {
+              const coverKey = `${folderId}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
+              const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
+              await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
+              imageUrls.cover = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
+            } catch (coverError) {
+              console.error('Error uploading cover:', coverError);
+              // Continue without cover rather than failing completely
+            }
+          }
+        }
+
+        // Return the public URLs
+        const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${folderId}`;
+        
+        return new Response(JSON.stringify({
+          success: true,
+          folderId,
+          urls: {
+            html: `${baseUrl}/index.html`,
+            vcard: `${baseUrl}/contact.vcf`
+          },
+          imageUrls
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+      } catch (contentError) {
+        console.error('Error generating or uploading content:', contentError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to generate or upload contact card content',
+          details: contentError instanceof Error ? contentError.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+    } catch (s3Error) {
+      console.error('S3 operation error:', s3Error);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to upload to S3',
+        details: s3Error instanceof Error ? s3Error.message : 'Unknown error'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
-
-    // Generate vCard content
-    const vcardConfig: VCardConfig = {
-      name: contactData.name,
-      email: contactData.email,
-      phone: contactData.phone,
-      company: contactData.company,
-      title: contactData.title,
-      website: contactData.website,
-      socialMedia: contactData.socialMedia,
-      customMessage: contactData.customMessage
-    };
-
-    const vcardContent = generateVCard(vcardConfig);
-
-    // Generate HTML content for the contact card
-    const htmlContent = generateContactCardHTML(contactData);
-
-    // Upload vCard file
-    const vcardKey = `${folderId}/contact.vcf`;
-    await uploadToS3(bucketName, vcardKey, vcardContent, 'text/vcard');
-
-    // Upload HTML file
-    const htmlKey = `${folderId}/index.html`;
-    await uploadToS3(bucketName, htmlKey, htmlContent, 'text/html');
-
-    // Upload images if they exist
-    const imageUrls: Record<string, string> = {};
-    
-    if (contactData.images) {
-      const { logo, photo, cover } = contactData.images;
-      
-      if (logo?.blob) {
-        const logoKey = `${folderId}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
-        const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
-        await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
-        imageUrls.logo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
-      }
-      
-      if (photo?.blob) {
-        const photoKey = `${folderId}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
-        const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
-        await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
-        imageUrls.photo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
-      }
-      
-      if (cover?.blob) {
-        const coverKey = `${folderId}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
-        const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
-        await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
-        imageUrls.cover = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
-      }
-    }
-
-    // Return the public URLs
-    const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${folderId}`;
-    
-    return new Response(JSON.stringify({
-      success: true,
-      folderId,
-      urls: {
-        html: `${baseUrl}/index.html`,
-        vcard: `${baseUrl}/contact.vcf`
-      },
-      imageUrls
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
   } catch (error) {
-    console.error('Error uploading to S3:', error);
+    console.error('Unexpected error in upload-to-s3:', error);
     return new Response(JSON.stringify({ 
-      error: 'Failed to upload to S3',
+      error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,

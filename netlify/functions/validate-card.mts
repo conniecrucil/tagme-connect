@@ -2,85 +2,117 @@ import type { Context } from '@netlify/functions';
 import { generateVCard, isValidVCard, type VCardConfig } from './utils/vcard-generator.js';
 
 export default async (req: Request, context: Context) => {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-
   try {
-
-    console.log('validate-card');
-
-    const { configuration } = await req.json();
-
-
-
-    if (!configuration) {
-      return new Response(JSON.stringify({ error: 'Configuration is required' }), {
-        status: 400,
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
         headers: {
           'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
           'Content-Type': 'application/json',
         },
       });
     }
 
-    // Validate required fields
-    const validationErrors = validateConfiguration(configuration);
+    try {
+      console.log('validate-card');
 
-    if (validationErrors.length > 0) {
-      return new Response(JSON.stringify({
-        error: 'Validation failed',
-        details: validationErrors
+      const { configuration } = await req.json();
+
+      if (!configuration) {
+        console.error('Configuration is missing from request');
+        return new Response(JSON.stringify({ error: 'Configuration is required' }), {
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
+      // Validate required fields
+      const validationErrors = validateConfiguration(configuration);
+
+      if (validationErrors.length > 0) {
+        console.warn('Configuration validation failed:', validationErrors);
+        return new Response(JSON.stringify({
+          error: 'Validation failed',
+          details: validationErrors
+        }), {
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
+      try {
+        // Generate vCard to test validity
+        const vcardContent = generateVCard(configuration as VCardConfig);
+
+        // Basic vCard structure validation
+        if (!isValidVCard(vcardContent)) {
+          console.error('Generated vCard is invalid');
+          return new Response(JSON.stringify({
+            error: 'Invalid vCard generated',
+            details: ['Generated vCard does not meet standard requirements']
+          }), {
+            status: 400,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json',
+            },
+          });
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Configuration validated successfully',
+          vcardPreview: vcardContent.substring(0, 200) + '...' // Preview only, not full vCard
+        }), {
+          status: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          },
+        });
+
+      } catch (vcardError) {
+        console.error('Error generating vCard:', vcardError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to generate vCard',
+          details: vcardError instanceof Error ? vcardError.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
+    } catch (validationError) {
+      console.error('Error validating card configuration:', validationError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to validate configuration',
+        details: validationError instanceof Error ? validationError.message : 'Unknown error'
       }), {
-        status: 400,
+        status: 500,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json',
         },
       });
     }
-
-    // Generate vCard to test validity
-    const vcardContent = generateVCard(configuration as VCardConfig);
-
-    // Basic vCard structure validation
-    if (!isValidVCard(vcardContent)) {
-      return new Response(JSON.stringify({
-        error: 'Invalid vCard generated',
-        details: ['Generated vCard does not meet standard requirements']
-      }), {
-        status: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        },
-      });
-    }
-
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Configuration validated successfully',
-      vcardPreview: vcardContent.substring(0, 200) + '...' // Preview only, not full vCard
-    }), {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      },
-    });
-
   } catch (error) {
-    console.error('Error validating card configuration:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    console.error('Unexpected error in validate-card:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       status: 500,
       headers: {
         'Access-Control-Allow-Origin': '*',

@@ -4,32 +4,34 @@ import type { Context } from '@netlify/functions';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 export default async (req: Request, context: Context) => {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-
   try {
-    const { cart, customerInfo } = await req.json();
-
-    // Validate required data
-    if (!cart || !cart.length) {
-      return new Response(JSON.stringify({ error: 'Cart is required' }), {
-        status: 400,
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
         headers: {
           'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
           'Content-Type': 'application/json',
         },
       });
     }
+
+    try {
+      const { cart, customerInfo } = await req.json();
+
+      // Validate required data
+      if (!cart || !cart.length) {
+        console.error('Cart validation failed: cart is empty or missing');
+        return new Response(JSON.stringify({ error: 'Cart is required' }), {
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          },
+        });
+      }
 
     // Get base URL for redirects and images
     // Use the origin from the request headers to support both localhost and production
@@ -103,20 +105,54 @@ export default async (req: Request, context: Context) => {
       },
     });
 
-    return new Response(JSON.stringify({
-      sessionId: session.id,
-      url: session.url
-    }), {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      },
-    });
+      return new Response(JSON.stringify({
+        sessionId: session.id,
+        url: session.url
+      }), {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      });
 
+    } catch (stripeError) {
+      console.error('Stripe API error:', stripeError);
+      
+      // Handle specific Stripe errors
+      if (stripeError && typeof stripeError === 'object' && 'type' in stripeError) {
+        const error = stripeError as any;
+        if (error.type === 'StripeInvalidRequestError') {
+          return new Response(JSON.stringify({ 
+            error: 'Invalid request to payment processor',
+            details: error.message 
+          }), {
+            status: 400,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json',
+            },
+          });
+        }
+      }
+      
+      return new Response(JSON.stringify({ 
+        error: 'Failed to create checkout session',
+        details: stripeError instanceof Error ? stripeError.message : 'Unknown error'
+      }), {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      });
+    }
   } catch (error) {
-    console.error('Error creating checkout session:', error);
-    return new Response(JSON.stringify({ error: 'Failed to create checkout session' }), {
+    console.error('Unexpected error in create-checkout-session:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       status: 500,
       headers: {
         'Access-Control-Allow-Origin': '*',

@@ -37,61 +37,87 @@ interface ContactCardData {
 }
 
 export default async (req: Request, context: Context) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json' 
-      },
-    });
-  }
-
   try {
-    const { uuid, contactData } = await req.json();
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Content-Type': 'application/json' 
+        },
+      });
+    }
 
-    if (!uuid || !contactData) {
-      return new Response(JSON.stringify({ error: 'UUID and contact data are required' }), {
+    try {
+      const { uuid, contactData } = await req.json();
+
+      if (!uuid || !contactData) {
+        console.error('Missing required parameters:', { uuid: !!uuid, contactData: !!contactData });
+        return new Response(JSON.stringify({ error: 'UUID and contact data are required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      
+      if (!bucketName) {
+        console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
+        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
+      }
+
+      try {
+        // Verify the contact card exists
+        const exists = await contactCardExists(bucketName, uuid);
+        if (!exists) {
+          console.warn('Contact card not found:', uuid);
+          return new Response(JSON.stringify({ error: 'Contact card not found' }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Update the contact card data in S3
+        const result = await updateContactCardInS3(bucketName, uuid, contactData);
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Contact card updated successfully',
+          uuid,
+          urls: result.urls,
+          imageUrls: result.imageUrls
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+      } catch (s3Error) {
+        console.error('S3 operation error:', s3Error);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to update contact card in S3',
+          details: s3Error instanceof Error ? s3Error.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+    } catch (parseError) {
+      console.error('Error parsing request:', parseError);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid request format',
+        details: parseError instanceof Error ? parseError.message : 'Unknown error'
+      }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
-    
-    if (!bucketName) {
-      throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
-    }
-
-    // Verify the contact card exists
-    const exists = await contactCardExists(bucketName, uuid);
-    if (!exists) {
-      return new Response(JSON.stringify({ error: 'Contact card not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Update the contact card data in S3
-    const result = await updateContactCardInS3(bucketName, uuid, contactData);
-
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Contact card updated successfully',
-      uuid,
-      urls: result.urls,
-      imageUrls: result.imageUrls
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
   } catch (error) {
-    console.error('Error updating contact data:', error);
+    console.error('Unexpected error in update-contact-data:', error);
     return new Response(JSON.stringify({ 
-      error: 'Failed to update contact data',
+      error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,

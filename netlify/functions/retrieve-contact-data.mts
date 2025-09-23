@@ -23,100 +23,126 @@ interface ContactCardData {
 }
 
 export default async (req: Request, context: Context) => {
-  if (req.method !== 'GET') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Content-Type': 'application/json' 
-      },
-    });
-  }
-
   try {
-    const url = new URL(req.url);
-    const contactUrl = url.searchParams.get('contactUrl') || url.searchParams.get('uuid');
-
-    if (!contactUrl) {
-      return new Response(JSON.stringify({ error: 'Contact URL or UUID parameter is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
+    if (req.method !== 'GET') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Content-Type': 'application/json' 
+        },
       });
     }
 
-    let htmlUrl: string;
-    let uuid: string;
+    try {
+      const url = new URL(req.url);
+      const contactUrl = url.searchParams.get('contactUrl') || url.searchParams.get('uuid');
 
-    // Check if it's a full URL or just a UUID
-    if (contactUrl.startsWith('http')) {
-      // It's a full URL, extract UUID and use the URL directly
-      htmlUrl = contactUrl;
-      const urlParts = contactUrl.split('/');
-      uuid = urlParts[urlParts.length - 2]; // UUID is the second-to-last part
-    } else {
-      // It's just a UUID, construct the URL using the bucket name
-      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
-      if (!bucketName) {
-        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required when providing UUID');
+      if (!contactUrl) {
+        console.error('Contact URL or UUID parameter is missing');
+        return new Response(JSON.stringify({ error: 'Contact URL or UUID parameter is required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
-      uuid = contactUrl;
-      htmlUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}/index.html`;
-    }
 
-    // Fetch the HTML content directly from the public URL
-    const contactData = await retrieveContactCardDataFromUrl(htmlUrl, uuid);
+      let htmlUrl: string;
+      let uuid: string;
 
-    if (!contactData) {
-      return new Response(JSON.stringify({ error: 'Contact card not found' }), {
-        status: 404,
+      try {
+        // Check if it's a full URL or just a UUID
+        if (contactUrl.startsWith('http')) {
+          // It's a full URL, extract UUID and use the URL directly
+          htmlUrl = contactUrl;
+          const urlParts = contactUrl.split('/');
+          uuid = urlParts[urlParts.length - 2]; // UUID is the second-to-last part
+        } else {
+          // It's just a UUID, construct the URL using the bucket name
+          const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+          if (!bucketName) {
+            console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
+            throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required when providing UUID');
+          }
+          uuid = contactUrl;
+          htmlUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}/index.html`;
+        }
+
+        // Fetch the HTML content directly from the public URL
+        const contactData = await retrieveContactCardDataFromUrl(htmlUrl, uuid);
+
+        if (!contactData) {
+          console.warn('Contact card not found:', htmlUrl);
+          return new Response(JSON.stringify({ error: 'Contact card not found' }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Construct the vCard URL based on the same pattern as HTML URL
+        const baseUrl = htmlUrl.replace('/index.html', '');
+        const vcardUrl = `${baseUrl}/contact.vcf`;
+
+        return new Response(JSON.stringify({
+          success: true,
+          uuid,
+          contactData,
+          urls: {
+            html: htmlUrl,
+            vcard: vcardUrl
+          }
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+      } catch (urlError) {
+        console.error('Error processing URL:', urlError);
+        return new Response(JSON.stringify({ 
+          error: 'Invalid URL format',
+          details: urlError instanceof Error ? urlError.message : 'Unknown error'
+        }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+    } catch (fetchError) {
+      console.error('Error retrieving contact data:', fetchError);
+      
+      // Handle specific error types
+      let statusCode = 500;
+      let errorMessage = 'Failed to retrieve contact data';
+      
+      if (fetchError instanceof Error) {
+        if (fetchError.message.includes('404') || fetchError.message.includes('Not Found')) {
+          statusCode = 404;
+          errorMessage = 'Contact card not found: The specified URL does not exist or is not publicly accessible.';
+        } else if (fetchError.message.includes('403') || fetchError.message.includes('Forbidden')) {
+          statusCode = 403;
+          errorMessage = 'Access denied: The contact card is not publicly accessible.';
+        } else if (fetchError.message.includes('ENOTFOUND') || fetchError.message.includes('fetch failed')) {
+          statusCode = 404;
+          errorMessage = 'Unable to reach the contact card URL. Please check the URL and try again.';
+        }
+      }
+      
+      return new Response(JSON.stringify({ 
+        error: errorMessage,
+        details: fetchError instanceof Error ? fetchError.message : 'Unknown error'
+      }), {
+        status: statusCode,
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    // Construct the vCard URL based on the same pattern as HTML URL
-    const baseUrl = htmlUrl.replace('/index.html', '');
-    const vcardUrl = `${baseUrl}/contact.vcf`;
-
-    return new Response(JSON.stringify({
-      success: true,
-      uuid,
-      contactData,
-      urls: {
-        html: htmlUrl,
-        vcard: vcardUrl
-      }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
   } catch (error) {
-    console.error('Error retrieving contact data:', error);
-    
-    // Handle specific error types
-    let statusCode = 500;
-    let errorMessage = 'Failed to retrieve contact data';
-    
-    if (error instanceof Error) {
-      if (error.message.includes('404') || error.message.includes('Not Found')) {
-        statusCode = 404;
-        errorMessage = 'Contact card not found: The specified URL does not exist or is not publicly accessible.';
-      } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
-        statusCode = 403;
-        errorMessage = 'Access denied: The contact card is not publicly accessible.';
-      } else if (error.message.includes('ENOTFOUND') || error.message.includes('fetch failed')) {
-        statusCode = 404;
-        errorMessage = 'Unable to reach the contact card URL. Please check the URL and try again.';
-      }
-    }
-    
+    console.error('Unexpected error in retrieve-contact-data:', error);
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {
-      status: statusCode,
+      status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }

@@ -37,48 +37,72 @@ function getBaseUrlFromRequest(req: Request): string {
 }
 
 export default async (req: Request, context: Context) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
-    const { configuration } = await req.json();
-
-    if (!configuration) {
-      return new Response(JSON.stringify({ error: 'Missing configuration data' }), {
-        status: 400,
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Generate unique session ID for admin creation
-    const sessionId = `admin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    try {
+      const { configuration } = await req.json();
 
-    // Upload contact card to S3
-    const s3Response = await uploadContactCardToS3(sessionId, configuration, req);
+      if (!configuration) {
+        console.error('Missing configuration data in request');
+        return new Response(JSON.stringify({ error: 'Missing configuration data' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
 
-    // Send admin notification email
-    await sendAdminNotificationEmail(sessionId, configuration, s3Response);
+      // Generate unique session ID for admin creation
+      const sessionId = `admin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Contact created successfully',
-      sessionId,
-      s3Urls: s3Response.urls,
-      contactName: configuration.name,
-      contactEmail: configuration.email
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+      try {
+        // Upload contact card to S3
+        const s3Response = await uploadContactCardToS3(sessionId, configuration, req);
 
+        // Send admin notification email
+        await sendAdminNotificationEmail(sessionId, configuration, s3Response);
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Contact created successfully',
+          sessionId,
+          s3Urls: s3Response.urls,
+          contactName: configuration.name,
+          contactEmail: configuration.email
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+      } catch (s3Error) {
+        console.error('S3 upload error:', s3Error);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to upload contact card to S3',
+          details: s3Error instanceof Error ? s3Error.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to send notification email',
+        details: emailError instanceof Error ? emailError.message : 'Unknown error'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
   } catch (error) {
-    console.error('Error creating admin contact:', error);
+    console.error('Unexpected error in admin-create-contact:', error);
     return new Response(JSON.stringify({ 
-      error: 'Failed to create contact',
+      error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
@@ -102,6 +126,8 @@ async function uploadContactCardToS3(sessionId: string, configuration: any, req:
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`S3 upload failed: ${response.status} ${response.statusText}`, errorText);
       throw new Error(`S3 upload failed: ${response.statusText}`);
     }
 

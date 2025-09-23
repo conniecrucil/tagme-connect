@@ -42,73 +42,100 @@ function getBaseUrlFromRequest(req: Request): string {
 }
 
 export default async (req: Request, context: Context) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
-    const body = await req.json();
-    const { sessionId, customerInfo, cart } = body;
-
-    if (!sessionId || !customerInfo || !cart) {
-      return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
-        status: 400,
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Check if emails have already been sent for this session
-    if (sentEmails.has(sessionId)) {
+    try {
+      const body = await req.json();
+      const { sessionId, customerInfo, cart } = body;
+
+      if (!sessionId || !customerInfo || !cart) {
+        console.error('Missing required parameters:', { sessionId: !!sessionId, customerInfo: !!customerInfo, cart: !!cart });
+        return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Check if emails have already been sent for this session
+      if (sentEmails.has(sessionId)) {
+        console.log('Emails already sent for session:', sessionId);
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: 'Emails already sent for this session',
+          duplicate: true 
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Validate customer email is provided
+      if (!customerInfo.email || !customerInfo.email.trim()) {
+        console.error('Customer email is missing or empty');
+        return new Response(JSON.stringify({ error: 'Customer email is required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        // Create a mock session object for compatibility with existing functions
+        const session = {
+          id: sessionId,
+          metadata: {
+            sessionId,
+            customerName: customerInfo.name,
+            customerEmail: customerInfo.email,
+            totalItems: cart.reduce((sum: number, item: any) => sum + item.quantity, 0).toString(),
+            totalAmount: cart.reduce((sum: number, item: any) => {
+              const price = item.productType === 'basic' ? 40 : 47;
+              return sum + (price * item.quantity);
+            }, 0).toString()
+          },
+          shipping: customerInfo.shipping ? {
+            address: customerInfo.shipping
+          } : null
+        };
+
+        await handleCheckoutSessionCompleted(session, cart, customerInfo, req);
+
+        // Mark emails as sent for this session
+        sentEmails.add(sessionId);
+
+        return new Response(JSON.stringify({ success: true, message: 'Emails sent successfully' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+      } catch (emailError) {
+        console.error('Error sending purchase emails:', emailError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to send purchase emails',
+          details: emailError instanceof Error ? emailError.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+    } catch (parseError) {
+      console.error('Error parsing request:', parseError);
       return new Response(JSON.stringify({ 
-        success: true, 
-        message: 'Emails already sent for this session',
-        duplicate: true 
+        error: 'Invalid request format',
+        details: parseError instanceof Error ? parseError.message : 'Unknown error'
       }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Validate customer email is provided
-    if (!customerInfo.email || !customerInfo.email.trim()) {
-      return new Response(JSON.stringify({ error: 'Customer email is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    // Create a mock session object for compatibility with existing functions
-    const session = {
-      id: sessionId,
-      metadata: {
-        sessionId,
-        customerName: customerInfo.name,
-        customerEmail: customerInfo.email,
-        totalItems: cart.reduce((sum: number, item: any) => sum + item.quantity, 0).toString(),
-        totalAmount: cart.reduce((sum: number, item: any) => {
-          const price = item.productType === 'basic' ? 40 : 47;
-          return sum + (price * item.quantity);
-        }, 0).toString()
-      },
-      shipping: customerInfo.shipping ? {
-        address: customerInfo.shipping
-      } : null
-    };
-
-    await handleCheckoutSessionCompleted(session, cart, customerInfo, req);
-
-    // Mark emails as sent for this session
-    sentEmails.add(sessionId);
-
-    return new Response(JSON.stringify({ success: true, message: 'Emails sent successfully' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
   } catch (error) {
-    console.error('Error processing purchase emails:', error);
+    console.error('Unexpected error in send-purchase-emails:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -147,7 +174,16 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
       for (let i = 0; i < item.quantity; i++) {
         if (item.configuration && item.productType === 'core') {
           try {
-            const s3Response = await uploadContactCardToS3(session.id, item.configuration, i + 1, req);
+            // Create a copy of configuration without images to avoid logo upload conflicts
+            const configurationWithoutImages = {
+              ...item.configuration,
+              images: {
+                logo: { url: null, blob: null, ext: null, mime: null },
+                photo: item.configuration.images?.photo || { url: null, blob: null, ext: null, mime: null },
+                cover: item.configuration.images?.cover || { url: null, blob: null, ext: null, mime: null }
+              }
+            };
+            const s3Response = await uploadContactCardToS3(session.id, configurationWithoutImages, i + 1, req);
             s3Urls.push(s3Response);
           } catch (error) {
             console.error(`Failed to upload card ${i + 1} to S3:`, error);
@@ -224,10 +260,17 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
 
 async function sendAdminNotificationEmail(session: any, customerData: any, item: any, cardNumber: any, s3Data: any = null, req?: Request) {
   try {
-    // Handle card design zip upload for both basic and core cards
+    // Handle logo zip upload for both basic and core cards
     let cardDesignZipUrl = null;
     
-    if (item.configuration?.images?.cardDesign?.blob) {
+    // Check for logo in both cardDesign (basic cards) and logo (core cards) fields
+    const logoImageData = item.configuration?.images?.cardDesign?.blob 
+      ? item.configuration.images.cardDesign 
+      : item.configuration?.images?.logo?.blob 
+        ? item.configuration.images.logo 
+        : null;
+    
+    if (logoImageData) {
       try {
         const baseUrl = req ? getBaseUrlFromRequest(req) : (process.env.NETLIFY_SITE_URL || 'http://localhost:8888');
         const cardDesignZipResponse = await fetch(`${baseUrl}/.netlify/functions/upload-logo-zip`, {
@@ -236,7 +279,7 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            imageData: item.configuration.images.cardDesign,
+            imageData: logoImageData,
             sessionId: session.id,
             cardNumber: cardNumber
           }),
@@ -246,10 +289,10 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
           const cardDesignZipData = await cardDesignZipResponse.json();
           cardDesignZipUrl = cardDesignZipData.zipUrl;
         } else {
-          console.error('Failed to upload card design zip:', await cardDesignZipResponse.text());
+          console.error('Failed to upload logo zip:', await cardDesignZipResponse.text());
         }
       } catch (error) {
-        console.error('Error uploading card design zip:', error);
+        console.error('Error uploading logo zip:', error);
       }
     }
     
