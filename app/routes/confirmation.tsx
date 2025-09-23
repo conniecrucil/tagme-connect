@@ -169,7 +169,7 @@ export default function Confirmation() {
                 configuration: null,
                 url: null
               }));
-              totalAmount = totalAmountCents;
+              totalAmount = totalAmountCents / 100; // Convert from cents to dollars
               console.log('Created order structure from Stripe data:', { totalItems, totalAmountCents, pricePerItem });
             }
             

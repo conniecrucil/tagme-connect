@@ -32,7 +32,9 @@ export default async (req: Request, context: Context) => {
     }
 
     // Get base URL for redirects and images
-    const baseUrl = process.env.NETLIFY_SITE_URL || 'http://localhost:8888';
+    // Use the origin from the request headers to support both localhost and production
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^\/]*$/, '') || process.env.NETLIFY_SITE_URL || 'http://localhost:8888';
+    const baseUrl = origin;
 
     // Create line items for Stripe
     const lineItems = cart.map((item: any) => ({
