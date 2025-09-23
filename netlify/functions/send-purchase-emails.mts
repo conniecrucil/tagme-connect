@@ -9,6 +9,11 @@ const resend = new Resend(process.env.RESEND_API_KEY || '');
 const emailFrom = process.env.EMAIL_FROM || 'hello@brianbancroft.ca';
 const adminEmail = process.env.ADMIN_EMAIL || 'connectme-test@mailinator.com';
 
+// In-memory store for tracking sent emails (in production, use a database or Redis)
+// This prevents duplicate emails from being sent if the function is called multiple times
+// for the same session ID (e.g., page refresh, direct URL access, etc.)
+const sentEmails = new Set<string>();
+
 export default async (req: Request, context: Context) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -24,6 +29,18 @@ export default async (req: Request, context: Context) => {
     if (!sessionId || !customerInfo || !cart) {
       return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
         status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check if emails have already been sent for this session
+    if (sentEmails.has(sessionId)) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Emails already sent for this session',
+        duplicate: true 
+      }), {
+        status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }
@@ -55,6 +72,9 @@ export default async (req: Request, context: Context) => {
     };
 
     await handleCheckoutSessionCompleted(session, cart, customerInfo);
+
+    // Mark emails as sent for this session
+    sentEmails.add(sessionId);
 
     return new Response(JSON.stringify({ success: true, message: 'Emails sent successfully' }), {
       status: 200,
@@ -125,10 +145,7 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
   }
 }
 
-async function handlePaymentSucceeded(paymentIntent: any) {
-  console.log('Payment succeeded:', paymentIntent.id);
-  // Additional payment success logic can be added here
-}
+
 
 async function uploadContactCardToS3(sessionId: string, configuration: any, cardNumber: number) {
   try {
