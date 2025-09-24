@@ -41,9 +41,9 @@ export default function MobileCardPreview({
 
   return (
     <div className="bg-white text-black rounded-lg shadow-sm border border-gray-200 overflow-hidden min-w-[320px] max-w-[400px]">
-      {/* Header Section */}
+      {/* Header Section - Edge to edge */}
       <div
-        className="w-full h-20 relative flex items-center justify-center"
+        className="w-full h-20 relative"
         style={{
           backgroundColor: '#e4eaea',
           backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
@@ -65,7 +65,7 @@ export default function MobileCardPreview({
         {/* Profile Photo */}
         <div className="relative inline-block mb-3">
           <div 
-            className="w-16 h-16 rounded-full mx-auto border-2 border-white shadow-md flex items-center justify-center text-lg text-gray-500"
+            className="w-28 h-28 rounded-full mx-auto border-2 border-white shadow-md flex items-center justify-center text-2xl text-gray-500"
             style={{ backgroundColor: '#f0f0f0' }}
           >
             {images.photo.url ? (
@@ -104,8 +104,8 @@ export default function MobileCardPreview({
         {vCardData.email && (
           <a href={`mailto:${vCardData.email}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500">Email</div>
-              <div className="text-sm text-gray-800">{vCardData.email}</div>
+              <div className="text-sm font-medium text-gray-500">Email</div>
+              <div className="text-base text-gray-800">{vCardData.email}</div>
             </div>
           </a>
         )}
@@ -114,8 +114,8 @@ export default function MobileCardPreview({
         {vCardData.phone && (
           <a href={`tel:${vCardData.phone}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500">Phone</div>
-              <div className="text-sm text-gray-800">{vCardData.phone}</div>
+              <div className="text-sm font-medium text-gray-500">Phone</div>
+              <div className="text-base text-gray-800">{vCardData.phone}</div>
             </div>
           </a>
         )}
@@ -124,8 +124,8 @@ export default function MobileCardPreview({
         {vCardData.mobile && (
           <a href={`tel:${vCardData.mobile}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500">Mobile</div>
-              <div className="text-sm text-gray-800">{vCardData.mobile}</div>
+              <div className="text-sm font-medium text-gray-500">Mobile</div>
+              <div className="text-base text-gray-800">{vCardData.mobile}</div>
             </div>
           </a>
         )}
@@ -134,8 +134,8 @@ export default function MobileCardPreview({
         {vCardData.website && (
           <a href={vCardData.website} target="_blank" rel="noopener noreferrer" className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500">Website</div>
-              <div className="text-sm text-gray-800">{vCardData.website}</div>
+              <div className="text-sm font-medium text-gray-500">Website</div>
+              <div className="text-base text-gray-800">{vCardData.website}</div>
             </div>
           </a>
         )}
@@ -144,8 +144,8 @@ export default function MobileCardPreview({
         {fullAddress && (
           <div className="flex items-center py-2 border-b border-gray-100">
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500">Address</div>
-              <div className="text-sm text-gray-800">{fullAddress}</div>
+              <div className="text-sm font-medium text-gray-500">Address</div>
+              <div className="text-base text-gray-800">{fullAddress}</div>
             </div>
           </div>
         )}
@@ -153,15 +153,23 @@ export default function MobileCardPreview({
         {/* Custom Message */}
         {vCardData.desc && (
           <div className="py-2 border-b border-gray-100">
-            <div className="text-sm text-gray-800 italic">{vCardData.desc}</div>
+            <div className="text-base text-gray-800 italic">{vCardData.desc}</div>
           </div>
         )}
+      </div>
+
+      {/* Save Contact Button */}
+      <div className="px-3 pb-3">
+        <button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <span>📥</span>
+          Save Contact
+        </button>
       </div>
 
       {/* Actions Section */}
       {(activePrimaryActions.length > 0 || activeSecondaryActions.length > 0) && (
         <div className="px-3 pb-3">
-          {/* Separator between contact info and actions */}
+          {/* Separator between save contact and actions */}
           <hr className="border-gray-200 my-3" />
           
           {/* Primary Actions */}

@@ -6,8 +6,8 @@ import { inlineEmailCSS } from './utils/email-inline-css.js';
 import { generateAdminContactCreationEmail } from './utils/email-templates.mjs';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
-const emailFrom = process.env.EMAIL_FROM || 'hello@brianbancroft.ca';
-const adminEmail = process.env.ADMIN_EMAIL || 'connectme-test@mailinator.com';
+const emailFrom = process.env.EMAIL_FROM || 'contact@tagmeconnections.con';
+const adminEmail = process.env.ADMIN_EMAIL || 'contact@tagmeconnections.con';
 
 // Helper function to get base URL from request headers
 function getBaseUrlFromRequest(req: Request): string {

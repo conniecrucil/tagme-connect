@@ -12,6 +12,8 @@ export interface VCardConfig {
   website?: string;
   socialMedia?: Record<string, string>;
   customMessage?: string;
+  photo?: string; // Data URL or base64 encoded image
+  imageUrls?: Record<string, string>;
 }
 
 /**
@@ -67,6 +69,42 @@ export function generateVCard(config: VCardConfig): string {
         lines.push(`URL;TYPE=${platform.toUpperCase()}:${url}`);
       }
     });
+  }
+  
+  // Photo/Avatar
+  if (config.photo) {
+    // If photo is a data URI, convert to proper vCard 3.0 format
+    if (config.photo.startsWith('data:')) {
+      // Extract MIME type and base64 data
+      const mimeMatch = config.photo.match(/data:([^;]+);base64,(.+)/);
+      if (mimeMatch) {
+        const mimeType = mimeMatch[1];
+        const base64Data = mimeMatch[2];
+        
+        // Determine the image type for vCard
+        let imageType = 'JPEG'; // Default to JPEG
+        if (mimeType.includes('png')) {
+          imageType = 'PNG';
+        } else if (mimeType.includes('gif')) {
+          imageType = 'GIF';
+        }
+        
+        // Format for vCard 3.0: PHOTO;TYPE=JPEG;ENCODING=BASE64:base64data
+        lines.push(`PHOTO;TYPE=${imageType};ENCODING=BASE64:${base64Data}`);
+      } else {
+        // Fallback: treat as base64 data
+        lines.push(`PHOTO;TYPE=JPEG;ENCODING=BASE64:${config.photo}`);
+      }
+    } else if (config.imageUrls?.photo) {
+      // If we have an uploaded photo URL, use that
+      lines.push(`PHOTO:${config.imageUrls.photo}`);
+    } else {
+      // Assume it's base64 data without data URL prefix
+      lines.push(`PHOTO;TYPE=JPEG;ENCODING=BASE64:${config.photo}`);
+    }
+  } else if (config.imageUrls?.photo) {
+    // Fallback to imageUrls if no direct photo field
+    lines.push(`PHOTO:${config.imageUrls.photo}`);
   }
   
   // Custom message as note

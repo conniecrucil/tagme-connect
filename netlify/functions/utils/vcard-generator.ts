@@ -12,6 +12,8 @@ export interface VCardConfig {
   website?: string;
   socialMedia?: Record<string, string>;
   customMessage?: string;
+  photo?: string;
+  imageUrls?: Record<string, string>;
 }
 
 /**
@@ -67,6 +69,20 @@ export function generateVCard(config: VCardConfig): string {
         lines.push(`URL;TYPE=${platform.toUpperCase()}:${url}`);
       }
     });
+  }
+  
+  // Photo/Avatar
+  if (config.photo) {
+    // If photo is a data URI, include it directly
+    if (config.photo.startsWith('data:')) {
+      lines.push(`PHOTO:${config.photo}`);
+    } else if (config.imageUrls?.photo) {
+      // If we have an uploaded photo URL, use that
+      lines.push(`PHOTO:${config.imageUrls.photo}`);
+    }
+  } else if (config.imageUrls?.photo) {
+    // Fallback to imageUrls if no direct photo field
+    lines.push(`PHOTO:${config.imageUrls.photo}`);
   }
   
   // Custom message as note

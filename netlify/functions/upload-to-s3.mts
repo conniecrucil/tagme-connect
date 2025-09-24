@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import type { Context } from '@netlify/functions';
-import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
+import { generateVCard, type VCardConfig } from './utils/vcard-generator.mjs';
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -118,26 +118,8 @@ export default async (req: Request, context: Context) => {
       }
 
       try {
-        // Generate vCard content
-        const vcardConfig: VCardConfig = {
-          name: contactData.name,
-          email: contactData.email,
-          phone: contactData.phone,
-          company: contactData.company,
-          title: contactData.title,
-          website: contactData.website,
-          socialMedia: contactData.socialMedia,
-          customMessage: contactData.customMessage
-        };
-
-        const vcardContent = generateVCard(vcardConfig);
-
         // Generate HTML content for the contact card
         const htmlContent = generateContactCardHTML(contactData);
-
-        // Upload vCard file
-        const vcardKey = `${folderId}/contact.vcf`;
-        await uploadToS3(bucketName, vcardKey, vcardContent, 'text/vcard');
 
         // Upload HTML file
         const htmlKey = `${folderId}/index.html`;
@@ -185,6 +167,26 @@ export default async (req: Request, context: Context) => {
             }
           }
         }
+
+        // Generate vCard content with uploaded image URLs
+        const vcardConfig: VCardConfig = {
+          name: contactData.name,
+          email: contactData.email,
+          phone: contactData.phone,
+          company: contactData.company,
+          title: contactData.title,
+          website: contactData.website,
+          socialMedia: contactData.socialMedia,
+          customMessage: contactData.customMessage,
+          photo: contactData.photo,
+          imageUrls: imageUrls
+        };
+
+        const vcardContent = generateVCard(vcardConfig);
+
+        // Upload vCard file
+        const vcardKey = `${folderId}/contact.vcf`;
+        await uploadToS3(bucketName, vcardKey, vcardContent, 'text/vcard');
 
         // Return the public URLs
         const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${folderId}`;

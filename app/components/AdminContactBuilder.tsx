@@ -10,6 +10,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { availableActions } from "~/providers/configuration-provider";
 import type { VCardData, Action, ImageData } from "~/providers/configuration-provider";
 import MobileCardPreview from "~/components/MobileCardPreview";
+import { resizeImage } from "~/lib/imageUtils";
 
 export default function AdminContactBuilder() {
   const navigate = useNavigate();
@@ -67,27 +68,46 @@ export default function AdminContactBuilder() {
     setImages(prev => ({ ...prev, [type]: imageData }));
   };
 
-  const handleImageUpload = (type: 'logo' | 'photo' | 'cover', file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataURI = e.target?.result as string;
-      const ext = dataURI.split(',')[0].split(':')[1].split('/')[1].split(';')[0];
+  const handleImageUpload = async (type: 'logo' | 'photo' | 'cover', file: File) => {
+    try {
+      let processedDataURI: string;
+      
+      if (type === 'photo') {
+        // Resize photo to 100x100px for vCard compatibility
+        processedDataURI = await resizeImage(file, 100, 100, 0.8);
+      } else {
+        // For logo and cover, keep original size but convert to data URI
+        const reader = new FileReader();
+        processedDataURI = await new Promise<string>((resolve, reject) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      const ext = processedDataURI.split(',')[0].split(':')[1].split('/')[1].split(';')[0];
 
       const imageData = {
-        url: dataURI,
-        blob: dataURI,
+        url: processedDataURI,
+        blob: processedDataURI,
         ext: ext,
         mime: file.type,
-        resized: null
+        resized: type === 'photo' ? processedDataURI : null
       };
 
       updateImage(type, imageData);
 
       if (type === 'photo') {
-        updateVCardField('photo', dataURI);
+        updateVCardField('photo', processedDataURI);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: "Image Upload Failed",
+        description: "Failed to process the uploaded image. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const removeImage = (type: 'logo' | 'photo' | 'cover') => {
@@ -334,6 +354,36 @@ export default function AdminContactBuilder() {
           lines.push(`URL;TYPE=${platform.toUpperCase()}:${url}`);
         }
       });
+    }
+    
+    // Photo/Avatar - Updated to use proper vCard 3.0 format
+    if (config.photo) {
+      // If photo is a data URI, convert to proper vCard 3.0 format
+      if (config.photo.startsWith('data:')) {
+        // Extract MIME type and base64 data
+        const mimeMatch = config.photo.match(/data:([^;]+);base64,(.+)/);
+        if (mimeMatch) {
+          const mimeType = mimeMatch[1];
+          const base64Data = mimeMatch[2];
+          
+          // Determine the image type for vCard
+          let imageType = 'JPEG'; // Default to JPEG
+          if (mimeType.includes('png')) {
+            imageType = 'PNG';
+          } else if (mimeType.includes('gif')) {
+            imageType = 'GIF';
+          }
+          
+          // Format for vCard 3.0: PHOTO;TYPE=JPEG;ENCODING=BASE64:base64data
+          lines.push(`PHOTO;TYPE=${imageType};ENCODING=BASE64:${base64Data}`);
+        } else {
+          // Fallback: treat as base64 data
+          lines.push(`PHOTO;TYPE=JPEG;ENCODING=BASE64:${config.photo}`);
+        }
+      } else {
+        // Assume it's base64 data without data URL prefix
+        lines.push(`PHOTO;TYPE=JPEG;ENCODING=BASE64:${config.photo}`);
+      }
     }
     
     // Custom message as note
@@ -587,9 +637,9 @@ export default function AdminContactBuilder() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleImageUpload('logo', file);
+                        if (file) await handleImageUpload('logo', file);
                       }}
                     />
                   </div>
@@ -628,9 +678,9 @@ export default function AdminContactBuilder() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleImageUpload('photo', file);
+                        if (file) await handleImageUpload('photo', file);
                       }}
                     />
                   </div>
@@ -669,9 +719,9 @@ export default function AdminContactBuilder() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleImageUpload('cover', file);
+                        if (file) await handleImageUpload('cover', file);
                       }}
                     />
                   </div>

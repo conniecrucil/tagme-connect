@@ -22,7 +22,7 @@ This document outlines all the environment variables required for the Netlify PO
 - `APP_AWS_ACCESS_KEY_ID` - Your AWS access key ID
 - `APP_AWS_SECRET_ACCESS_KEY` - Your AWS secret access key
 - `APP_AWS_REGION` - AWS region for your S3 bucket (e.g., us-east-1)
-- `APP_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards
+- `VITE_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards
 
 ### Admin Authentication
 - `ADMIN_USER` - Username for admin access

@@ -6,8 +6,8 @@ import { generateCustomerConfirmationEmail, generateAdminNotificationEmail } fro
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
-const emailFrom = process.env.EMAIL_FROM || 'hello@brianbancroft.ca';
-const adminEmail = process.env.ADMIN_EMAIL || 'connectme-test@mailinator.com';
+const emailFrom = process.env.EMAIL_FROM || 'contact@tagmeconnections.con';
+const adminEmail = process.env.ADMIN_EMAIL || 'contact@tagmeconnections.con';
 
 // In-memory store for tracking sent emails (in production, use a database or Redis)
 // This prevents duplicate emails from being sent if the function is called multiple times
