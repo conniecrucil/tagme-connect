@@ -173,13 +173,20 @@ function AdminCreateForm() {
         logoOrHeader: logoOrHeader
       };
 
+      // Get customer email from form (if provided)
+      const customerEmail = (e.target as HTMLFormElement).elements.namedItem('customerEmail') as HTMLInputElement;
+      const customerEmailValue = customerEmail?.value?.trim() || '';
+
       // Call admin creation API
       const response = await fetch('/.netlify/functions/admin-create-contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ configuration }),
+        body: JSON.stringify({ 
+          configuration,
+          customerEmail: customerEmailValue || undefined
+        }),
       });
 
       const result = await response.json();
@@ -310,6 +317,28 @@ function AdminCreateForm() {
             <div className="grid lg:grid-cols-2 gap-12">
               {/* Left Panel - Form */}
               <div className="space-y-8">
+                {/* Customer Email Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Customer Information (Optional)</CardTitle>
+                    <CardDescription>Link this card to a customer for tracking purposes</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Label htmlFor="customerEmail">Customer Email</Label>
+                      <Input
+                        id="customerEmail"
+                        name="customerEmail"
+                        type="email"
+                        placeholder="customer@example.com"
+                        className="w-full"
+                      />
+                      <p className="text-sm text-gray-500">
+                        If provided, this card will be linked to the customer record. If the customer doesn't exist, a new record will be created.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
                 {/* Header Image Section */}
                 <Card>
                   <CardHeader>

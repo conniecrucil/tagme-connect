@@ -2,12 +2,16 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 
+const isDevSetup = process.env.DEV_SETUP === 'true';
+
 const s3Client = new S3Client({
-  region: process.env.APP_AWS_REGION || 'us-east-1',
+  region: isDevSetup ? 'us-east-1' : (process.env.APP_AWS_REGION || 'us-east-1'),
+  endpoint: isDevSetup ? 'http://localhost:9000' : process.env.S3_ENDPOINT, // For MinIO compatibility
   credentials: {
-    accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: isDevSetup ? 'minioadmin' : (process.env.S3_ACCESS_KEY || process.env.APP_AWS_ACCESS_KEY_ID!),
+    secretAccessKey: isDevSetup ? 'minioadmin123' : (process.env.S3_SECRET_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY!),
   },
+  forcePathStyle: isDevSetup ? true : (process.env.S3_FORCE_PATH_STYLE === 'true'), // Required for MinIO
 });
 
 export default async (req: Request, context: any) => {
@@ -30,7 +34,7 @@ export default async (req: Request, context: any) => {
         });
       }
 
-      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      const bucketName = isDevSetup ? 'tagme-dev' : (process.env.S3_BUCKET_NAME || process.env.APP_AWS_S3_BUCKET_NAME);
       
       if (!bucketName) {
         console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
@@ -80,7 +84,9 @@ export default async (req: Request, context: any) => {
         await uploadToS3(bucketName, zipKey, zipBuffer, 'application/zip');
         
         // Return the S3 URL for the zip file
-        const zipUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${zipKey}`;
+        const zipUrl = isDevSetup 
+          ? `http://localhost:9000/${bucketName}/${zipKey}`
+          : `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${zipKey}`;
         
         return new Response(JSON.stringify({
           success: true,

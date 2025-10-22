@@ -1,14 +1,25 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import type { Context } from '@netlify/functions';
 import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
+import { 
+  getCardByUuid, 
+  updateCard, 
+  deleteCardAssets, 
+  createCardAsset,
+  type CardData,
+  type Action,
+  type GenerationStatus
+} from './utils/supabase';
 
 // Initialize S3 client
 const s3Client = new S3Client({
   region: process.env.APP_AWS_REGION || 'us-east-1',
+  endpoint: process.env.S3_ENDPOINT, // For MinIO compatibility
   credentials: {
-    accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.S3_ACCESS_KEY || process.env.APP_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.S3_SECRET_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY || '',
   },
+  forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true', // Required for MinIO
 });
 
 interface ContactCardData {
@@ -61,7 +72,7 @@ export default async (req: Request, context: Context) => {
         });
       }
 
-      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      const bucketName = process.env.S3_BUCKET_NAME || process.env.APP_AWS_S3_BUCKET_NAME;
       
       if (!bucketName) {
         console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
@@ -81,6 +92,122 @@ export default async (req: Request, context: Context) => {
 
         // Update the contact card data in S3
         const result = await updateContactCardInS3(bucketName, uuid, contactData);
+
+        // Update database record
+        try {
+          const card = await getCardByUuid(uuid);
+          if (card) {
+            // Prepare updated card data
+            const updatedCardData: CardData = {
+              name: contactData.name,
+              title: contactData.title,
+              company: contactData.company,
+              phone: contactData.phone,
+              email: contactData.email,
+              website: contactData.website,
+              description: contactData.customMessage || contactData.desc,
+              street: contactData.street,
+              city: contactData.city,
+              state: contactData.state,
+              postal: contactData.postal,
+              country: contactData.country,
+              pronouns: contactData.pronouns,
+              prefix: contactData.prefix,
+              mobile: contactData.mobile,
+              fname: contactData.fname,
+              lname: contactData.lname,
+              biz: contactData.biz,
+              desc: contactData.desc,
+              photo: contactData.photo
+            };
+
+            // Prepare updated actions
+            const primaryActions: Action[] = contactData.primaryActions || [];
+            const secondaryActions: Action[] = contactData.secondaryActions || [];
+
+            // Determine asset flags
+            const hasLogo = !!(contactData.images?.logo?.blob);
+            const hasPhoto = !!(contactData.images?.photo?.blob);
+            const hasCover = !!(contactData.images?.cover?.blob);
+
+            // Update card record
+            await updateCard(card.id, {
+              card_data: updatedCardData,
+              primary_actions: primaryActions,
+              secondary_actions: secondaryActions,
+              logo_or_header: contactData.logoOrHeader || false,
+              has_logo: hasLogo,
+              has_photo: hasPhoto,
+              has_cover: hasCover,
+              generated_at: new Date().toISOString(),
+              generation_status: {
+                status: 'success',
+                timestamp: new Date().toISOString()
+              }
+            });
+
+            // Update assets if images were uploaded
+            if (hasLogo || hasPhoto || hasCover) {
+              // Delete existing asset records
+              await deleteCardAssets(card.id);
+
+              // Create new asset records for uploaded images
+              if (hasLogo && result.imageUrls?.logo) {
+                await createCardAsset({
+                  card_id: card.id,
+                  asset_type: 'logo',
+                  s3_key: `${uuid}/logo.${(contactData.images!.logo!.ext || 'jpg').split(';')[0]}`,
+                  s3_url: result.imageUrls.logo,
+                  mime_type: contactData.images!.logo!.mime || 'image/jpeg'
+                });
+              }
+
+              if (hasPhoto && result.imageUrls?.photo) {
+                await createCardAsset({
+                  card_id: card.id,
+                  asset_type: 'photo',
+                  s3_key: `${uuid}/photo.${(contactData.images!.photo!.ext || 'jpg').split(';')[0]}`,
+                  s3_url: result.imageUrls.photo,
+                  mime_type: contactData.images!.photo!.mime || 'image/jpeg'
+                });
+              }
+
+              if (hasCover && result.imageUrls?.cover) {
+                await createCardAsset({
+                  card_id: card.id,
+                  asset_type: 'cover',
+                  s3_key: `${uuid}/cover.${(contactData.images!.cover!.ext || 'jpg').split(';')[0]}`,
+                  s3_url: result.imageUrls.cover,
+                  mime_type: contactData.images!.cover!.mime || 'image/jpeg'
+                });
+              }
+
+              // Always update HTML and VCF assets
+              await createCardAsset({
+                card_id: card.id,
+                asset_type: 'html',
+                s3_key: `${uuid}/index.html`,
+                s3_url: result.urls.html,
+                mime_type: 'text/html'
+              });
+
+              await createCardAsset({
+                card_id: card.id,
+                asset_type: 'vcf',
+                s3_key: `${uuid}/contact.vcf`,
+                s3_url: result.urls.vcard,
+                mime_type: 'text/vcard'
+              });
+            }
+
+            console.log('Database record updated successfully for card:', card.id);
+          } else {
+            console.warn('Card not found in database for UUID:', uuid);
+          }
+        } catch (dbError) {
+          console.error('Database update failed:', dbError);
+          // Continue with S3 success but log database error
+        }
 
         return new Response(JSON.stringify({
           success: true,

@@ -1,18 +1,63 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Search, Loader2, ExternalLink } from "lucide-react";
 
 export function meta() {
   return [
     { title: "Update Contact - Admin - TagMe Connections" },
-    { name: "description", content: "Admin tool to retrieve and update existing TAG Core card sites by URL. Edit contact details and re-publish under the same UUID." },
+    { name: "description", content: "Admin tool to retrieve and update existing contact cards. Select from database and edit contact details." },
   ];
+}
+
+interface CardWithCustomer {
+  id: string;
+  uuid: string;
+  customer?: {
+    email: string;
+    name?: string;
+  };
+  card_data: {
+    name?: string;
+    email?: string;
+    title?: string;
+    company?: string;
+    phone?: string;
+    mobile?: string;
+    website?: string;
+    description?: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    postal?: string;
+    country?: string;
+    pronouns?: string;
+    prefix?: string;
+    fname?: string;
+    lname?: string;
+    biz?: string;
+    desc?: string;
+    photo?: string;
+  };
+  primary_actions: Array<{ name: string; value: string; color?: string }>;
+  secondary_actions: Array<{ name: string; value: string; color?: string }>;
+  logo_or_header: boolean;
+  has_logo: boolean;
+  has_photo: boolean;
+  has_cover: boolean;
+  s3_base_url?: string;
+  generation_status: {
+    status: 'success' | 'error' | 'pending';
+    error?: string;
+    timestamp: string;
+  };
+  created_at: string;
 }
 
 interface ContactCardData {
@@ -30,6 +75,9 @@ interface ContactCardData {
   country?: string;
   socialMedia?: Record<string, string>;
   customMessage?: string;
+  primaryActions?: Array<{ name: string; value: string; color?: string }>;
+  secondaryActions?: Array<{ name: string; value: string; color?: string }>;
+  logoOrHeader?: boolean;
   images?: {
     logo?: { url?: string; blob?: string; ext?: string; mime?: string };
     photo?: { url?: string; blob?: string; ext?: string; mime?: string };
@@ -37,111 +85,152 @@ interface ContactCardData {
   };
 }
 
-interface RetrievedContactData {
-  success: boolean;
-  uuid: string;
-  contactData: ContactCardData;
-  urls: {
-    html: string;
-    vcard: string;
-  };
-}
-
 export default function AdminUpdate() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
-  const [contactUrl, setContactUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [cards, setCards] = useState<CardWithCustomer[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState("");
+  const [isLoadingCards, setIsLoadingCards] = useState(false);
+  const [isLoadingCard, setIsLoadingCard] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [retrievedData, setRetrievedData] = useState<RetrievedContactData | null>(null);
   const [contactData, setContactData] = useState<ContactCardData>({});
   const [socialMedia, setSocialMedia] = useState<Record<string, string>>({});
+  const [primaryActions, setPrimaryActions] = useState<Array<{ name: string; value: string; color?: string }>>([]);
+  const [secondaryActions, setSecondaryActions] = useState<Array<{ name: string; value: string; color?: string }>>([]);
+  const [logoOrHeader, setLogoOrHeader] = useState(false);
+  const [images, setImages] = useState<{
+    logo?: { url?: string; blob?: string; ext?: string; mime?: string };
+    photo?: { url?: string; blob?: string; ext?: string; mime?: string };
+    cover?: { url?: string; blob?: string; ext?: string; mime?: string };
+  }>({});
 
-  // Extract UUID from contact card URL
-  const extractUuidFromUrl = (url: string): string | null => {
+  // Check if cardId is provided in URL params
+  useEffect(() => {
+    const cardId = searchParams.get('cardId');
+    if (cardId) {
+      setSelectedCardId(cardId);
+      fetchCardDetails(cardId);
+    }
+  }, [searchParams]);
+
+  // Fetch cards list on component mount
+  useEffect(() => {
+    fetchCards();
+  }, []);
+
+  const fetchCards = async () => {
     try {
-      // Handle both index.html and contact.vcf URLs
-      // Examples: 
-      // https://demo.bancroft.io/00534a50-a2f9-430d-9f96-883877a5b6fd/index.html
-      // https://demo.bancroft.io/00534a50-a2f9-430d-9f96-883877a5b6fd/contact.vcf
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
+      setIsLoadingCards(true);
+      const response = await fetch('/.netlify/functions/get-cards?limit=100');
       
-      // Find the UUID part (should be the last directory before the filename)
-      if (pathParts.length >= 2) {
-        const uuid = pathParts[pathParts.length - 2];
-        // Validate UUID format (basic check)
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (uuidRegex.test(uuid)) {
-          return uuid;
-        }
+      if (!response.ok) {
+        throw new Error('Failed to fetch cards');
       }
-      
-      return null;
+
+      const data = await response.json();
+      setCards(data.cards);
     } catch (error) {
-      console.error('Error parsing URL:', error);
-      return null;
+      console.error('Error fetching cards:', error);
+      toast.error("Failed to load cards", {
+        description: "Please try again later."
+      });
+    } finally {
+      setIsLoadingCards(false);
     }
   };
 
-  const handleSearch = async () => {
-    if (!contactUrl.trim()) {
-      toast.error("Contact URL Required", {
-        description: "Please enter a contact card URL to search for."
-      });
-      return;
-    }
-
-    // Extract UUID from the provided URL
-    const uuid = extractUuidFromUrl(contactUrl.trim());
-    if (!uuid) {
-      toast.error("Invalid URL", {
-        description: "Please enter a valid contact card URL (e.g., https://demo.bancroft.io/uuid/index.html)."
-      });
-      return;
-    }
-
-    setIsLoading(true);
+  const fetchCardDetails = async (cardId: string) => {
     try {
-      const response = await fetch(`/.netlify/functions/retrieve-contact-data?contactUrl=${encodeURIComponent(contactUrl.trim())}`);
-      const result = await response.json();
-
+      setIsLoadingCard(true);
+      const response = await fetch(`/.netlify/functions/get-card-details?cardId=${cardId}`);
+      
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to retrieve contact data');
+        throw new Error('Failed to fetch card details');
       }
 
-      setRetrievedData(result);
-      setContactData(result.contactData);
-      setSocialMedia(result.contactData.socialMedia || {});
+      const data = await response.json();
+      const card = data.card;
+      
+      // Convert database card to form data
+      const formData: ContactCardData = {
+        name: card.card_data.name,
+        email: card.card_data.email,
+        phone: card.card_data.phone,
+        mobile: card.card_data.mobile,
+        company: card.card_data.company,
+        title: card.card_data.title,
+        website: card.card_data.website,
+        street: card.card_data.street,
+        city: card.card_data.city,
+        state: card.card_data.state,
+        postal: card.card_data.postal,
+        country: card.card_data.country,
+        customMessage: card.card_data.description,
+        primaryActions: card.primary_actions,
+        secondaryActions: card.secondary_actions,
+        logoOrHeader: card.logo_or_header,
+        images: {
+          logo: card.has_logo ? { url: `${card.s3_base_url}/logo.jpg` } : undefined,
+          photo: card.has_photo ? { url: `${card.s3_base_url}/photo.jpg` } : undefined,
+          cover: card.has_cover ? { url: `${card.s3_base_url}/cover.jpg` } : undefined,
+        }
+      };
 
-      toast.success("Contact Found", {
-        description: `Successfully retrieved contact data for ${result.contactData.name || 'Unknown'}.`
+      setContactData(formData);
+      setPrimaryActions(card.primary_actions || []);
+      setSecondaryActions(card.secondary_actions || []);
+      setLogoOrHeader(card.logo_or_header || false);
+      setImages(formData.images || {});
+
+      // Convert actions to social media format
+      const socialMediaData: Record<string, string> = {};
+      [...card.primary_actions, ...card.secondary_actions].forEach(action => {
+        if (action.value) {
+          socialMediaData[action.name] = action.value;
+        }
       });
+      setSocialMedia(socialMediaData);
+
     } catch (error) {
-      console.error('Error retrieving contact data:', error);
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to retrieve contact data"
+      console.error('Error fetching card details:', error);
+      toast.error("Failed to load card details", {
+        description: "Please try again later."
       });
     } finally {
-      setIsLoading(false);
+      setIsLoadingCard(false);
     }
+  };
+
+  const handleCardSelect = (cardId: string) => {
+    setSelectedCardId(cardId);
+    fetchCardDetails(cardId);
   };
 
   const handleUpdate = async () => {
-    if (!retrievedData) {
-      toast.error("No Data to Update", {
-        description: "Please search for and load a contact card first."
+    if (!selectedCardId) {
+      toast.error("No Card Selected", {
+        description: "Please select a card to update."
       });
       return;
     }
 
     setIsUpdating(true);
+
     try {
+      // Find the selected card to get UUID
+      const selectedCard = cards.find(card => card.id === selectedCardId);
+      if (!selectedCard) {
+        throw new Error('Selected card not found');
+      }
+
+      // Prepare update data
       const updateData = {
         ...contactData,
-        socialMedia: Object.fromEntries(
-          Object.entries(socialMedia).filter(([_, url]) => url.trim())
-        )
+        primaryActions: primaryActions.filter(a => a.value),
+        secondaryActions: secondaryActions.filter(a => a.value),
+        logoOrHeader,
+        images
       };
 
       const response = await fetch('/.netlify/functions/update-contact-data', {
@@ -150,7 +239,7 @@ export default function AdminUpdate() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          uuid: retrievedData.uuid,
+          uuid: selectedCard.uuid,
           contactData: updateData
         }),
       });
@@ -158,335 +247,268 @@ export default function AdminUpdate() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to update contact data');
+        throw new Error(result.error || 'Failed to update contact');
       }
 
-      toast.success("Update Successful", {
-        description: `Contact card for ${contactData.name || 'Unknown'} has been updated successfully.`
+      toast.success("Contact Updated Successfully", {
+        description: `Contact card has been updated and re-published.`
       });
 
-      // Update the retrieved data with new URLs
-      setRetrievedData({
-        ...retrievedData,
-        urls: result.urls
-      });
+      // Reset form
+      setContactData({});
+      setSocialMedia({});
+      setPrimaryActions([]);
+      setSecondaryActions([]);
+      setLogoOrHeader(false);
+      setImages({});
+      setSelectedCardId("");
 
     } catch (error) {
-      console.error('Error updating contact data:', error);
+      console.error('Error updating contact:', error);
       toast.error("Update Failed", {
-        description: error instanceof Error ? error.message : "Failed to update contact data"
+        description: error instanceof Error ? error.message : "An unexpected error occurred."
       });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const updateContactField = (field: keyof ContactCardData, value: string) => {
-    setContactData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const updateSocialMedia = (platform: string, url: string) => {
-    setSocialMedia(prev => ({
-      ...prev,
-      [platform]: url
-    }));
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button 
-              variant="outline" 
+        {/* Breadcrumb */}
+        <div className="bg-gray-50 py-4 mb-6">
+          <nav className="flex items-center space-x-2 text-sm">
+            <button
               onClick={() => navigate('/admin')}
-              className="flex items-center gap-2"
+              className="text-gray-600 hover:text-green-600 flex items-center gap-1"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-900">Update Contact Card</h1>
-          </div>
-          <p className="text-gray-600">
-            Retrieve and update existing TAG Core card sites by URL
+              Admin Dashboard
+            </button>
+            <span className="text-gray-400">›</span>
+            <span className="text-gray-900">Update Contact</span>
+          </nav>
+        </div>
+
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Update Contact Card</h1>
+          <p className="text-gray-600 mt-2">
+            Select an existing contact card from the database and update its details.
           </p>
         </div>
 
-        {/* Search Section */}
-        <Card className="mb-8">
+        {/* Card Selection */}
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Search for Contact Card</CardTitle>
-            <CardDescription>
-              Enter the URL of the contact card you want to update (e.g., https://demo.bancroft.io/uuid/index.html)
-            </CardDescription>
+            <CardTitle>Select Contact Card</CardTitle>
+            <CardDescription>Choose a contact card to update from the database</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="contactUrl">Contact Card URL</Label>
-                <Input
-                  id="contactUrl"
-                  placeholder="https://demo.bancroft.io/00534a50-a2f9-430d-9f96-883877a5b6fd/index.html"
-                  value={contactUrl}
-                  onChange={(e) => setContactUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
+            {isLoadingCards ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Loading cards...</span>
               </div>
-              <div className="flex items-end">
-                <Button 
-                  onClick={handleSearch} 
-                  disabled={isLoading || !contactUrl.trim()}
-                  className="flex items-center gap-2"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
-                  {isLoading ? 'Searching...' : 'Search'}
-                </Button>
-              </div>
-            </div>
+            ) : (
+              <Select value={selectedCardId} onValueChange={handleCardSelect}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a contact card to update..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {cards.map((card) => (
+                    <SelectItem key={card.id} value={card.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {card.card_data.name || 'Untitled Card'}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {card.customer?.email || 'No customer'} • {formatDate(card.created_at)}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </CardContent>
         </Card>
 
-        {/* Contact Data Form */}
-        {retrievedData && (
-          <Card className="mb-8">
+        {/* Contact Form */}
+        {selectedCardId && (
+          <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Contact Information</CardTitle>
-                  <CardDescription>
-                    Edit the contact details below and click Update to save changes
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(retrievedData.urls.html, '_blank')}
-                    className="flex items-center gap-2"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    View Live
-                  </Button>
-                  <Button
-                    onClick={handleUpdate}
-                    disabled={isUpdating}
-                    className="flex items-center gap-2"
-                  >
-                    {isUpdating ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : null}
-                    {isUpdating ? 'Updating...' : 'Update Contact'}
-                  </Button>
-                </div>
-              </div>
+              <CardTitle>Contact Details</CardTitle>
+              <CardDescription>Update the contact information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Basic Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="name">Name *</Label>
-                    <Input
-                      id="name"
-                      value={contactData.name || ''}
-                      onChange={(e) => updateContactField('name', e.target.value)}
-                      placeholder="Full name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={contactData.email || ''}
-                      onChange={(e) => updateContactField('email', e.target.value)}
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={contactData.phone || ''}
-                      onChange={(e) => updateContactField('phone', e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="mobile">Mobile</Label>
-                    <Input
-                      id="mobile"
-                      value={contactData.mobile || ''}
-                      onChange={(e) => updateContactField('mobile', e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
+              {isLoadingCard ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading contact details...</span>
                 </div>
-              </div>
-
-              {/* Business Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Business Information</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="company">Company</Label>
-                    <Input
-                      id="company"
-                      value={contactData.company || ''}
-                      onChange={(e) => updateContactField('company', e.target.value)}
-                      placeholder="Company name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="title">Job Title</Label>
+              ) : (
+                <>
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={contactData.name || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={contactData.email || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="john@example.com"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={contactData.phone || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="+1 (555) 123-4567"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="mobile">Mobile</Label>
+                      <Input
+                        id="mobile"
+                        value={contactData.mobile || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, mobile: e.target.value }))}
+                        placeholder="+1 (555) 123-4567"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="company">Company</Label>
+                      <Input
+                        id="company"
+                        value={contactData.company || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, company: e.target.value }))}
+                        placeholder="Acme Corp"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="title">Title</Label>
                       <Input
                         id="title"
                         value={contactData.title || ''}
-                        onChange={(e) => updateContactField('title', e.target.value)}
-                        placeholder="founder"
-                      />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="website">Website</Label>
-                    <Input
-                      id="website"
-                      value={contactData.website || ''}
-                      onChange={(e) => updateContactField('website', e.target.value)}
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Address Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Address Information</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="md:col-span-2">
-                    <Label htmlFor="street">Street Address</Label>
-                    <Input
-                      id="street"
-                      value={contactData.street || ''}
-                      onChange={(e) => updateContactField('street', e.target.value)}
-                      placeholder="123 Main Street"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={contactData.city || ''}
-                      onChange={(e) => updateContactField('city', e.target.value)}
-                      placeholder="City"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State/Province</Label>
-                    <Input
-                      id="state"
-                      value={contactData.state || ''}
-                      onChange={(e) => updateContactField('state', e.target.value)}
-                      placeholder="State/Province"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="postal">Postal Code</Label>
-                    <Input
-                      id="postal"
-                      value={contactData.postal || ''}
-                      onChange={(e) => updateContactField('postal', e.target.value)}
-                      placeholder="12345"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
-                      value={contactData.country || ''}
-                      onChange={(e) => updateContactField('country', e.target.value)}
-                      placeholder="Country"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Media */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Social Media Links</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {['linkedin', 'twitter', 'facebook', 'instagram', 'youtube', 'github'].map((platform) => (
-                    <div key={platform}>
-                      <Label htmlFor={platform}>
-                        {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                      </Label>
-                      <Input
-                        id={platform}
-                        value={socialMedia[platform] || ''}
-                        onChange={(e) => updateSocialMedia(platform, e.target.value)}
-                        placeholder={`https://${platform}.com/username`}
+                        onChange={(e) => setContactData(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Software Engineer"
                       />
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div>
+                      <Label htmlFor="website">Website</Label>
+                      <Input
+                        id="website"
+                        value={contactData.website || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, website: e.target.value }))}
+                        placeholder="https://example.com"
+                      />
+                    </div>
+                  </div>
 
-              {/* Custom Message */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Custom Message</h3>
-                <Textarea
-                  value={contactData.customMessage || ''}
-                  onChange={(e) => updateContactField('customMessage', e.target.value)}
-                  placeholder="Enter a custom message or tagline..."
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  {/* Address */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="street">Street Address</Label>
+                      <Input
+                        id="street"
+                        value={contactData.street || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, street: e.target.value }))}
+                        placeholder="123 Main St"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={contactData.city || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, city: e.target.value }))}
+                        placeholder="New York"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={contactData.state || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, state: e.target.value }))}
+                        placeholder="NY"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="postal">Postal Code</Label>
+                      <Input
+                        id="postal"
+                        value={contactData.postal || ''}
+                        onChange={(e) => setContactData(prev => ({ ...prev, postal: e.target.value }))}
+                        placeholder="10001"
+                      />
+                    </div>
+                  </div>
 
-        {/* Current Status */}
-        {retrievedData && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label>UUID</Label>
-                  <Input value={retrievedData.uuid} readOnly className="bg-gray-50" />
-                </div>
-                <div>
-                  <Label>Contact Name</Label>
-                  <Input value={contactData.name || 'Not set'} readOnly className="bg-gray-50" />
-                </div>
-                <div>
-                  <Label>Live URL</Label>
-                  <Input 
-                    value={retrievedData.urls.html} 
-                    readOnly 
-                    className="bg-gray-50" 
-                    onClick={() => window.open(retrievedData.urls.html, '_blank')}
-                  />
-                </div>
-                <div>
-                  <Label>vCard URL</Label>
-                  <Input 
-                    value={retrievedData.urls.vcard} 
-                    readOnly 
-                    className="bg-gray-50"
-                    onClick={() => window.open(retrievedData.urls.vcard, '_blank')}
-                  />
-                </div>
-              </div>
+                  {/* Custom Message */}
+                  <div>
+                    <Label htmlFor="customMessage">Custom Message</Label>
+                    <Textarea
+                      id="customMessage"
+                      value={contactData.customMessage || ''}
+                      onChange={(e) => setContactData(prev => ({ ...prev, customMessage: e.target.value }))}
+                      placeholder="Add a personal message or description..."
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={handleUpdate}
+                      disabled={isUpdating}
+                      className="flex-1"
+                    >
+                      {isUpdating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Update Contact Card'
+                      )}
+                    </Button>
+                    
+                    {contactData.website && (
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(contactData.website, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View Website
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         )}

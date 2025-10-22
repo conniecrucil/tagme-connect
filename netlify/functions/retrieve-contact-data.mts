@@ -1,4 +1,5 @@
 import type { Context } from '@netlify/functions';
+import { getCardByUuid, getCardAssets, type CardWithCustomer } from './utils/supabase';
 
 interface ContactCardData {
   name?: string;
@@ -48,25 +49,73 @@ export default async (req: Request, context: Context) => {
         });
       }
 
-      let htmlUrl: string;
       let uuid: string;
 
       try {
-        // Check if it's a full URL or just a UUID
+        // Extract UUID from URL or use as-is if it's already a UUID
         if (contactUrl.startsWith('http')) {
-          // It's a full URL, extract UUID and use the URL directly
-          htmlUrl = contactUrl;
+          // It's a full URL, extract UUID
           const urlParts = contactUrl.split('/');
           uuid = urlParts[urlParts.length - 2]; // UUID is the second-to-last part
         } else {
-          // It's just a UUID, construct the URL using the bucket name
-          const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+          // It's just a UUID
+          uuid = contactUrl;
+        }
+
+        // Try to get card data from database first
+        try {
+          const card = await getCardByUuid(uuid);
+          
+          if (card) {
+            // Get assets for this card
+            const assets = await getCardAssets(card.id);
+            
+            // Convert database card to contact data format
+            const contactData = convertCardToContactData(card, assets);
+            
+            // Construct URLs
+            const htmlUrl = card.s3_base_url ? `${card.s3_base_url}/index.html` : null;
+            const vcardUrl = card.s3_base_url ? `${card.s3_base_url}/contact.vcf` : null;
+
+            return new Response(JSON.stringify({
+              success: true,
+              uuid,
+              contactData,
+              urls: {
+                html: htmlUrl,
+                vcard: vcardUrl
+              },
+              source: 'database',
+              card_id: card.id,
+              customer: card.customer
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+        } catch (dbError) {
+          console.error('Database query failed, falling back to S3:', dbError);
+        }
+
+        // Fallback to S3 if database query failed or card not found
+        let htmlUrl: string;
+        
+        if (contactUrl.startsWith('http')) {
+          htmlUrl = contactUrl;
+        } else {
+          // Construct URL using bucket name
+          const bucketName = process.env.S3_BUCKET_NAME || process.env.APP_AWS_S3_BUCKET_NAME;
           if (!bucketName) {
             console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
             throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required when providing UUID');
           }
-          uuid = contactUrl;
-          htmlUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}/index.html`;
+          
+          // Use MinIO website endpoint if available, otherwise use AWS S3
+          if (process.env.S3_WEBSITE_ENDPOINT) {
+            htmlUrl = `${process.env.S3_WEBSITE_ENDPOINT}/${uuid}/index.html`;
+          } else {
+            htmlUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}/index.html`;
+          }
         }
 
         // Fetch the HTML content directly from the public URL
@@ -91,7 +140,8 @@ export default async (req: Request, context: Context) => {
           urls: {
             html: htmlUrl,
             vcard: vcardUrl
-          }
+          },
+          source: 's3_fallback'
         }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -318,4 +368,53 @@ async function getImageUrlsFromBaseUrl(baseUrl: string): Promise<any> {
   }
 
   return Object.keys(imageUrls).length > 0 ? imageUrls : undefined;
+}
+
+function convertCardToContactData(card: CardWithCustomer, assets: any[]): ContactCardData {
+  const cardData = card.card_data;
+  
+  // Convert assets to image URLs
+  const images: any = {};
+  assets.forEach(asset => {
+    if (asset.asset_type === 'logo' || asset.asset_type === 'photo' || asset.asset_type === 'cover') {
+      images[asset.asset_type] = { url: asset.s3_url };
+    }
+  });
+
+  // Convert actions to social media format
+  const socialMedia: Record<string, string> = {};
+  [...card.primary_actions, ...card.secondary_actions].forEach(action => {
+    if (action.value) {
+      socialMedia[action.name] = action.value;
+    }
+  });
+
+  return {
+    name: cardData.name,
+    email: cardData.email,
+    phone: cardData.phone,
+    mobile: cardData.mobile,
+    company: cardData.company,
+    title: cardData.title,
+    website: cardData.website,
+    street: cardData.street,
+    city: cardData.city,
+    state: cardData.state,
+    postal: cardData.postal,
+    country: cardData.country,
+    customMessage: cardData.description,
+    images: Object.keys(images).length > 0 ? images : undefined,
+    socialMedia: Object.keys(socialMedia).length > 0 ? socialMedia : undefined,
+    // Additional fields for compatibility
+    fname: cardData.fname,
+    lname: cardData.lname,
+    biz: cardData.biz,
+    desc: cardData.desc,
+    photo: cardData.photo,
+    pronouns: cardData.pronouns,
+    prefix: cardData.prefix,
+    primaryActions: card.primary_actions,
+    secondaryActions: card.secondary_actions,
+    logoOrHeader: card.logo_or_header
+  };
 }

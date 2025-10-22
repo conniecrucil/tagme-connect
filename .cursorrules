@@ -1,1 +1,3 @@
 Assume netlify dev is run at port 8888. Check that port with browsermcp. If browsermcp not responding, stop and ask for it to be running. If running, and no port, run netlify dev.
+
+Do not use pkill or kill commands on Docker processes. Avoid terminating Docker containers or Docker-related processes unless explicitly requested by the user. If you have to, run "make dev-down"

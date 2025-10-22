@@ -4,6 +4,7 @@ import { transformS3UrlToDomain } from './utils/url-transform.js';
 import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
 import { inlineEmailCSS } from './utils/email-inline-css.js';
 import { generateAdminContactCreationEmail } from './utils/email-templates.mjs';
+import { upsertCustomer, type Customer } from './utils/supabase';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 const emailFrom = process.env.EMAIL_FROM || 'contact@tagmeconnections.con';
@@ -46,7 +47,7 @@ export default async (req: Request, context: Context) => {
     }
 
     try {
-      const { configuration } = await req.json();
+      const { configuration, customerEmail } = await req.json();
 
       if (!configuration) {
         console.error('Missing configuration data in request');
@@ -60,11 +61,31 @@ export default async (req: Request, context: Context) => {
       const sessionId = `admin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       try {
-        // Upload contact card to S3
+        // Create or update customer if email provided
+        let customer: Customer | null = null;
+        if (customerEmail) {
+          try {
+            customer = await upsertCustomer({
+              email: customerEmail,
+              name: configuration.name,
+              phone: configuration.phone || configuration.mobile,
+              metadata: {
+                source: 'admin_creation',
+                session_id: sessionId
+              }
+            });
+            console.log('Customer created/updated:', customer.id);
+          } catch (customerError) {
+            console.error('Failed to create/update customer:', customerError);
+            // Continue without customer - card will be created without customer link
+          }
+        }
+
+        // Upload contact card to S3 (this will also create card record in database)
         const s3Response = await uploadContactCardToS3(sessionId, configuration, req);
 
         // Send admin notification email
-        await sendAdminNotificationEmail(sessionId, configuration, s3Response);
+        await sendAdminNotificationEmail(sessionId, configuration, s3Response, customer);
 
         return new Response(JSON.stringify({
           success: true,
@@ -72,7 +93,9 @@ export default async (req: Request, context: Context) => {
           sessionId,
           s3Urls: s3Response.urls,
           contactName: configuration.name,
-          contactEmail: configuration.email
+          contactEmail: configuration.email,
+          customerId: customer?.id,
+          cardId: s3Response.card_id
         }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -139,12 +162,13 @@ async function uploadContactCardToS3(sessionId: string, configuration: any, req:
   }
 }
 
-async function sendAdminNotificationEmail(sessionId: string, configuration: any, s3Data: any) {
+async function sendAdminNotificationEmail(sessionId: string, configuration: any, s3Data: any, customer?: Customer | null) {
   try {
     const emailHtml = generateAdminContactCreationEmail({
       sessionId,
       configuration,
-      s3Data
+      s3Data,
+      customer
     });
 
     await resend.emails.send({

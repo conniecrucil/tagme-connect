@@ -2,14 +2,29 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import type { Context } from '@netlify/functions';
 import { generateVCard, type VCardConfig } from './utils/vcard-generator.mjs';
+import { 
+  upsertCustomer, 
+  createCard, 
+  createCardAsset, 
+  type Customer, 
+  type Card, 
+  type CardAsset,
+  type CardData,
+  type Action,
+  type GenerationStatus
+} from './utils/supabase';
 
 // Initialize S3 client
+const isDevSetup = process.env.DEV_SETUP === 'true';
+
 const s3Client = new S3Client({
-  region: process.env.APP_AWS_REGION || 'us-east-1',
+  region: isDevSetup ? 'us-east-1' : (process.env.APP_AWS_REGION || 'us-east-1'),
+  endpoint: isDevSetup ? 'http://localhost:9000' : process.env.S3_ENDPOINT, // For MinIO compatibility
   credentials: {
-    accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: isDevSetup ? 'minioadmin' : (process.env.S3_ACCESS_KEY || process.env.APP_AWS_ACCESS_KEY_ID || ''),
+    secretAccessKey: isDevSetup ? 'minioadmin123' : (process.env.S3_SECRET_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY || ''),
   },
+  forcePathStyle: isDevSetup ? true : (process.env.S3_FORCE_PATH_STYLE === 'true'), // Required for MinIO
 });
 
 // Helper function to get display name for action buttons
@@ -110,7 +125,7 @@ export default async (req: Request, context: Context) => {
 
       // Generate unique folder ID
       const folderId = uuidv4();
-      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      const bucketName = isDevSetup ? 'tagme-dev' : (process.env.S3_BUCKET_NAME || process.env.APP_AWS_S3_BUCKET_NAME);
       
       if (!bucketName) {
         console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
@@ -136,7 +151,9 @@ export default async (req: Request, context: Context) => {
               const logoKey = `${folderId}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
               const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
               await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
-              imageUrls.logo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
+              imageUrls.logo = isDevSetup 
+                ? `http://localhost:9000/${bucketName}/${logoKey}`
+                : `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
             } catch (logoError) {
               console.error('Error uploading logo:', logoError);
               // Continue without logo rather than failing completely
@@ -148,7 +165,9 @@ export default async (req: Request, context: Context) => {
               const photoKey = `${folderId}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
               const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
               await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
-              imageUrls.photo = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
+              imageUrls.photo = isDevSetup 
+                ? `http://localhost:9000/${bucketName}/${photoKey}`
+                : `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
             } catch (photoError) {
               console.error('Error uploading photo:', photoError);
               // Continue without photo rather than failing completely
@@ -160,7 +179,9 @@ export default async (req: Request, context: Context) => {
               const coverKey = `${folderId}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
               const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
               await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
-              imageUrls.cover = `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
+              imageUrls.cover = isDevSetup 
+                ? `http://localhost:9000/${bucketName}/${coverKey}`
+                : `${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
             } catch (coverError) {
               console.error('Error uploading cover:', coverError);
               // Continue without cover rather than failing completely
@@ -189,7 +210,139 @@ export default async (req: Request, context: Context) => {
         await uploadToS3(bucketName, vcardKey, vcardContent, 'text/vcard');
 
         // Return the public URLs
-        const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${folderId}`;
+        const baseUrl = isDevSetup 
+          ? `http://localhost:9000/${bucketName}/${folderId}`
+          : `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${folderId}`;
+        
+        // Create database records
+        let customer: Customer | null = null;
+        let card: Card | null = null;
+        
+        try {
+          // Create or update customer if email is provided
+          if (contactData.email) {
+            customer = await upsertCustomer({
+              email: contactData.email,
+              name: contactData.name,
+              phone: contactData.phone || contactData.mobile,
+              metadata: {
+                source: 'card_creation',
+                session_id: sessionId
+              }
+            });
+          }
+
+          // Prepare card data
+          const cardData: CardData = {
+            name: contactData.name,
+            title: contactData.title,
+            company: contactData.company,
+            phone: contactData.phone,
+            email: contactData.email,
+            website: contactData.website,
+            description: contactData.customMessage || contactData.desc,
+            street: contactData.street,
+            city: contactData.city,
+            state: contactData.state,
+            postal: contactData.postal,
+            country: contactData.country,
+            pronouns: contactData.pronouns,
+            prefix: contactData.prefix,
+            mobile: contactData.mobile,
+            fname: contactData.fname,
+            lname: contactData.lname,
+            biz: contactData.biz,
+            desc: contactData.desc,
+            photo: contactData.photo
+          };
+
+          // Prepare actions
+          const primaryActions: Action[] = contactData.primaryActions || [];
+          const secondaryActions: Action[] = contactData.secondaryActions || [];
+
+          // Determine asset flags
+          const hasLogo = !!(contactData.images?.logo?.blob);
+          const hasPhoto = !!(contactData.images?.photo?.blob);
+          const hasCover = !!(contactData.images?.cover?.blob);
+
+          // Create card record
+          card = await createCard({
+            customer_id: customer?.id,
+            uuid: folderId,
+            card_data: cardData,
+            primary_actions: primaryActions,
+            secondary_actions: secondaryActions,
+            logo_or_header: contactData.logoOrHeader || false,
+            has_logo: hasLogo,
+            has_photo: hasPhoto,
+            has_cover: hasCover,
+            s3_base_url: baseUrl,
+            generated_at: new Date().toISOString(),
+            generation_status: {
+              status: 'success',
+              timestamp: new Date().toISOString()
+            }
+          });
+
+          // Create asset records
+          const assets: CardAsset[] = [];
+          
+          // HTML asset
+          assets.push(await createCardAsset({
+            card_id: card.id,
+            asset_type: 'html',
+            s3_key: htmlKey,
+            s3_url: `${baseUrl}/index.html`,
+            mime_type: 'text/html',
+            file_size: htmlContent.length
+          }));
+
+          // VCF asset
+          assets.push(await createCardAsset({
+            card_id: card.id,
+            asset_type: 'vcf',
+            s3_key: vcardKey,
+            s3_url: `${baseUrl}/contact.vcf`,
+            mime_type: 'text/vcard',
+            file_size: vcardContent.length
+          }));
+
+          // Image assets
+          if (hasLogo) {
+            assets.push(await createCardAsset({
+              card_id: card.id,
+              asset_type: 'logo',
+              s3_key: `${folderId}/logo.${(contactData.images!.logo!.ext || 'jpg').split(';')[0]}`,
+              s3_url: imageUrls.logo!,
+              mime_type: contactData.images!.logo!.mime || 'image/jpeg'
+            }));
+          }
+
+          if (hasPhoto) {
+            assets.push(await createCardAsset({
+              card_id: card.id,
+              asset_type: 'photo',
+              s3_key: `${folderId}/photo.${(contactData.images!.photo!.ext || 'jpg').split(';')[0]}`,
+              s3_url: imageUrls.photo!,
+              mime_type: contactData.images!.photo!.mime || 'image/jpeg'
+            }));
+          }
+
+          if (hasCover) {
+            assets.push(await createCardAsset({
+              card_id: card.id,
+              asset_type: 'cover',
+              s3_key: `${folderId}/cover.${(contactData.images!.cover!.ext || 'jpg').split(';')[0]}`,
+              s3_url: imageUrls.cover!,
+              mime_type: contactData.images!.cover!.mime || 'image/jpeg'
+            }));
+          }
+
+        } catch (dbError) {
+          console.error('Database error in upload-to-s3:', dbError);
+          // Continue with S3 success but log database error
+          // The card was created in S3, so we still return success
+        }
         
         return new Response(JSON.stringify({
           success: true,
@@ -198,7 +351,9 @@ export default async (req: Request, context: Context) => {
             html: `${baseUrl}/index.html`,
             vcard: `${baseUrl}/contact.vcf`
           },
-          imageUrls
+          imageUrls,
+          card_id: card?.id,
+          customer_id: customer?.id
         }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -206,6 +361,72 @@ export default async (req: Request, context: Context) => {
 
       } catch (contentError) {
         console.error('Error generating or uploading content:', contentError);
+        
+        // Try to create error record in database
+        try {
+          const folderId = uuidv4();
+          const errorMessage = contentError instanceof Error ? contentError.message : 'Unknown error';
+          
+          // Create customer if email provided
+          let customer: Customer | null = null;
+          if (contactData?.email) {
+            try {
+              customer = await upsertCustomer({
+                email: contactData.email,
+                name: contactData.name,
+                phone: contactData.phone || contactData.mobile,
+                metadata: {
+                  source: 'card_creation_error',
+                  session_id: sessionId
+                }
+              });
+            } catch (customerError) {
+              console.error('Failed to create customer for error record:', customerError);
+            }
+          }
+
+          // Create card record with error status
+          await createCard({
+            customer_id: customer?.id,
+            uuid: folderId,
+            card_data: contactData ? {
+              name: contactData.name,
+              title: contactData.title,
+              company: contactData.company,
+              phone: contactData.phone,
+              email: contactData.email,
+              website: contactData.website,
+              description: contactData.customMessage || contactData.desc,
+              street: contactData.street,
+              city: contactData.city,
+              state: contactData.state,
+              postal: contactData.postal,
+              country: contactData.country,
+              pronouns: contactData.pronouns,
+              prefix: contactData.prefix,
+              mobile: contactData.mobile,
+              fname: contactData.fname,
+              lname: contactData.lname,
+              biz: contactData.biz,
+              desc: contactData.desc,
+              photo: contactData.photo
+            } : {},
+            primary_actions: contactData?.primaryActions || [],
+            secondary_actions: contactData?.secondaryActions || [],
+            logo_or_header: contactData?.logoOrHeader || false,
+            has_logo: !!(contactData?.images?.logo?.blob),
+            has_photo: !!(contactData?.images?.photo?.blob),
+            has_cover: !!(contactData?.images?.cover?.blob),
+            generation_status: {
+              status: 'error',
+              error: errorMessage,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (dbError) {
+          console.error('Failed to create error record in database:', dbError);
+        }
+        
         return new Response(JSON.stringify({ 
           error: 'Failed to generate or upload contact card content',
           details: contentError instanceof Error ? contentError.message : 'Unknown error'

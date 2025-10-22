@@ -1,7 +1,7 @@
 # Makefile for Netlify POC Testing Suite
 # Provides easy commands for development, testing, and Docker management
 
-.PHONY: help install dev test test-headed test-ui test-docker clean docker-build docker-up docker-down docker-logs test-basic test-core test-admin-create test-admin-modify test-all
+.PHONY: help install dev dev-stop test test-headed test-ui test-docker clean docker-build docker-up docker-down docker-logs test-basic test-core test-admin-create test-admin-modify test-all
 
 # Default target
 help: ## Show this help message
@@ -17,14 +17,63 @@ install: ## Install dependencies
 	npm install
 	npx playwright install
 
-dev: ## Start Netlify dev server
-	@echo "🚀 Starting Netlify dev server on port 8888..."
+dev: ## Start development environment (Docker services + Netlify dev)
+	@echo "🚀 Starting development environment..."
+	@if [ ! -f ".env" ]; then \
+		echo "❌ Error: .env file not found!"; \
+		echo "Please run 'make setup-env' to create a .env file with default values."; \
+		echo "Then edit the .env file with your actual API keys and configuration."; \
+		exit 1; \
+	fi
+	@echo "📦 Starting Docker services..."
+	docker-compose -f docker-compose.dev.yml up -d
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 5
+	@echo "🔍 Checking service health..."
+	@until docker-compose -f docker-compose.dev.yml ps | grep -q "healthy\|Up"; do \
+		echo "⏳ Waiting for services..."; \
+		sleep 2; \
+	done
+	@echo "✅ Docker services are ready!"
+	@echo "🌱 Seeding MinIO with fake data..."
+	@sleep 3
+	@node supabase/seed-minio.cjs || echo "⚠️  MinIO seeding failed, continuing..."
 	@if lsof -Pi :8888 -sTCP:LISTEN -t >/dev/null 2>&1; then \
 		echo "⚠️  Port 8888 is already in use. Stopping existing process..."; \
 		lsof -ti:8888 | xargs kill -9 2>/dev/null || true; \
 		sleep 2; \
 	fi
+	@echo "🌐 Starting Netlify dev server on port 8888..."
 	netlify dev --port 8888
+
+dev-stop: ## Stop development environment (Docker services)
+	@echo "🛑 Stopping development environment..."
+	@if lsof -Pi :8888 -sTCP:LISTEN -t >/dev/null 2>&1; then \
+		echo "🛑 Stopping Netlify dev server..."; \
+		lsof -ti:8888 | xargs kill -9 2>/dev/null || true; \
+	fi
+	@echo "🐳 Stopping Docker services..."
+	docker-compose -f docker-compose.dev.yml down --volumes
+	@echo "✅ Development environment stopped!"
+
+dev-down: ## Stop development environment (alias for dev-stop)
+	@make dev-stop
+
+dev-logs: ## Show logs from development environment
+	@echo "📋 Showing development environment logs..."
+	docker-compose -f docker-compose.dev.yml logs -f
+
+dev-logs-netlify: ## Show logs from Netlify dev server only
+	@echo "📋 Showing Netlify dev server logs..."
+	docker-compose -f docker-compose.dev.yml logs -f netlify-dev
+
+dev-logs-minio: ## Show logs from MinIO dev service only
+	@echo "📋 Showing MinIO dev service logs..."
+	docker-compose -f docker-compose.dev.yml logs -f minio
+
+dev-logs-db: ## Show logs from database services only
+	@echo "📋 Showing database service logs..."
+	docker-compose -f docker-compose.dev.yml logs -f postgres postgrest
 
 # Testing commands
 test: ## Run all Playwright tests headlessly (no human interaction needed)
@@ -89,7 +138,47 @@ docker-logs: ## Show Docker container logs
 
 test-docker: ## Run tests in Docker environment
 	@echo "🐳 Running tests in Docker environment..."
-	docker-compose up --build playwright-tests
+	docker-compose -f docker-compose.test.yml up --build playwright-tests
+
+test-logs: ## Show logs from test environment
+	@echo "📋 Showing test environment logs..."
+	docker-compose -f docker-compose.test.yml logs -f
+
+test-logs-netlify: ## Show logs from Netlify test server only
+	@echo "📋 Showing Netlify test server logs..."
+	docker-compose -f docker-compose.test.yml logs -f netlify-test
+
+test-logs-minio: ## Show logs from MinIO test service only
+	@echo "📋 Showing MinIO test service logs..."
+	docker-compose -f docker-compose.test.yml logs -f minio-test
+
+test-logs-db: ## Show logs from test database services only
+	@echo "📋 Showing test database service logs..."
+	docker-compose -f docker-compose.test.yml logs -f postgres-test postgrest-test
+
+# MinIO console commands
+minio-console-dev: ## Open MinIO console for development environment
+	@echo "🌐 Opening MinIO development console..."
+	@echo "URL: http://localhost:9001"
+	@echo "Username: minioadmin"
+	@echo "Password: minioadmin123"
+	@open http://localhost:9001 || echo "Please open http://localhost:9001 in your browser"
+
+minio-console-test: ## Open MinIO console for test environment
+	@echo "🌐 Opening MinIO test console..."
+	@echo "URL: http://localhost:9003"
+	@echo "Username: miniotest"
+	@echo "Password: miniotest123"
+	@open http://localhost:9003 || echo "Please open http://localhost:9003 in your browser"
+
+# MinIO seeding commands
+seed-minio: ## Seed MinIO with fake VCF files and HTML content
+	@echo "🌱 Seeding MinIO with fake data..."
+	@node supabase/seed-minio.cjs
+
+seed-minio-test: ## Seed MinIO test environment with fake data
+	@echo "🌱 Seeding MinIO test environment with fake data..."
+	@S3_ENDPOINT=http://localhost:9002 S3_ACCESS_KEY=miniotest S3_SECRET_KEY=miniotest123 S3_BUCKET_NAME=tagme-test node supabase/seed-minio.cjs
 
 # Combined commands
 dev-test: ## Start dev server and run tests (requires two terminals)
@@ -129,7 +218,8 @@ setup: ## Initial setup (install dependencies and check environment)
 	@echo "🔧 Setting up development environment..."
 	@if [ ! -f ".env" ]; then \
 		echo "❌ Error: .env file not found!"; \
-		echo "Please create a .env file with the required environment variables."; \
+		echo "Please run './setup-env.sh' to create a .env file with default values."; \
+		echo "Then edit the .env file with your actual API keys and configuration."; \
 		echo "See ENVIRONMENT_VARIABLES.md for details."; \
 		exit 1; \
 	fi
@@ -147,6 +237,10 @@ setup: ## Initial setup (install dependencies and check environment)
 	@echo "✅ Docker available"
 	@echo "🎉 Environment setup complete!"
 
+setup-env: ## Create .env file with default values
+	@echo "🔧 Creating .env file with default values..."
+	@./setup-env.sh
+
 # Status commands
 status: ## Check status of services
 	@echo "📊 Service Status:"
@@ -156,11 +250,33 @@ status: ## Check status of services
 	else \
 		echo "❌ Netlify dev server: Not running"; \
 	fi
+	@if docker ps --format "table {{.Names}}\t{{.Status}}" | grep -q "tagme-"; then \
+		echo "✅ Docker dev containers: Running"; \
+		docker ps --format "table {{.Names}}\t{{.Status}}" | grep "tagme-"; \
+	else \
+		echo "❌ Docker dev containers: Not running"; \
+	fi
 	@if docker ps --format "table {{.Names}}\t{{.Status}}" | grep -q "netlify-poc"; then \
-		echo "✅ Docker containers: Running"; \
+		echo "✅ Docker test containers: Running"; \
 		docker ps --format "table {{.Names}}\t{{.Status}}" | grep "netlify-poc"; \
 	else \
-		echo "❌ Docker containers: Not running"; \
+		echo "❌ Docker test containers: Not running"; \
+	fi
+	@echo ""
+	@echo "🌐 MinIO Services:"
+	@if lsof -Pi :9000 -sTCP:LISTEN -t >/dev/null 2>&1; then \
+		echo "✅ MinIO dev API: Running on port 9000"; \
+		echo "   Console: http://localhost:9001"; \
+		echo "   Website hosting: http://localhost:9010"; \
+	else \
+		echo "❌ MinIO dev API: Not running"; \
+	fi
+	@if lsof -Pi :9002 -sTCP:LISTEN -t >/dev/null 2>&1; then \
+		echo "✅ MinIO test API: Running on port 9002"; \
+		echo "   Console: http://localhost:9003"; \
+		echo "   Website hosting: http://localhost:9011"; \
+	else \
+		echo "❌ MinIO test API: Not running"; \
 	fi
 
 # Quick development workflow

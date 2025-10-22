@@ -51,6 +51,34 @@ export default function AdminIndex() {
 
           <Card>
             <CardHeader>
+              <CardTitle>View All Cards</CardTitle>
+              <CardDescription>
+                Browse, search, and manage all contact cards created through the system. Filter by customer, status, and date.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/cards">View All Cards</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>System Status</CardTitle>
+              <CardDescription>
+                Check system configuration and environment variables status. Verify all services are properly configured.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/system-status">Check System Status</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>View Analytics</CardTitle>
               <CardDescription>
                 View contact card analytics, usage statistics, and performance metrics.
