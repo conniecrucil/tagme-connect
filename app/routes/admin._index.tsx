@@ -122,6 +122,20 @@ export default function AdminIndex() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Card Preview</CardTitle>
+              <CardDescription>
+                Preview how contact cards will look with dummy data. Test different layouts and configurations.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/preview">Preview Cards</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Support</CardTitle>
               <CardDescription>
                 Access support tools, view tickets, and manage customer inquiries.
