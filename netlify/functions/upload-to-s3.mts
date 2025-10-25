@@ -110,12 +110,8 @@ export default async (req: Request, context: Context) => {
 
       // Generate unique folder ID
       const folderId = uuidv4();
-      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      const bucketName = 'c.tagmeconnections.com';
       
-      if (!bucketName) {
-        console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
-        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
-      }
 
       try {
         // Generate HTML content for the contact card

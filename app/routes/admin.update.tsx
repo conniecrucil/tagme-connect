@@ -96,7 +96,7 @@ export default function AdminUpdate() {
     const uuid = extractUuidFromUrl(contactUrl.trim());
     if (!uuid) {
       toast.error("Invalid URL", {
-        description: "Please enter a valid contact card URL (e.g., https://demo.bancroft.io/uuid/index.html)."
+        description: "Please enter a valid contact card URL (e.g., https://c.tagmeconnections.com/uuid/index.html)."
       });
       return;
     }
@@ -220,7 +220,7 @@ export default function AdminUpdate() {
           <CardHeader>
             <CardTitle>Search for Contact Card</CardTitle>
             <CardDescription>
-              Enter the URL of the contact card you want to update (e.g., https://demo.bancroft.io/uuid/index.html)
+              Enter the URL of the contact card you want to update (e.g., https://c.tagmeconnections.com/uuid/index.html)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -229,7 +229,7 @@ export default function AdminUpdate() {
                 <Label htmlFor="contactUrl">Contact Card URL</Label>
                 <Input
                   id="contactUrl"
-                  placeholder="https://demo.bancroft.io/00534a50-a2f9-430d-9f96-883877a5b6fd/index.html"
+                  placeholder="https://c.tagmeconnections.com/00534a50-a2f9-430d-9f96-883877a5b6fd/index.html"
                   value={contactUrl}
                   onChange={(e) => setContactUrl(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
