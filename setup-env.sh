@@ -84,3 +84,4 @@ echo ""
 echo "📖 See ENVIRONMENT_VARIABLES.md for detailed setup instructions."
 echo ""
 echo "🚀 You can now run 'make dev' to start the development environment!"
+
