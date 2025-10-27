@@ -2,6 +2,7 @@ import { UnifiedIcon } from "~/components/UnifiedIcon";
 import type { VCardData, Action, ImageData } from "~/providers/configuration-provider";
 import logoImg from "~/assets/300x300.png";
 import headerImg from "~/assets/960x640.png";
+import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/ui/tooltip";
 
 interface MobileCardPreviewProps {
   vCardData: VCardData;
@@ -168,9 +169,16 @@ export default function MobileCardPreview({
 
       {/* Save Contact Button */}
       <div className="px-3 pb-3 mt-8">
-        <button type="button" className="w-3/4 mx-auto font-bold py-3 px-4 rounded transition-colors flex items-center justify-center text-gray-900 hover:text-white" style={{ backgroundColor: '#6ed097', color: '#222' }}>
-          Save Contact
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="w-3/4 mx-auto font-bold py-3 px-4 rounded transition-colors flex items-center justify-center text-gray-900 hover:text-white" style={{ backgroundColor: '#6ed097', color: '#222' }}>
+              Save Contact
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Clicking this button on a live custom website will download the contact file. It is disabled here.</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Actions Section */}
