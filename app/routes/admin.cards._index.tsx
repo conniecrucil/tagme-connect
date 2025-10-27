@@ -350,7 +350,8 @@ export default function AdminCardsIndex() {
                 <p className="text-gray-600">No cards found matching your criteria.</p>
               </div>
             ) : (
-              <TableProvider columns={columns} data={cards}>
+              <div className="pl-4">
+                <TableProvider columns={columns} data={cards}>
                 <TableHeader>
                   {({ headerGroup }) => (
                     <TableHeaderGroup headerGroup={headerGroup}>
@@ -369,7 +370,7 @@ export default function AdminCardsIndex() {
                     </TableRow>
                   )}
                 </TableBody>
-                </TableProvider>
+              </TableProvider>
               </div>
             )}
           </CardContent>
