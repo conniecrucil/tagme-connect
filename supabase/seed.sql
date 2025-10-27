@@ -35,22 +35,6 @@ INSERT INTO contact_cards (
     NOW() - INTERVAL '7 days'
 );
 
--- Insert sample admin user (password: admin123)
--- Note: This is a bcrypt hash for "admin123" - DO NOT use in production
-INSERT INTO admin_users (
-    id,
-    email,
-    password_hash,
-    otp_enabled,
-    created_at
-) VALUES (
-    '00000000-0000-0000-0000-000000000003',
-    'admin@tagme.test',
-    '$2b$10$rBV2Ifq7bFVWKbNQw8xTCOqNpjYJvF.dXFgp5i7TLLvNqR7ULmEly',
-    false,
-    NOW()
-) ON CONFLICT (email) DO NOTHING;
-
 -- Add more sample orders for variety
 INSERT INTO orders (
     stripe_session_id,
@@ -156,7 +140,7 @@ INSERT INTO cards (
     false,
     'http://localhost:9010/alex-chen-techcorp-001',
     NOW() - INTERVAL '25 days',
-    '{"status": "success", "timestamp": "' || (NOW() - INTERVAL '25 days')::text || '"}'::jsonb,
+    jsonb_build_object('status', 'success', 'timestamp', (NOW() - INTERVAL '25 days')),
     NOW() - INTERVAL '25 days'
 ),
 (
@@ -172,7 +156,7 @@ INSERT INTO cards (
     true,
     'http://localhost:9010/sarah-williams-design-002',
     NOW() - INTERVAL '20 days',
-    '{"status": "success", "timestamp": "' || (NOW() - INTERVAL '20 days')::text || '"}'::jsonb,
+    jsonb_build_object('status', 'success', 'timestamp', (NOW() - INTERVAL '20 days')),
     NOW() - INTERVAL '20 days'
 );
 

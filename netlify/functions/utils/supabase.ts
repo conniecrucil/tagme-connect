@@ -4,9 +4,9 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
  * Supabase client utility for server-side operations
  * 
  * This file provides a configured Supabase client for use in Netlify functions.
- * It is set up but not yet integrated into the application.
+ * Configured for SaaS Supabase using PROJECT_URL and SUPABASE_KEY environment variables.
  * 
- * Usage (future implementation):
+ * Usage:
  * ```typescript
  * import { getSupabaseClient } from './utils/supabase';
  * 
@@ -20,64 +20,42 @@ let supabaseClient: SupabaseClient | null = null;
 /**
  * Get or create a Supabase client instance
  * Uses singleton pattern to reuse the client across function invocations
+ * 
+ * Requires environment variables:
+ * - PROJECT_URL: Your Supabase project URL (e.g., https://xxxxx.supabase.co)
+ * - SUPABASE_KEY: Service role key for server-side operations
  */
 export function getSupabaseClient(): SupabaseClient {
   if (supabaseClient) {
     return supabaseClient;
   }
 
-  // Use hard-coded values for local development
-  // Check if we're running locally (either through DEV_SETUP env var or if SUPABASE_URL is not set)
-  const isDevSetup = process.env.DEV_SETUP === 'true' || !process.env.SUPABASE_URL;
-  
-  const supabaseUrl = isDevSetup 
-    ? 'http://localhost:54321'
-    : process.env.SUPABASE_URL;
-    
-  const supabaseServiceKey = isDevSetup
-    ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
-    : process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.PROJECT_URL;
+  const supabaseServiceKey = process.env.SUPABASE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error(
-      'Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+      'Missing Supabase environment variables. Please set PROJECT_URL and SUPABASE_KEY.'
     );
   }
 
   console.log('Creating Supabase client with URL:', supabaseUrl);
   console.log('Service key length:', supabaseServiceKey?.length || 0);
   
-  // For local development, try a different approach
-  if (isDevSetup) {
-    // Create client with minimal configuration for local development
-    supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+  supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: {
+        'apikey': supabaseServiceKey,
       },
-      global: {
-        headers: {
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'apikey': supabaseServiceKey,
-        },
-      },
-    });
-  } else {
-    supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-      db: {
-        schema: 'public',
-      },
-      global: {
-        headers: {
-          'apikey': supabaseServiceKey,
-        },
-      },
-    });
-  }
+    },
+  });
   
   console.log('Supabase client created successfully');
 

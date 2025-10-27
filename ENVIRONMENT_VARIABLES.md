@@ -49,27 +49,12 @@ This document outlines all the environment variables required for the Netlify PO
 ### Netlify Configuration
 - `NETLIFY_SITE_URL` - Your Netlify site URL (e.g., https://your-site.netlify.app)
 
-### Supabase Configuration
-- `SUPABASE_URL` - Supabase API URL
-  - Local development: `http://localhost:54321`
-  - Local test: `http://localhost:54421`
-  - Production: Your hosted Supabase project URL (e.g., `https://xxxxx.supabase.co`)
-- `SUPABASE_ANON_KEY` - Supabase anonymous key for client-side operations
-  - Local development/test: Use the default key from `.env.example`
-  - Production: Get from your Supabase project settings
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key for server-side operations
-  - Local development/test: Use the default key from `.env.example`
-  - Production: Get from your Supabase project settings (keep secret!)
-- `DATABASE_URL` - Direct PostgreSQL connection string
-  - Local development: `postgres://postgres:postgres@localhost:54322/postgres`
-  - Local test: `postgres://postgres:postgres@localhost:54422/postgres_test`
-  - Production: Get from your Supabase project settings
-
-### PostgreSQL Configuration (Docker Compose only)
-- `POSTGRES_PASSWORD` - PostgreSQL password (default: `postgres`)
-- `POSTGRES_DB` - PostgreSQL database name (default: `postgres` for dev, `postgres_test` for test)
-- `POSTGRES_USER` - PostgreSQL username (default: `postgres`)
-- `JWT_SECRET` - JWT secret for local PostgREST authentication (minimum 32 characters)
+### Supabase Configuration (SaaS - Server-side only)
+- `PROJECT_URL` - Your Supabase project URL (e.g., `https://xxxxx.supabase.co`)
+  - Get from your Supabase project settings under "Project Settings" → "API"
+- `SUPABASE_KEY` - Supabase service role key for server-side operations (Netlify functions only)
+  - Get from your Supabase project settings under "Project Settings" → "API" → "Service role key"
+  - **Keep secret!** This key has full access to your database
 
 ## Setting Environment Variables
 
@@ -110,17 +95,9 @@ AUTH0_AUDIENCE=https://your-tenant.us.auth0.com/api/v2/
 # Netlify
 NETLIFY_SITE_URL=https://your-site.netlify.app
 
-# Supabase (Local Development)
-SUPABASE_URL=http://localhost:54321
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
-DATABASE_URL=postgres://postgres:postgres@localhost:54322/postgres
-
-# PostgreSQL (Docker Compose)
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+# Supabase (SaaS - Server-side only for Netlify functions)
+PROJECT_URL=https://your-project-id.supabase.co
+SUPABASE_KEY=your_service_role_key_here
 ```
 
 ### For Netlify Deployment

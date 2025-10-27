@@ -71,9 +71,7 @@ dev-logs-minio: ## Show logs from MinIO dev service only
 	@echo "📋 Showing MinIO dev service logs..."
 	docker-compose -f docker-compose.dev.yml logs -f minio
 
-dev-logs-db: ## Show logs from database services only
-	@echo "📋 Showing database service logs..."
-	docker-compose -f docker-compose.dev.yml logs -f postgres postgrest
+
 
 # Testing commands
 test: ## Run all Playwright tests headlessly (no human interaction needed)
@@ -152,9 +150,7 @@ test-logs-minio: ## Show logs from MinIO test service only
 	@echo "📋 Showing MinIO test service logs..."
 	docker-compose -f docker-compose.test.yml logs -f minio-test
 
-test-logs-db: ## Show logs from test database services only
-	@echo "📋 Showing test database service logs..."
-	docker-compose -f docker-compose.test.yml logs -f postgres-test postgrest-test
+
 
 # MinIO console commands
 minio-console-dev: ## Open MinIO console for development environment
