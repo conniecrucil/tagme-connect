@@ -937,53 +937,53 @@ export default function ConfigureProduct() {
                 </Card>
               </div>
             </div>
+
+            {/* Purchase Section - Common for both card types, appears after preview on mobile */}
+            <div className="mt-8 max-w-2xl mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Purchase</CardTitle>
+                  <CardDescription>Add your configured card to cart</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                      Quantity:
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                      >
+                        -
+                      </button>
+                      <span className="w-12 text-center font-medium">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    form="configuration-form"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium transition-colors"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Adding to Cart...' : `Add to Cart - $${((productId === 'tag-basic-card' ? 40 : 47) * quantity).toFixed(2)}`}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </form>
 
         </div>
       </section>
-
-      {/* Fixed Purchase Section - Lower Right */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Card className="w-80 shadow-xl border-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Purchase</CardTitle>
-            <CardDescription className="text-sm">Add your configured card to cart</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                Quantity:
-              </label>
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
-                >
-                  -
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              form="configuration-form"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium transition-colors"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Adding to Cart...' : `Add to Cart - $${(47 * quantity).toFixed(2)}`}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

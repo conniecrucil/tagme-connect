@@ -18,25 +18,12 @@ This document outlines all the environment variables required for the Netlify PO
 - `COMPANY_NAME` - Your company name
 - `COMPANY_WEBSITE` - Your company website URL
 
-### AWS S3 Configuration (Production)
+### AWS S3 Configuration
 - `APP_AWS_ACCESS_KEY_ID` - Your AWS access key ID
 - `APP_AWS_SECRET_ACCESS_KEY` - Your AWS secret access key
 - `APP_AWS_REGION` - AWS region for your S3 bucket (e.g., us-east-1)
-- `VITE_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards
-
-### MinIO/S3 Configuration (Development/Test)
-- `S3_ENDPOINT` - MinIO endpoint URL (automatically set by Docker)
-- `S3_ACCESS_KEY` - MinIO access key (automatically set by Docker)
-- `S3_SECRET_KEY` - MinIO secret key (automatically set by Docker)
-- `S3_BUCKET_NAME` - MinIO bucket name (default: `tagme-dev` for dev, `tagme-test` for test)
-- `S3_FORCE_PATH_STYLE` - Set to `true` for MinIO compatibility (automatically set by Docker)
-- `S3_WEBSITE_ENDPOINT` - MinIO website hosting endpoint (automatically set by Docker)
-
-### MinIO Root Credentials (Docker Compose only)
-- `MINIO_ROOT_USER` - MinIO root username (default: `minioadmin`)
-- `MINIO_ROOT_PASSWORD` - MinIO root password (default: `minioadmin123`)
-- `MINIO_TEST_ROOT_USER` - MinIO test root username (default: `miniotest`)
-- `MINIO_TEST_ROOT_PASSWORD` - MinIO test root password (default: `miniotest123`)
+- `VITE_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards (used for SDK operations)
+- `VITE_AWS_S3_BUCKET_URL` - Public URL base for accessing S3 bucket content (e.g., `https://cards.yourdomain.com` or CloudFront URL like `https://d1234567890.cloudfront.net`)
 
 
 
@@ -47,6 +34,7 @@ This document outlines all the environment variables required for the Netlify PO
 - `AUTH0_AUDIENCE` - Optional Auth0 API identifier (defaults to Auth0 Management API)
 
 ### Netlify Configuration
+- `NETLIFY_ACCESS_TOKEN` - Netlify personal access token (required for running netlify dev in Docker)
 - `NETLIFY_SITE_URL` - Your Netlify site URL (e.g., https://your-site.netlify.app)
 
 ### Supabase Configuration (SaaS - Server-side only)
@@ -81,6 +69,7 @@ APP_AWS_ACCESS_KEY_ID=your_aws_access_key_id
 APP_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 APP_AWS_REGION=us-east-1
 VITE_AWS_S3_BUCKET_NAME=your-s3-bucket-name
+VITE_AWS_S3_BUCKET_URL=https://cards.yourdomain.com
 
 # Admin Auth (Legacy - Deprecated)
 ADMIN_USER=admin
@@ -103,9 +92,7 @@ SUPABASE_KEY=your_service_role_key_here
 ### For Netlify Deployment
 Set these variables in your Netlify dashboard under Site Settings > Environment Variables.
 
-## S3/MinIO Setup
-
-### Production S3 Bucket Setup
+## S3 Bucket Setup
 1. Create an S3 bucket in your AWS account
 2. Configure the bucket for public read access on uploaded objects:
    - Go to bucket permissions → Block public access settings
@@ -146,27 +133,11 @@ Set these variables in your Netlify dashboard under Site Settings > Environment 
    - `s3:PutObjectAcl`
    - `s3:GetObject` (for verification)
 
-### Local Development with MinIO
-MinIO containers are automatically configured with:
-- **Dev Environment**: 
-  - API: `http://localhost:9000`
-  - Web Console: `http://localhost:9001`
-  - Website Hosting: `http://localhost:9010`
-  - Bucket: `tagme-dev`
-- **Test Environment**:
-  - API: `http://localhost:9002`
-  - Web Console: `http://localhost:9003`
-  - Website Hosting: `http://localhost:9011`
-  - Bucket: `tagme-test`
+### Setting up Custom Domain or CloudFront (Recommended)
+For better performance and branding, you can use a custom domain or CloudFront distribution:
 
-#### Accessing Generated Websites
-When contact cards are generated, they create static websites that can be accessed at:
-- **Dev**: `http://localhost:9010/{uuid}/index.html`
-- **Test**: `http://localhost:9011/{uuid}/index.html`
-
-#### MinIO Web Console Access
-- **Dev Console**: http://localhost:9001 (username: `minioadmin`, password: `minioadmin123`)
-- **Test Console**: http://localhost:9003 (username: `miniotest`, password: `miniotest123`)
+- **Option 1 - CloudFront**: Create a CloudFront distribution pointing to your S3 bucket and use that URL in `VITE_AWS_S3_BUCKET_URL`
+- **Option 2 - Custom Domain**: Configure a custom domain with DNS CNAME pointing to your S3 bucket or CloudFront distribution
 
 ## Security Notes
 

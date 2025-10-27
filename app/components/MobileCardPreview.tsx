@@ -168,7 +168,7 @@ export default function MobileCardPreview({
       </div>
 
       {/* Save Contact Button */}
-      <div className="px-3 pb-3 mt-8">
+      <div className={`px-3 ${activePrimaryActions.length > 0 || activeSecondaryActions.length > 0 ? 'pb-3' : 'pb-6'} mt-8`}>
         <Tooltip>
           <TooltipTrigger asChild>
             <button type="button" className="w-3/4 mx-auto font-bold py-3 px-4 rounded transition-colors flex items-center justify-center text-gray-900 hover:text-white" style={{ backgroundColor: '#6ed097', color: '#222' }}>
@@ -183,7 +183,7 @@ export default function MobileCardPreview({
 
       {/* Actions Section */}
       {(activePrimaryActions.length > 0 || activeSecondaryActions.length > 0) && (
-        <div className="px-3 pb-3">
+        <div className="px-3 pb-6">
           {/* Separator between save contact and actions */}
           <hr className="border-gray-200 my-3" />
           

@@ -90,13 +90,8 @@ export const handler: Handler = async (event) => {
         region: !!process.env.APP_AWS_REGION,
         bucketName: !!process.env.VITE_AWS_S3_BUCKET_NAME,
       },
-      minio: {
-        endpoint: !!process.env.S3_ENDPOINT,
-        accessKey: !!process.env.S3_ACCESS_KEY,
-        secretKey: !!process.env.S3_SECRET_KEY,
-        bucketName: !!process.env.S3_BUCKET_NAME,
-        forcePathStyle: !!process.env.S3_FORCE_PATH_STYLE,
-        websiteEndpoint: !!process.env.S3_WEBSITE_ENDPOINT,
+      s3BucketUrl: {
+        bucketUrl: !!process.env.VITE_AWS_S3_BUCKET_URL,
       },
       admin: {
         user: !!process.env.ADMIN_USER,

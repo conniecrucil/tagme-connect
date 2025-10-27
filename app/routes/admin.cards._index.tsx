@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useId } from "react";
 import { Link } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
@@ -11,12 +11,11 @@ import {
   TableHeader, 
   TableHead, 
   TableHeaderGroup, 
-  TableColumnHeader,
   TableBody, 
   TableRow, 
   TableCell,
   type ColumnDef 
-} from "~/components/kibo-ui/table";
+} from "@components/kibo-ui/table";
 
 export function meta() {
   return [
@@ -65,6 +64,10 @@ interface CardsListResponse {
 
 export default function AdminCardsIndex() {
   const { toast } = useToast();
+  const searchEmailId = useId();
+  const statusFilterId = useId();
+  const dateFromId = useId();
+  const dateToId = useId();
   const [cards, setCards] = useState<CardWithCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -77,7 +80,7 @@ export default function AdminCardsIndex() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const getStatusBadge = (status: string, error?: string) => {
+  const getStatusBadge = useCallback((status: string, error?: string) => {
     switch (status) {
       case 'success':
         return <Badge className="bg-green-100 text-green-800">Success</Badge>;
@@ -88,9 +91,9 @@ export default function AdminCardsIndex() {
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
-  };
+  }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -98,7 +101,7 @@ export default function AdminCardsIndex() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
 
   // Column definitions for Kibo UI Table
   const columns = useMemo<ColumnDef<CardWithCustomer>[]>(
@@ -186,7 +189,7 @@ export default function AdminCardsIndex() {
     [formatDate, getStatusBadge]
   );
 
-  const fetchCards = async () => {
+  const fetchCards = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -219,7 +222,7 @@ export default function AdminCardsIndex() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, searchEmail, statusFilter, dateFrom, dateTo, toast]);
 
   useEffect(() => {
     fetchCards();
@@ -260,10 +263,11 @@ export default function AdminCardsIndex() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor={searchEmailId} className="block text-sm font-medium text-gray-700 mb-1">
                   Customer Email
                 </label>
                 <Input
+                  id={searchEmailId}
                   placeholder="Search by email..."
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
@@ -271,11 +275,11 @@ export default function AdminCardsIndex() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor={statusFilterId} className="block text-sm font-medium text-gray-700 mb-1">
                   Status
                 </label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger id={statusFilterId}>
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,10 +292,11 @@ export default function AdminCardsIndex() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor={dateFromId} className="block text-sm font-medium text-gray-700 mb-1">
                   From Date
                 </label>
                 <Input
+                  id={dateFromId}
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
@@ -299,10 +304,11 @@ export default function AdminCardsIndex() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor={dateToId} className="block text-sm font-medium text-gray-700 mb-1">
                   To Date
                 </label>
                 <Input
+                  id={dateToId}
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
@@ -349,9 +355,7 @@ export default function AdminCardsIndex() {
                   {({ headerGroup }) => (
                     <TableHeaderGroup headerGroup={headerGroup}>
                       {({ header }) => (
-                        <TableHead>
-                          <TableColumnHeader column={header.column} title={String(header.column.columnDef.header)} />
-                        </TableHead>
+                        <TableHead key={header.id} header={header} />
                       )}
                     </TableHeaderGroup>
                   )}
@@ -365,7 +369,8 @@ export default function AdminCardsIndex() {
                     </TableRow>
                   )}
                 </TableBody>
-              </TableProvider>
+                </TableProvider>
+              </div>
             )}
           </CardContent>
         </Card>

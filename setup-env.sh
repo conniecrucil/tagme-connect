@@ -38,11 +38,12 @@ SUPPORT_EMAIL=support@yourdomain.com
 COMPANY_NAME=TagMe Connect
 COMPANY_WEBSITE=https://tagmeconnect.com
 
-# AWS S3 Configuration (REQUIRED for production)
+# AWS S3 Configuration (REQUIRED)
 APP_AWS_ACCESS_KEY_ID=your_aws_access_key_id
 APP_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 APP_AWS_REGION=us-east-1
 VITE_AWS_S3_BUCKET_NAME=your-s3-bucket-name
+VITE_AWS_S3_BUCKET_URL=https://cards.yourdomain.com
 
 # Admin Authentication (REQUIRED)
 ADMIN_USER=admin
@@ -50,6 +51,7 @@ ADMIN_PASS=admin123
 
 # Netlify Configuration (REQUIRED)
 NETLIFY_SITE_URL=https://your-site.netlify.app
+NETLIFY_ACCESS_TOKEN=your_netlify_access_token_here
 
 # Supabase Configuration (Local Development - Default values work for local dev)
 SUPABASE_URL=http://localhost:54321
@@ -57,16 +59,21 @@ SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZ
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
 DATABASE_URL=postgres://postgres:postgres@localhost:54322/postgres
 
-# PostgreSQL Configuration (Docker Compose - Default values work for local dev)
+# PostgreSQL Configuration (Default values work for local dev)
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=postgres
 POSTGRES_USER=postgres
 JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
 
-# MinIO Configuration (Development - Default values work for local dev)
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin123
-S3_BUCKET_NAME=tagme-dev
+# Auth0 Configuration (REQUIRED)
+VITE_AUTH0_DOMAIN=your-tenant.us.auth0.com
+VITE_AUTH0_CLIENT_ID=your_client_id_here
+AUTH0_CLIENT_SECRET=your_client_secret_here
+AUTH0_AUDIENCE=https://your-tenant.us.auth0.com/api/v2/
+
+# Supabase Configuration (SaaS - Server-side only for Netlify functions)
+PROJECT_URL=https://your-project-id.supabase.co
+SUPABASE_KEY=your_service_role_key_here
 EOF
 
 echo "✅ .env file created successfully!"

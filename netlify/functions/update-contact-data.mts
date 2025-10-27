@@ -14,12 +14,10 @@ import {
 // Initialize S3 client
 const s3Client = new S3Client({
   region: process.env.APP_AWS_REGION || 'us-east-1',
-  endpoint: process.env.S3_ENDPOINT, // For MinIO compatibility
   credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY || process.env.APP_AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.S3_SECRET_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
   },
-  forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true', // Required for MinIO
 });
 
 interface ContactCardData {
@@ -72,11 +70,17 @@ export default async (req: Request, context: Context) => {
         });
       }
 
-      const bucketName = process.env.S3_BUCKET_NAME || process.env.APP_AWS_S3_BUCKET_NAME;
+      const bucketName = process.env.VITE_AWS_S3_BUCKET_NAME;
+      const bucketUrl = process.env.VITE_AWS_S3_BUCKET_URL;
       
       if (!bucketName) {
-        console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
-        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
+        console.error('VITE_AWS_S3_BUCKET_NAME environment variable is not set');
+        throw new Error('VITE_AWS_S3_BUCKET_NAME environment variable is required');
+      }
+      
+      if (!bucketUrl) {
+        console.error('VITE_AWS_S3_BUCKET_URL environment variable is not set');
+        throw new Error('VITE_AWS_S3_BUCKET_URL environment variable is required');
       }
 
       try {
@@ -91,7 +95,7 @@ export default async (req: Request, context: Context) => {
         }
 
         // Update the contact card data in S3
-        const result = await updateContactCardInS3(bucketName, uuid, contactData);
+        const result = await updateContactCardInS3(bucketName, bucketUrl, uuid, contactData);
 
         // Update database record
         try {
@@ -269,7 +273,7 @@ async function contactCardExists(bucketName: string, uuid: string): Promise<bool
   }
 }
 
-async function updateContactCardInS3(bucketName: string, uuid: string, contactData: ContactCardData): Promise<{ urls: any; imageUrls: any }> {
+async function updateContactCardInS3(bucketName: string, bucketUrl: string, uuid: string, contactData: ContactCardData): Promise<{ urls: any; imageUrls: any }> {
   try {
     // Generate vCard content
     const vcardConfig: VCardConfig = {
@@ -286,7 +290,7 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
     const vcardContent = generateVCard(vcardConfig);
 
     // Construct baseUrl for meta tags (used in OG properties)
-    const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}`;
+    const baseUrl = `${bucketUrl}/${uuid}`;
 
     // Generate HTML content for the contact card
     const htmlContent = generateContactCardHTML(contactData, baseUrl);
@@ -310,21 +314,21 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
         const logoKey = `${uuid}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
         const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
-        imageUrls.logo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
+        imageUrls.logo = `${bucketUrl}/${logoKey}`;
       }
       
       if (photo?.blob) {
         const photoKey = `${uuid}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
         const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
-        imageUrls.photo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
+        imageUrls.photo = `${bucketUrl}/${photoKey}`;
       }
       
       if (cover?.blob) {
         const coverKey = `${uuid}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
         const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
-        imageUrls.cover = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
+        imageUrls.cover = `${bucketUrl}/${coverKey}`;
       }
     }
 

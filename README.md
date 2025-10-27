@@ -21,6 +21,7 @@ A modern, production-ready template for building full-stack React applications u
 - Node.js 18+ and npm
 - Docker and Docker Compose (for local database)
 - Environment variables configured (see `ENVIRONMENT_VARIABLES.md`)
+- `NETLIFY_ACCESS_TOKEN` environment variable set (for running Netlify dev in Docker)
 
 ### Installation
 
@@ -31,6 +32,11 @@ npm install
 ```
 
 2. Create a `.env` file in the root directory with your environment variables. See `ENVIRONMENT_VARIABLES.md` for the complete list.
+
+3. Set up your Netlify Access Token:
+   - Create a personal access token in Netlify: https://app.netlify.com/user/applications#personal-access-tokens
+   - Add it to your environment: `export NETLIFY_ACCESS_TOKEN=your_token_here`
+   - Or add it to your `.env` file
 
 ### Database Setup
 

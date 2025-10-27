@@ -1,7 +1,7 @@
 # Makefile for Netlify POC Testing Suite
 # Provides easy commands for development, testing, and Docker management
 
-.PHONY: help install dev dev-stop test test-headed test-ui test-docker clean docker-build docker-up docker-down docker-logs test-basic test-core test-admin-create test-admin-modify test-all
+.PHONY: help install dev dev-stop dev-down up down test test-headed test-ui test-docker clean docker-build docker-up docker-down docker-logs test-basic test-core test-admin-create test-admin-modify test-all
 
 # Default target
 help: ## Show this help message
@@ -48,6 +48,10 @@ dev: ## Start development environment (Docker services + Netlify dev)
 		sleep 2; \
 	done
 	@echo "✅ MinIO console is live at http://localhost:9001"
+	@echo ""
+	@echo "🌐 Starting Netlify dev server on port 8888..."
+	@echo "Press Ctrl+C to stop the dev server"
+	@netlify dev --port 8888
 
 dev-stop: ## Stop development environment (Docker services)
 	@echo "🐳 Stopping Docker services..."
@@ -57,13 +61,15 @@ dev-stop: ## Stop development environment (Docker services)
 dev-down: ## Stop development environment (alias for dev-stop)
 	@make dev-stop
 
+up: ## Start development environment (alias for dev)
+	@make dev
+
+down: ## Stop development environment (alias for dev-down)
+	@make dev-down
+
 dev-logs: ## Show logs from development environment
 	@echo "📋 Showing development environment logs..."
 	docker-compose -f docker-compose.dev.yml logs -f
-
-dev-logs-netlify: ## Show logs from Netlify dev server only
-	@echo "📋 Showing Netlify dev server logs..."
-	docker-compose -f docker-compose.dev.yml logs -f netlify-dev
 
 dev-logs-minio: ## Show logs from MinIO dev service only
 	@echo "📋 Showing MinIO dev service logs..."

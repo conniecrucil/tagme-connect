@@ -5,7 +5,7 @@
   "scripts": {
     "build": "react-router build",
     "build:static": "node build-static.js",
-    "dev": "PORT=8888 react-router dev",
+    "dev": "react-router dev",
     "dev:db": "docker-compose -f docker-compose.dev.yml up",
     "dev:db:down": "docker-compose -f docker-compose.dev.yml down",
     "start": "react-router-serve ./build/server/index.js",
