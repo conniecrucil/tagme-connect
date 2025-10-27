@@ -36,12 +36,6 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       url: "/admin",
       icon: LayoutDashboard,
       isActive: false,
-      items: [
-        {
-          title: "Overview",
-          url: "/admin",
-        },
-      ],
     },
     {
       title: "Contacts",
