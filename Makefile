@@ -35,6 +35,9 @@ dev: ## Start development environment (Docker services + Netlify dev)
 		sleep 2; \
 	done
 	@echo "✅ Docker services are ready!"
+	@echo "⚙️  Initializing MinIO bucket policies..."
+	@docker cp supabase/init-minio.sh tagme-minio-dev:/tmp/init-minio.sh
+	@docker exec tagme-minio-dev sh /tmp/init-minio.sh || echo "⚠️  MinIO initialization failed, continuing..."
 	@echo "🌱 Seeding MinIO with fake data..."
 	@sleep 5
 	@node supabase/seed-minio.cjs || echo "⚠️  MinIO seeding failed, continuing..."

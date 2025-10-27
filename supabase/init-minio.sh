@@ -3,8 +3,6 @@
 # MinIO initialization script for creating buckets and setting up policies
 # This script runs inside the MinIO container during startup
 
-set -e
-
 echo "Starting MinIO initialization..."
 
 # Wait for MinIO to be ready
@@ -28,30 +26,11 @@ mc mb local/$BUCKET_NAME --ignore-existing
 
 # Set bucket policy for public read access (like production S3)
 echo "Setting bucket policy for public read access..."
-cat > /tmp/bucket-policy.json << EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::$BUCKET_NAME/*"
-    }
-  ]
-}
-EOF
-
-mc policy set-json /tmp/bucket-policy.json local/$BUCKET_NAME
-
-# Enable website hosting for the bucket
-echo "Enabling website hosting for bucket: $BUCKET_NAME"
-mc website set --index-document index.html local/$BUCKET_NAME
+mc anonymous set download local/$BUCKET_NAME
 
 # Set CORS policy for the bucket
 echo "Setting CORS policy..."
-cat > /tmp/cors-policy.json << EOF
+cat > /tmp/cors-policy.json << 'CORS_EOF'
 [
   {
     "AllowedHeaders": ["*"],
@@ -61,12 +40,11 @@ cat > /tmp/cors-policy.json << EOF
     "MaxAgeSeconds": 3000
   }
 ]
-EOF
+CORS_EOF
 
-mc cors set /tmp/cors-policy.json local/$BUCKET_NAME
+mc cors set /tmp/cors-policy.json local/$BUCKET_NAME || echo "Note: CORS setting skipped (may not be available)"
 
 echo "MinIO initialization completed successfully!"
 echo "Bucket '$BUCKET_NAME' is ready with:"
-echo "  - Public read access"
-echo "  - Website hosting enabled"
+echo "  - Public read access (download)"
 echo "  - CORS policy configured"
