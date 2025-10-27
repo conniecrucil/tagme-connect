@@ -285,8 +285,11 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
 
     const vcardContent = generateVCard(vcardConfig);
 
+    // Construct baseUrl for meta tags (used in OG properties)
+    const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}`;
+
     // Generate HTML content for the contact card
-    const htmlContent = generateContactCardHTML(contactData);
+    const htmlContent = generateContactCardHTML(contactData, baseUrl);
 
     // Upload updated vCard file
     const vcardKey = `${uuid}/contact.vcf`;
@@ -325,8 +328,7 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
       }
     }
 
-    // Return the public URLs
-    const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}`;
+    // baseUrl was already constructed earlier for meta tags
     
     return {
       urls: {
@@ -358,7 +360,7 @@ async function uploadToS3(bucket: string, key: string, body: string | Buffer, co
   await s3Client.send(command);
 }
 
-function generateContactCardHTML(data: ContactCardData): string {
+function generateContactCardHTML(data: ContactCardData, baseUrl?: string): string {
   const { images } = data;
   
   // Generate CSS for mobile-first design
@@ -731,20 +733,35 @@ function generateContactCardHTML(data: ContactCardData): string {
     });
   }
 
+  // Prepare description: use customMessage if available, otherwise default to "custom contact card"
+  const description = data.customMessage || 'custom contact card';
+  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Contact information for ${data.name || 'Contact'}${data.company ? ` at ${data.company}` : ''}">
+  <meta name="description" content="${description}">
   <meta name="author" content="${data.name || 'Contact'}">
+  
+  <!-- Open Graph Meta Tags -->
   <meta property="og:title" content="${data.name || 'Contact Card'}">
-  <meta property="og:description" content="Contact information for ${data.name || 'Contact'}${data.company ? ` at ${data.company}` : ''}">
+  <meta property="og:description" content="${description}">
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="Smart Contact Card">
+  ${images?.photo?.url ? `<meta property="og:image" content="${images.photo.url}">` : ''}
+  ${images?.photo?.url ? `<meta property="og:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  ${baseUrl ? `<meta property="og:url" content="${baseUrl}/index.html">` : ''}
+  ${data.name ? `<meta property="profile:first_name" content="${data.name.split(' ')[0]}">` : ''}
+  ${data.name && data.name.split(' ').length > 1 ? `<meta property="profile:last_name" content="${data.name.split(' ').slice(1).join(' ')}">` : ''}
+  
+  <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="${data.name || 'Contact Card'}">
-  <meta name="twitter:description" content="Contact information for ${data.name || 'Contact'}${data.company ? ` at ${data.company}` : ''}">
+  <meta name="twitter:description" content="${description}">
+  ${images?.photo?.url ? `<meta name="twitter:image" content="${images.photo.url}">` : ''}
+  ${images?.photo?.url ? `<meta name="twitter:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  
   <title>${data.name || 'Contact Card'}</title>
   
   <!-- Structured Data for SEO -->
