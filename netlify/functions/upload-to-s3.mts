@@ -509,7 +509,7 @@ function generateContactCardHTML(data: ContactCardData): string {
       
       .header {
         height: 80px;
-        background: #e4eaea;
+        background: transparent;
         position: relative;
         background-size: cover;
         background-position: center;
@@ -548,7 +548,7 @@ function generateContactCardHTML(data: ContactCardData): string {
         height: 64px;
         border-radius: 50%;
         margin: 0 auto 12px;
-        border: 2px solid white;
+        border: 2px solid #a2e4d6;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         background: #f0f0f0;
         display: flex;
@@ -566,21 +566,21 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .name {
-        font-size: 18px;
+        font-size: 24px;
         font-weight: 700;
-        color: #1a1a1a;
+        color: #000000;
         margin-bottom: 4px;
       }
       
       .title {
-        font-size: 12px;
-        color: #666;
+        font-size: 16px;
+        color: #000000;
         margin-bottom: 4px;
       }
       
       .company {
-        font-size: 12px;
-        color: #888;
+        font-size: 16px;
+        color: #a2e4d6;
         margin-bottom: 8px;
       }
       
@@ -590,9 +590,9 @@ function generateContactCardHTML(data: ContactCardData): string {
       
       .contact-item {
         display: flex;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid #f0f0f0;
+        align-items: flex-start;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
         text-decoration: none;
         color: inherit;
         transition: background-color 0.2s;
@@ -606,30 +606,27 @@ function generateContactCardHTML(data: ContactCardData): string {
         border-bottom: none;
       }
       
-      .contact-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 2px;
+      .contact-icon {
+        display: none;
       }
       
       .contact-text {
         flex: 1;
-        font-size: 14px;
+        font-size: 16px;
       }
       
       .contact-label {
         font-weight: 500;
-        color: #6b7280;
+        color: #a2e4d6;
         font-size: 12px;
+        margin-bottom: 4px;
+        text-transform: uppercase;
       }
       
       .contact-value {
-        color: #1f2937;
+        color: #000000;
         margin-top: 2px;
-        font-size: 14px;
+        font-size: 18px;
       }
       
       .actions-section {
@@ -688,21 +685,23 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .download-btn {
-        margin: 24px;
-        padding: 16px;
-        background: #10b981;
-        color: white;
+        margin: 32px auto 12px;
+        padding: 12px;
+        background: #6ed097;
+        color: #222;
         border: none;
         border-radius: 8px;
         font-size: 16px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        width: calc(100% - 48px);
-        transition: background 0.2s;
+        width: 75%;
+        display: block;
+        transition: all 0.2s;
       }
       
       .download-btn:hover {
-        background: #059669;
+        background: #5dc087;
+        color: white;
       }
       
       @media (max-width: 480px) {
@@ -745,7 +744,7 @@ function generateContactCardHTML(data: ContactCardData): string {
     contactItems.push(`
       <a href="mailto:${data.email}" class="contact-item">
         <div class="contact-text">
-          <div class="contact-label">Email</div>
+          <div class="contact-label">EMAIL</div>
           <div class="contact-value">${data.email}</div>
         </div>
       </a>
@@ -756,7 +755,7 @@ function generateContactCardHTML(data: ContactCardData): string {
     contactItems.push(`
       <a href="tel:${data.phone}" class="contact-item">
         <div class="contact-text">
-          <div class="contact-label">Phone</div>
+          <div class="contact-label">PHONE</div>
           <div class="contact-value">${data.phone}</div>
         </div>
       </a>
@@ -767,7 +766,7 @@ function generateContactCardHTML(data: ContactCardData): string {
     contactItems.push(`
       <a href="tel:${data.mobile}" class="contact-item">
         <div class="contact-text">
-          <div class="contact-label">Mobile</div>
+          <div class="contact-label">MOBILE</div>
           <div class="contact-value">${data.mobile}</div>
         </div>
       </a>
@@ -778,7 +777,7 @@ function generateContactCardHTML(data: ContactCardData): string {
     contactItems.push(`
       <a href="${data.website}" class="contact-item" target="_blank">
         <div class="contact-text">
-          <div class="contact-label">Website</div>
+          <div class="contact-label">WEBSITE</div>
           <div class="contact-value">${data.website.replace(/^https?:\/\//, '')}</div>
         </div>
       </a>
@@ -908,7 +907,7 @@ function generateContactCardHTML(data: ContactCardData): string {
           <img src="${images.photo.url}" alt="${data.name || 'Profile Photo'}">
         </div>
       ` : `
-        <div class="photo">👤</div>
+        <div class="photo"></div>
       `}
       
       <div class="name">${data.name || 'Contact'}</div>
@@ -952,7 +951,7 @@ function generateContactCardHTML(data: ContactCardData): string {
 
     <!-- Download vCard Button -->
     <button class="download-btn" onclick="downloadVCard()">
-      📥 Save Contact
+      Save Contact
     </button>
   </div>
 

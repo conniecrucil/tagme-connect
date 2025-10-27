@@ -271,7 +271,7 @@ END:VCARD`;
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900 mb-1">Brand Logo</h3>
                           <p className="text-sm text-gray-600 mb-2">
-                            Display your company logo prominently at the top of your card
+                            Display your company logo as a full banner at the top of your card
                           </p>
                           <p className="text-xs text-gray-500">
                             Best for: Professional branding, company recognition
@@ -298,9 +298,9 @@ END:VCARD`;
                           className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
                         />
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-1">Cover Photo</h3>
+                          <h3 className="font-semibold text-gray-900 mb-1">Card with Header</h3>
                           <p className="text-sm text-gray-600 mb-2">
-                            Use a background image that spans the full width of your card
+                            Use a decorative header image that spans the full width of your card
                           </p>
                           <p className="text-xs text-gray-500">
                             Best for: Visual impact, personal branding, creative expression

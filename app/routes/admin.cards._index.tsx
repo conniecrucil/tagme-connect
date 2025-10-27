@@ -1,12 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import { useToast } from "~/components/ui/use-toast";
+import { 
+  TableProvider, 
+  TableHeader, 
+  TableHead, 
+  TableHeaderGroup, 
+  TableColumnHeader,
+  TableBody, 
+  TableRow, 
+  TableCell,
+  type ColumnDef 
+} from "~/components/kibo-ui/table";
 
 export function meta() {
   return [
@@ -67,6 +77,115 @@ export default function AdminCardsIndex() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  const getStatusBadge = (status: string, error?: string) => {
+    switch (status) {
+      case 'success':
+        return <Badge className="bg-green-100 text-green-800">Success</Badge>;
+      case 'error':
+        return <Badge className="bg-red-100 text-red-800" title={error}>Error</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Column definitions for Kibo UI Table
+  const columns = useMemo<ColumnDef<CardWithCustomer>[]>(
+    () => [
+      {
+        accessorKey: "customer",
+        header: "Customer",
+        cell: ({ row }) => (
+          <div>
+            <div className="font-medium">
+              {row.original.customer?.email || 'No customer'}
+            </div>
+            {row.original.customer?.name && (
+              <div className="text-sm text-gray-500">
+                {row.original.customer.name}
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "card_data",
+        header: "Card Name",
+        cell: ({ row }) => (
+          <div>
+            <div className="font-medium">
+              {row.original.card_data.name || 'Untitled Card'}
+            </div>
+            {row.original.card_data.title && (
+              <div className="text-sm text-gray-500">
+                {row.original.card_data.title}
+              </div>
+            )}
+            {row.original.card_data.company && (
+              <div className="text-sm text-gray-500">
+                {row.original.card_data.company}
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "created_at",
+        header: "Created",
+        cell: ({ row }) => formatDate(row.original.created_at),
+      },
+      {
+        accessorKey: "generation_status",
+        header: "Status",
+        cell: ({ row }) => getStatusBadge(
+          row.original.generation_status.status, 
+          row.original.generation_status.error
+        ),
+      },
+      {
+        accessorKey: "assets",
+        header: "Assets",
+        cell: ({ row }) => (
+          <div className="flex gap-1">
+            {row.original.has_logo && <Badge variant="outline" className="text-xs">Logo</Badge>}
+            {row.original.has_photo && <Badge variant="outline" className="text-xs">Photo</Badge>}
+            {row.original.has_cover && <Badge variant="outline" className="text-xs">Cover</Badge>}
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/admin/cards/${row.original.id}`}>
+                View
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/admin/update?cardId=${row.original.id}`}>
+                Edit
+              </Link>
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [formatDate, getStatusBadge]
+  );
+
   const fetchCards = async () => {
     try {
       setLoading(true);
@@ -104,7 +223,7 @@ export default function AdminCardsIndex() {
 
   useEffect(() => {
     fetchCards();
-  }, [page, searchEmail, statusFilter, dateFrom, dateTo]);
+  }, [fetchCards]);
 
   const handleSearch = () => {
     setPage(1);
@@ -117,29 +236,6 @@ export default function AdminCardsIndex() {
     setDateFrom("");
     setDateTo("");
     setPage(1);
-  };
-
-  const getStatusBadge = (status: string, error?: string) => {
-    switch (status) {
-      case 'success':
-        return <Badge className="bg-green-100 text-green-800">Success</Badge>;
-      case 'error':
-        return <Badge className="bg-red-100 text-red-800" title={error}>Error</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -248,80 +344,28 @@ export default function AdminCardsIndex() {
                 <p className="text-gray-600">No cards found matching your criteria.</p>
               </div>
             ) : (
-              <Table>
+              <TableProvider columns={columns} data={cards}>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Card Name</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Assets</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
+                  {({ headerGroup }) => (
+                    <TableHeaderGroup headerGroup={headerGroup}>
+                      {({ header }) => (
+                        <TableHead>
+                          <TableColumnHeader column={header.column} title={String(header.column.columnDef.header)} />
+                        </TableHead>
+                      )}
+                    </TableHeaderGroup>
+                  )}
                 </TableHeader>
                 <TableBody>
-                  {cards.map((card) => (
-                    <TableRow key={card.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {card.customer?.email || 'No customer'}
-                          </div>
-                          {card.customer?.name && (
-                            <div className="text-sm text-gray-500">
-                              {card.customer.name}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {card.card_data.name || 'Untitled Card'}
-                          </div>
-                          {card.card_data.title && (
-                            <div className="text-sm text-gray-500">
-                              {card.card_data.title}
-                            </div>
-                          )}
-                          {card.card_data.company && (
-                            <div className="text-sm text-gray-500">
-                              {card.card_data.company}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(card.created_at)}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(card.generation_status.status, card.generation_status.error)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {card.has_logo && <Badge variant="outline" className="text-xs">Logo</Badge>}
-                          {card.has_photo && <Badge variant="outline" className="text-xs">Photo</Badge>}
-                          {card.has_cover && <Badge variant="outline" className="text-xs">Cover</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button asChild size="sm" variant="outline">
-                            <Link to={`/admin/cards/${card.id}`}>
-                              View
-                            </Link>
-                          </Button>
-                          <Button asChild size="sm" variant="outline">
-                            <Link to={`/admin/update?cardId=${card.id}`}>
-                              Edit
-                            </Link>
-                          </Button>
-                        </div>
-                      </TableCell>
+                  {({ row }) => (
+                    <TableRow row={row}>
+                      {({ cell }) => (
+                        <TableCell cell={cell} />
+                      )}
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
-              </Table>
+              </TableProvider>
             )}
           </CardContent>
         </Card>

@@ -6,7 +6,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { UnifiedIcon } from "~/components/UnifiedIcon";
-import { useToast } from "~/components/ui/use-toast";
+import { toast } from "sonner";
 import { ConfigurationProvider, primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions, useConfiguration } from "~/providers/configuration-provider";
 import SortableActionsList from "~/components/SortableActionsList";
 import MobileCardPreview from "~/components/MobileCardPreview";
@@ -26,7 +26,6 @@ export function handle() {
 
 function AdminCreateForm() {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Use configuration context
   const {
@@ -195,10 +194,23 @@ function AdminCreateForm() {
         }),
       });
 
-      const result = await response.json();
+      // Parse response and handle errors more robustly
+      let result: any;
+      const contentType = response.headers.get('content-type');
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Unexpected response format. Server returned ${response.status} ${response.statusText}`);
+      }
+      
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error(`Invalid JSON response from server (${response.status} ${response.statusText})`);
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create contact');
+        const errorMessage = result?.error || result?.message || `Failed to create contact (${response.status})`;
+        throw new Error(errorMessage);
       }
 
       // Navigate to success page with creation details
@@ -212,10 +224,9 @@ function AdminCreateForm() {
 
     } catch (error) {
       console.error('Error creating contact:', error);
-      toast({
-        title: "Creation Failed",
-        description: error instanceof Error ? error.message : "An error occurred while creating the contact.",
-        variant: "destructive",
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while creating the contact.";
+      toast.error("Creation Failed", {
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);

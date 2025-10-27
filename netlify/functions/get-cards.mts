@@ -78,68 +78,15 @@ export default async (req: Request, context: Context) => {
         });
       }
 
-      // Fetch cards from database using direct fetch for local development
-      let result: CardsListResponse;
-      
-      if (process.env.DEV_SETUP === 'true' || !process.env.SUPABASE_URL) {
-        // Use direct fetch for local development
-        const supabaseUrl = 'http://localhost:54321';
-        const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
-        
-        // Build query parameters
-        const queryParams = new URLSearchParams({
-          limit: limit.toString(),
-          offset: offset.toString(),
-        });
-        
-        if (customer_email) queryParams.append('customer.email', `eq.${customer_email}`);
-        if (status) queryParams.append('generation_status->status', `eq.${status}`);
-        if (date_from) queryParams.append('created_at', `gte.${date_from}`);
-        if (date_to) queryParams.append('created_at', `lte.${date_to}`);
-        
-        const response = await fetch(`${supabaseUrl}/cards?${queryParams.toString()}`, {
-          headers: {
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'apikey': supabaseServiceKey,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Get total count
-        const countResponse = await fetch(`${supabaseUrl}/cards?select=count`, {
-          headers: {
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'apikey': supabaseServiceKey,
-            'Content-Type': 'application/json',
-            'Prefer': 'count=exact',
-          },
-        });
-        
-        const totalCount = countResponse.headers.get('Content-Range')?.split('/')[1] || '0';
-        
-        result = {
-          cards: data,
-          total: parseInt(totalCount),
-          page: Math.floor(offset / limit) + 1,
-          limit
-        };
-      } else {
-        // Use Supabase client for production
-        result = await listCards({
-          limit,
-          offset,
-          customer_email,
-          status: status || undefined,
-          date_from,
-          date_to,
-        });
-      }
+      // Fetch cards from database using Supabase client
+      const result: CardsListResponse = await listCards({
+        limit,
+        offset,
+        customer_email,
+        status: status || undefined,
+        date_from,
+        date_to,
+      });
 
       return new Response(JSON.stringify(result), {
         status: 200,

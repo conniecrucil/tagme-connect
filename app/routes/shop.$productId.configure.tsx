@@ -386,9 +386,9 @@ export default function ConfigureProduct() {
                                 className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500 disabled:cursor-not-allowed"
                               />
                               <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 mb-1">Cover Photo</h3>
+                                <h3 className="font-semibold text-gray-900 mb-1">Card with Header</h3>
                                 <p className="text-sm text-gray-600">
-                                  Use a background image for visual impact
+                                  Use a decorative header image for visual impact
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">Recommended size: 960×640px</p>
                                 {images.logo.url && (
@@ -402,7 +402,7 @@ export default function ConfigureProduct() {
                         {/* Upload Section */}
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                           {logoOrHeader ? (
-                            // Cover Photo Upload
+                            // Header Image Upload
                             images.cover.url ? (
                               <div className="space-y-2">
                                 <img
@@ -426,7 +426,7 @@ export default function ConfigureProduct() {
                                   variant="outline"
                                   onClick={() => fileInputRefs.cover.current?.click()}
                                 >
-                                  Upload Cover Photo
+                                  Upload Header Image
                                 </Button>
                                 <input
                                   ref={fileInputRefs.cover}

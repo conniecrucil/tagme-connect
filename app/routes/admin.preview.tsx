@@ -98,22 +98,19 @@ export default function AdminPreview() {
               </CardContent>
             </Card>
 
-            {/* Card with Logo */}
+            {/* Card with Header */}
             <Card>
               <CardHeader>
-                <CardTitle>Card with Logo Header</CardTitle>
+                <CardTitle>Card with Header</CardTitle>
                 <CardDescription>
-                  Preview with logo displayed in the header section
+                  Preview with header image displayed at the top
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex justify-center p-4 bg-gray-100 rounded-lg">
                   <MobileCardPreview
                     vCardData={dummyVCardData}
-                    images={{
-                      ...dummyImages,
-                      logo: { url: "/assets/tagme-logo.svg", blob: null, ext: null, mime: null, resized: null }
-                    }}
+                    images={dummyImages}
                     primaryActions={dummyPrimaryActions}
                     secondaryActions={dummySecondaryActions}
                     logoOrHeader={true}

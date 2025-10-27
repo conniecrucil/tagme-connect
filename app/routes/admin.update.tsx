@@ -250,10 +250,23 @@ export default function AdminUpdate() {
         }),
       });
 
-      const result = await response.json();
+      // Parse response and handle errors more robustly
+      let result: any;
+      const contentType = response.headers.get('content-type');
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Unexpected response format. Server returned ${response.status} ${response.statusText}`);
+      }
+      
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error(`Invalid JSON response from server (${response.status} ${response.statusText})`);
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to update contact');
+        const errorMessage = result?.error || result?.message || `Failed to update contact (${response.status})`;
+        throw new Error(errorMessage);
       }
 
       toast.success("Contact Updated Successfully", {
@@ -271,8 +284,9 @@ export default function AdminUpdate() {
 
     } catch (error) {
       console.error('Error updating contact:', error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
       toast.error("Update Failed", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred."
+        description: errorMessage
       });
     } finally {
       setIsUpdating(false);
