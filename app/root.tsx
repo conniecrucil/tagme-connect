@@ -5,17 +5,18 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 import { PostHogProvider } from 'posthog-js/react';
-import { Header } from "./components/Header";
 import { LoadingScreen } from "./components/LoadingScreen";
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
 import * as Sentry from "@sentry/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 Sentry.init({
   dsn: "https://7184a4ca4bd3c0d242e0297974ff3ce0@o258608.ingest.us.sentry.io/4510055747223552",
@@ -40,6 +41,8 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
@@ -94,11 +97,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         >
           {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
           <div className={isLoading ? "opacity-0" : "opacity-100 transition-opacity duration-500"}>
-            <Header />
+            {!isAdminRoute && <Header />}
             {children}
+            {!isAdminRoute && <Footer />}
             <ScrollRestoration />
             <Scripts />
-            <Footer />
             <Toaster />
             <SonnerToaster
               position="top-right"
@@ -114,7 +117,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+    
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

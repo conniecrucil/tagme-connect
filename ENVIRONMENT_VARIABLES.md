@@ -38,9 +38,13 @@ This document outlines all the environment variables required for the Netlify PO
 - `MINIO_TEST_ROOT_USER` - MinIO test root username (default: `miniotest`)
 - `MINIO_TEST_ROOT_PASSWORD` - MinIO test root password (default: `miniotest123`)
 
-### Admin Authentication
-- `ADMIN_USER` - Username for admin access
-- `ADMIN_PASS` - Password for admin access
+
+
+### Auth0 Configuration
+- `VITE_AUTH0_DOMAIN` - Your Auth0 tenant domain (e.g., `your-tenant.us.auth0.com`)
+- `VITE_AUTH0_CLIENT_ID` - Auth0 application client ID
+- `AUTH0_CLIENT_SECRET` - Auth0 application client secret (server-side only, not exposed to client)
+- `AUTH0_AUDIENCE` - Optional Auth0 API identifier (defaults to Auth0 Management API)
 
 ### Netlify Configuration
 - `NETLIFY_SITE_URL` - Your Netlify site URL (e.g., https://your-site.netlify.app)
@@ -93,9 +97,15 @@ APP_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 APP_AWS_REGION=us-east-1
 VITE_AWS_S3_BUCKET_NAME=your-s3-bucket-name
 
-# Admin Auth
+# Admin Auth (Legacy - Deprecated)
 ADMIN_USER=admin
 ADMIN_PASS=your_secure_admin_password
+
+# Auth0 (Google-only OAuth)
+VITE_AUTH0_DOMAIN=your-tenant.us.auth0.com
+VITE_AUTH0_CLIENT_ID=your_client_id_here
+AUTH0_CLIENT_SECRET=your_client_secret_here
+AUTH0_AUDIENCE=https://your-tenant.us.auth0.com/api/v2/
 
 # Netlify
 NETLIFY_SITE_URL=https://your-site.netlify.app
