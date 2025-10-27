@@ -36,22 +36,17 @@ dev: ## Start development environment (Docker services + Netlify dev)
 	done
 	@echo "✅ Docker services are ready!"
 	@echo "🌱 Seeding MinIO with fake data..."
-	@sleep 3
+	@sleep 5
 	@node supabase/seed-minio.cjs || echo "⚠️  MinIO seeding failed, continuing..."
-	@if lsof -Pi :8888 -sTCP:LISTEN -t >/dev/null 2>&1; then \
-		echo "⚠️  Port 8888 is already in use. Stopping existing process..."; \
-		lsof -ti:8888 | xargs kill -9 2>/dev/null || true; \
+	@echo "🔍 Verifying services are live..."
+	@echo "Checking MinIO console (port 9001)..."
+	@until curl -sf http://localhost:9001 > /dev/null 2>&1; do \
+		echo "⏳ Waiting for MinIO console..."; \
 		sleep 2; \
-	fi
-	@echo "🌐 Starting Netlify dev server on port 8888..."
-	netlify dev --port 8888
+	done
+	@echo "✅ MinIO console is live at http://localhost:9001"
 
 dev-stop: ## Stop development environment (Docker services)
-	@echo "🛑 Stopping development environment..."
-	@if lsof -Pi :8888 -sTCP:LISTEN -t >/dev/null 2>&1; then \
-		echo "🛑 Stopping Netlify dev server..."; \
-		lsof -ti:8888 | xargs kill -9 2>/dev/null || true; \
-	fi
 	@echo "🐳 Stopping Docker services..."
 	docker-compose -f docker-compose.dev.yml down --volumes
 	@echo "✅ Development environment stopped!"

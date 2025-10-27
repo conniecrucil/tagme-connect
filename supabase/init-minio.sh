@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # MinIO initialization script for creating buckets and setting up policies
 # This script runs inside the MinIO container during startup
@@ -16,7 +16,7 @@ done
 echo "MinIO is ready, setting up buckets..."
 
 # Determine bucket name based on environment
-if [[ "${MINIO_ROOT_USER}" == "miniotest" ]]; then
+if [ "${MINIO_ROOT_USER}" = "miniotest" ]; then
   BUCKET_NAME="tagme-test"
 else
   BUCKET_NAME="tagme-dev"
