@@ -16,6 +16,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Update Contact" }
+  };
+}
+
 interface CardWithCustomer {
   id: string;
   uuid: string;

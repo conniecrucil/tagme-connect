@@ -12,6 +12,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "System Status" }
+  };
+}
+
 interface SystemStatus {
   stripe: {
     secretKey: boolean;

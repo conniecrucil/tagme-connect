@@ -9,6 +9,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Email Templates" }
+  };
+}
+
 export default function AdminEmailTemplates() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">

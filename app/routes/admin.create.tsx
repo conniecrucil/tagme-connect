@@ -18,6 +18,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Create Contact" }
+  };
+}
+
 function AdminCreateForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -288,19 +294,6 @@ function AdminCreateForm() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
-      <div className="bg-gray-50 py-4">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center space-x-2 text-sm">
-            <Link to="/admin" className="text-gray-600 hover:text-green-600">
-              Admin Dashboard
-            </Link>
-            <span className="text-gray-400">›</span>
-            <span className="text-gray-900">Create Contact</span>
-          </nav>
-        </div>
-      </div>
-
       {/* Configuration Form */}
       <section className="py-20">
         <div className="container mx-auto px-4 max-w-6xl">

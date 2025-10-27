@@ -11,6 +11,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Card Preview" }
+  };
+}
+
 // Dummy data for preview
 const dummyVCardData: VCardData = {
   prefix: "Dr.",

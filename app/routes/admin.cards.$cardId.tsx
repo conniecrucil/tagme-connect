@@ -13,6 +13,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "View" }
+  };
+}
+
 interface CardWithCustomer {
   id: string;
   uuid: string;

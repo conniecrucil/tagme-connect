@@ -9,6 +9,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Homepage" }
+  };
+}
+
 export default function AdminIndex() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">

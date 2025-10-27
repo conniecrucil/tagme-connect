@@ -11,6 +11,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Success" }
+  };
+}
+
 export default function AdminSuccess() {
   const location = useLocation();
   const { creationDetails, contactName, contactEmail } = location.state || {};

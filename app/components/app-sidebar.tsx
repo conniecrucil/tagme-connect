@@ -7,6 +7,7 @@ import {
   Files,
   Eye,
   Server,
+  Users,
 } from "lucide-react"
 import tagmeLogo from "../assets/tagme-logo.svg"
 
@@ -48,10 +49,6 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           url: "/admin/create",
         },
         {
-          title: "Update Contact",
-          url: "/admin/update",
-        },
-        {
           title: "View All Cards",
           url: "/admin/cards",
         },
@@ -63,6 +60,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       icon: Server,
       isActive: false,
       items: [
+        {
+          title: "Admin Users",
+          url: "/admin/users",
+        },
         {
           title: "System Status",
           url: "/admin/system-status",

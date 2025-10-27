@@ -197,5 +197,8 @@ INSERT INTO card_assets (
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'cover', 'sarah-williams-design-002/cover.jpg', 'http://localhost:9010/sarah-williams-design-002/cover.jpg', 'image/jpeg', 245760, NOW() - INTERVAL '20 days'),
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'photo', 'sarah-williams-design-002/photo.jpg', 'http://localhost:9010/sarah-williams-design-002/photo.jpg', 'image/jpeg', 156000, NOW() - INTERVAL '20 days');
 
-
-
+-- Insert authorized admin users for Auth0 authentication
+INSERT INTO admin_users_auth0 (email) VALUES 
+('conniecrucil@gmail.com'),
+('hello@brianbancroft.ca')
+ON CONFLICT (email) DO NOTHING;

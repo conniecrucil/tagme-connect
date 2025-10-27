@@ -15,6 +15,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "All Cards" }
+  };
+}
+
 interface CardWithCustomer {
   id: string;
   uuid: string;
@@ -141,17 +147,6 @@ export default function AdminCardsIndex() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="bg-gray-50 py-4 mb-6">
-          <nav className="flex items-center space-x-2 text-sm">
-            <Link to="/admin" className="text-gray-600 hover:text-green-600">
-              Admin Dashboard
-            </Link>
-            <span className="text-gray-400">›</span>
-            <span className="text-gray-900">All Cards</span>
-          </nav>
-        </div>
-
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">All Contact Cards</h1>
