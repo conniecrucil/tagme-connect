@@ -1,5 +1,13 @@
 import type { Context } from '@netlify/functions';
 import { upsertCustomer, type Customer } from './utils/supabase';
+import * as Sentry from '@sentry/node';
+
+// Initialize Sentry for error tracking
+Sentry.init({
+  dsn: 'https://7184a4ca4bd3c0d242e0297974ff3ce0@o258608.ingest.us.sentry.io/4510055747223552',
+  environment: process.env.NETLIFY ? 'production' : 'development',
+  tracesSampleRate: 1.0,
+});
 
 // Email sending disabled - we're not using a database
 // import { Resend } from 'resend';
@@ -105,10 +113,12 @@ export default async (req: Request, context: Context) => {
 
       // Generate unique session ID for admin creation
       const sessionId = `admin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Declare customer outside try-catch so it's accessible in catch block
+      let customer: Customer | null = null;
 
       try {
         // Create or update customer if email provided
-        let customer: Customer | null = null;
         if (customerEmail) {
           try {
             customer = await upsertCustomer({
@@ -151,6 +161,34 @@ export default async (req: Request, context: Context) => {
       } catch (s3Error) {
         console.error('S3 upload error:', s3Error);
         
+        // Capture error in Sentry with additional context
+        Sentry.captureException(s3Error, {
+          tags: {
+            function: 'admin-create-contact',
+            operation: 's3_upload',
+            partial_success: 'true'
+          },
+          contexts: {
+            operation: {
+              type: 's3_upload_failure',
+              customerId: customer?.id || null,
+              sessionId: sessionId,
+              contactName: configuration.name,
+              contactEmail: configuration.email,
+              customerCreated: !!customer
+            }
+          },
+          extra: {
+            errorMessage: s3Error instanceof Error ? s3Error.message : 'Unknown error',
+            sessionId,
+            configuration: {
+              name: configuration.name,
+              email: configuration.email,
+              phone: configuration.phone
+            }
+          }
+        });
+        
         // Provide detailed context about what succeeded and what failed
         const errorMessage = s3Error instanceof Error ? s3Error.message : 'Unknown error';
         const responseData: ErrorResponseData = {
@@ -178,11 +216,20 @@ export default async (req: Request, context: Context) => {
         });
       }
 
-    } catch (emailError) {
-      console.error('Email sending error:', emailError);
+    } catch (parseError) {
+      // This catches JSON parsing errors or other errors from the inner try block
+      console.error('Error parsing request or handling contact creation:', parseError);
+      
+      Sentry.captureException(parseError, {
+        tags: {
+          function: 'admin-create-contact',
+          operation: 'request_parsing'
+        }
+      });
+      
       return new Response(JSON.stringify({ 
-        error: 'Failed to send notification email',
-        details: emailError instanceof Error ? emailError.message : 'Unknown error'
+        error: 'Failed to create contact',
+        details: parseError instanceof Error ? parseError.message : 'Unknown error'
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -190,6 +237,14 @@ export default async (req: Request, context: Context) => {
     }
   } catch (error) {
     console.error('Unexpected error in admin-create-contact:', error);
+    
+    Sentry.captureException(error, {
+      tags: {
+        function: 'admin-create-contact',
+        operation: 'unexpected_error'
+      }
+    });
+    
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

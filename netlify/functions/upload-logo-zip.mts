@@ -3,11 +3,12 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 
 const s3Client = new S3Client({
-  region: (process.env.APP_AWS_REGION || 'us-east-1'),
+  region: 'us-east-1',
   credentials: {
     accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY!,
   },
+  forcePathStyle: true, // Use path-style addressing to avoid region mismatch issues
 });
 
 export default async (req: Request, context: any) => {

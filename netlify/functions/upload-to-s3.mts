@@ -13,14 +13,23 @@ import {
   type Action,
   type GenerationStatus
 } from './utils/supabase';
+import * as Sentry from '@sentry/node';
+
+// Initialize Sentry for error tracking
+Sentry.init({
+  dsn: 'https://7184a4ca4bd3c0d242e0297974ff3ce0@o258608.ingest.us.sentry.io/4510055747223552',
+  environment: process.env.NETLIFY ? 'production' : 'development',
+  tracesSampleRate: 1.0,
+});
 
 // Initialize S3 client
 const s3Client = new S3Client({
-  region: process.env.APP_AWS_REGION || 'us-east-1',
+  region: 'us-east-1',
   credentials: {
     accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
     secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
   },
+  forcePathStyle: true, // Use path-style addressing to avoid region mismatch issues
 });
 
 // Helper function to get display name for action buttons
@@ -343,6 +352,24 @@ export default async (req: Request, context: Context) => {
 
         } catch (dbError) {
           console.error('Database error in upload-to-s3:', dbError);
+          
+          // Capture database error in Sentry
+          Sentry.captureException(dbError, {
+            tags: {
+              function: 'upload-to-s3',
+              operation: 'database_card_creation',
+              partial_success: 'true'
+            },
+            contexts: {
+              operation: {
+                type: 'database_error',
+                sessionId: sessionId,
+                cardType: contactData?.cardType,
+                hasImages: !!(contactData?.images)
+              }
+            }
+          });
+          
           // Continue with S3 success but log database error
           // The card was created in S3, so we still return success
         }
@@ -364,6 +391,34 @@ export default async (req: Request, context: Context) => {
 
       } catch (contentError) {
         console.error('Error generating or uploading content:', contentError);
+        
+        // Capture error in Sentry with full context
+        const errorMessage = contentError instanceof Error ? contentError.message : 'Unknown error';
+        Sentry.captureException(contentError, {
+          tags: {
+            function: 'upload-to-s3',
+            operation: 'content_generation_or_upload',
+            session_id: sessionId
+          },
+          contexts: {
+            operation: {
+              type: 'content_generation_failure',
+              sessionId: sessionId,
+              contactName: contactData?.name,
+              contactEmail: contactData?.email,
+              cardType: contactData?.cardType
+            }
+          },
+          extra: {
+            errorMessage,
+            sessionId,
+            contactData: {
+              name: contactData?.name,
+              email: contactData?.email,
+              phone: contactData?.phone
+            }
+          }
+        });
         
         // Try to create error record in database
         try {
@@ -431,6 +486,21 @@ export default async (req: Request, context: Context) => {
           });
         } catch (dbError) {
           console.error('Failed to create error record in database:', dbError);
+          
+          // Capture database error in Sentry
+          Sentry.captureException(dbError, {
+            tags: {
+              function: 'upload-to-s3',
+              operation: 'database_error_record_creation'
+            },
+            contexts: {
+              operation: {
+                type: 'database_error_recording_failure',
+                originalError: errorMessage,
+                sessionId: sessionId
+              }
+            }
+          });
         }
         
         return new Response(JSON.stringify({ 
@@ -444,6 +514,21 @@ export default async (req: Request, context: Context) => {
 
     } catch (s3Error) {
       console.error('S3 operation error:', s3Error);
+      
+      // Capture S3 error in Sentry
+      Sentry.captureException(s3Error, {
+        tags: {
+          function: 'upload-to-s3',
+          operation: 's3_operation_failure'
+        },
+        contexts: {
+          operation: {
+            type: 's3_error',
+            errorMessage: s3Error instanceof Error ? s3Error.message : 'Unknown error'
+          }
+        }
+      });
+      
       return new Response(JSON.stringify({ 
         error: 'Failed to upload to S3',
         details: s3Error instanceof Error ? s3Error.message : 'Unknown error'
@@ -454,6 +539,21 @@ export default async (req: Request, context: Context) => {
     }
   } catch (error) {
     console.error('Unexpected error in upload-to-s3:', error);
+    
+    // Capture unexpected error in Sentry
+    Sentry.captureException(error, {
+      tags: {
+        function: 'upload-to-s3',
+        operation: 'unexpected_error'
+      },
+      contexts: {
+        operation: {
+          type: 'unexpected_error',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        }
+      }
+    });
+    
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
