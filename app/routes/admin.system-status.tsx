@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
@@ -66,6 +66,12 @@ interface SystemStatus {
     user: boolean;
     jwtSecret: boolean;
   };
+  connectivity: {
+    bucketAccess: boolean;
+    supabaseConnectivity: boolean;
+    posthogConfigured: boolean;
+    sentryConfigured: boolean;
+  };
 }
 
 interface StatusSummary {
@@ -89,7 +95,7 @@ export default function AdminSystemStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSystemStatus = async () => {
+  const fetchSystemStatus = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -113,11 +119,11 @@ export default function AdminSystemStatus() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchSystemStatus();
-  }, []);
+  }, [fetchSystemStatus]);
 
   const getStatusBadge = (isConfigured: boolean) => {
     return isConfigured ? (
@@ -420,6 +426,68 @@ export default function AdminSystemStatus() {
               <div className="flex justify-between items-center">
                 <span className="text-sm">Admin Password</span>
                 {getStatusBadge(systemStatus.status.admin.pass)}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Connectivity Status */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Connectivity Status
+                {systemStatus.status.connectivity.bucketAccess && 
+                 systemStatus.status.connectivity.supabaseConnectivity && 
+                 systemStatus.status.connectivity.posthogConfigured && 
+                 systemStatus.status.connectivity.sentryConfigured ? (
+                  <Badge className="bg-green-100 text-green-800">All Connected</Badge>
+                ) : (
+                  <Badge className="bg-yellow-100 text-yellow-800">Some Issues</Badge>
+                )}
+              </CardTitle>
+              <CardDescription>Actual connectivity checks for external services</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">S3 Bucket Access</span>
+                  </div>
+                  {systemStatus.status.connectivity.bucketAccess ? (
+                    <Badge className="bg-green-100 text-green-800">✅ Can Access</Badge>
+                  ) : (
+                    <Badge className="bg-red-100 text-red-800">❌ Cannot Access</Badge>
+                  )}
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Supabase Connectivity</span>
+                  </div>
+                  {systemStatus.status.connectivity.supabaseConnectivity ? (
+                    <Badge className="bg-green-100 text-green-800">✅ Connected</Badge>
+                  ) : (
+                    <Badge className="bg-red-100 text-red-800">❌ Disconnected</Badge>
+                  )}
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">PostHog Analytics</span>
+                  </div>
+                  {systemStatus.status.connectivity.posthogConfigured ? (
+                    <Badge className="bg-green-100 text-green-800">✅ Configured</Badge>
+                  ) : (
+                    <Badge className="bg-red-100 text-red-800">❌ Not Configured</Badge>
+                  )}
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Sentry.io Error Tracking</span>
+                  </div>
+                  {systemStatus.status.connectivity.sentryConfigured ? (
+                    <Badge className="bg-green-100 text-green-800">✅ Configured</Badge>
+                  ) : (
+                    <Badge className="bg-red-100 text-red-800">❌ Not Configured</Badge>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -178,7 +178,7 @@ export default function AdminCardsIndex() {
               </Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link to={`/admin/update?cardId=${row.original.id}`}>
+              <Link to={`/admin/cards/${row.original.id}/edit`}>
                 Edit
               </Link>
             </Button>

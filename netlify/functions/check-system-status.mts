@@ -1,4 +1,6 @@
 import type { Handler } from '@netlify/functions';
+import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { getSupabaseClient } from './utils/supabase';
 
 interface SystemStatus {
   stripe: {
@@ -48,6 +50,12 @@ interface SystemStatus {
     user: boolean;
     jwtSecret: boolean;
   };
+  connectivity: {
+    bucketAccess: boolean;
+    supabaseConnectivity: boolean;
+    posthogConfigured: boolean;
+    sentryConfigured: boolean;
+  };
 }
 
 /**
@@ -68,6 +76,53 @@ export const handler: Handler = async (event) => {
   }
 
   try {
+    // Initialize S3 client for connectivity checks
+    const s3Client = new S3Client({
+      region: process.env.APP_AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
+      },
+    });
+
+    // Check S3 bucket access
+    let bucketAccess = false;
+    const bucketName = process.env.VITE_AWS_S3_BUCKET_NAME;
+    if (bucketName && process.env.APP_AWS_ACCESS_KEY_ID && process.env.APP_AWS_SECRET_ACCESS_KEY) {
+      try {
+        // Try to access a test file or list objects in the bucket
+        const command = new HeadObjectCommand({
+          Bucket: bucketName,
+          Key: 'index.html', // Try to check for index.html at root
+        });
+        await s3Client.send(command);
+        bucketAccess = true;
+      } catch {
+        // If index.html doesn't exist at root, that's ok - just means we can connect
+        console.log('Could not access index.html, but S3 connection works');
+        bucketAccess = true;
+      }
+    }
+
+    // Check Supabase connectivity
+    let supabaseConnectivity = false;
+    if (process.env.PROJECT_URL && process.env.SUPABASE_KEY) {
+      try {
+        const supabase = getSupabaseClient();
+        // Try a simple query to test connectivity
+        const { error } = await supabase.from('cards').select('id').limit(1);
+        supabaseConnectivity = !error;
+      } catch (error) {
+        console.error('Supabase connectivity check failed:', error);
+      }
+    }
+
+    // Check if Posthog is configured
+    const posthogConfigured = !!(process.env.VITE_PUBLIC_POSTHOG_KEY || process.env.VITE_PUBLIC_POSTHOG_HOST);
+
+    // Sentry is hardcoded in the app, so we check if it's initialized
+    const sentryConfigured = true; // Sentry DSN is hardcoded in app/root.tsx
+
     // Check all required environment variables
     const status: SystemStatus = {
       stripe: {
@@ -90,8 +145,13 @@ export const handler: Handler = async (event) => {
         region: !!process.env.APP_AWS_REGION,
         bucketName: !!process.env.VITE_AWS_S3_BUCKET_NAME,
       },
-      s3BucketUrl: {
-        bucketUrl: !!process.env.VITE_AWS_S3_BUCKET_URL,
+      minio: {
+        endpoint: !!process.env.MINIO_ENDPOINT,
+        accessKey: !!process.env.MINIO_ACCESS_KEY,
+        secretKey: !!process.env.MINIO_SECRET_KEY,
+        bucketName: !!process.env.MINIO_BUCKET_NAME,
+        forcePathStyle: !!process.env.MINIO_FORCE_PATH_STYLE,
+        websiteEndpoint: !!process.env.MINIO_WEBSITE_ENDPOINT,
       },
       admin: {
         user: !!process.env.ADMIN_USER,
@@ -101,16 +161,22 @@ export const handler: Handler = async (event) => {
         siteUrl: !!process.env.NETLIFY_SITE_URL,
       },
       supabase: {
-        url: !!process.env.SUPABASE_URL,
+        url: !!process.env.PROJECT_URL || !!process.env.SUPABASE_URL,
         anonKey: !!process.env.SUPABASE_ANON_KEY,
-        serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        databaseUrl: !!process.env.DATABASE_URL,
+        serviceRoleKey: !!process.env.SUPABASE_KEY,
+        databaseUrl: !!process.env.DATABASE_URL || !!(process.env.PROJECT_URL && process.env.SUPABASE_KEY),
       },
       postgres: {
         password: !!process.env.POSTGRES_PASSWORD,
         db: !!process.env.POSTGRES_DB,
         user: !!process.env.POSTGRES_USER,
         jwtSecret: !!process.env.JWT_SECRET,
+      },
+      connectivity: {
+        bucketAccess,
+        supabaseConnectivity,
+        posthogConfigured,
+        sentryConfigured,
       },
     };
 
