@@ -372,7 +372,7 @@ async function uploadToS3(bucket: string, key: string, body: string | Buffer, co
     Key: key,
     Body: body,
     ContentType: contentType,
-    CacheControl: 'public, max-age=31536000', // Cache for 1 year
+    CacheControl: 'no-store, no-cache, must-revalidate, proxy-revalidate',
     ...(contentType === 'text/html' && {
       ContentDisposition: 'inline',
       ContentEncoding: 'utf-8'

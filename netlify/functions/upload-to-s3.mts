@@ -572,7 +572,7 @@ async function uploadToS3(bucket: string, key: string, body: string | Buffer, co
     ContentType: contentType,
     // Removed ACL as modern S3 buckets often have ACLs disabled
     // Public access should be handled via bucket policy instead
-    CacheControl: 'public, max-age=31536000', // Cache for 1 year
+    CacheControl: 'no-store, no-cache, must-revalidate, proxy-revalidate',
     // Additional headers for better website serving
     ...(contentType === 'text/html' && {
       ContentDisposition: 'inline',

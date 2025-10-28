@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLoaderData } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import type { ClientLoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
@@ -149,7 +149,7 @@ export default function AdminOrdersIndex() {
                 </TableHeader>
                 <TableBody>
                   {orders.map((order) => (
-                    <TableRow key={order.id} className="cursor-pointer hover:bg-gray-50" onClick={() => { window.location.href = `/admin/orders/${order.id}`; }}>
+                    <TableRow key={order.id}>
                       <TableCell>
                         <div className="text-sm">
                           {formatDate(order.created_at)}
@@ -209,12 +209,11 @@ export default function AdminOrdersIndex() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = `/admin/orders/${order.id}`;
-                          }}
+                          asChild
                         >
-                          View
+                          <Link to={`/admin/orders/${order.id}`}>
+                            View
+                          </Link>
                         </Button>
                       </TableCell>
                     </TableRow>

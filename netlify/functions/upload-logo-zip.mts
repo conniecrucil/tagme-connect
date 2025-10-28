@@ -132,7 +132,7 @@ async function uploadToS3(bucket: string, key: string, body: Buffer, contentType
     Key: key,
     Body: body,
     ContentType: contentType,
-    CacheControl: 'public, max-age=31536000', // Cache for 1 year
+    CacheControl: 'no-store, no-cache, must-revalidate, proxy-revalidate',
   });
 
   await s3Client.send(command);
