@@ -1,14 +1,10 @@
-import { Resend } from 'resend';
 import type { Context } from '@netlify/functions';
-import { transformS3UrlToDomain } from './utils/url-transform.js';
-import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
-import { inlineEmailCSS } from './utils/email-inline-css.js';
-import { generateAdminContactCreationEmail } from './utils/email-templates.mjs';
 import { upsertCustomer, type Customer } from './utils/supabase';
 
-const resend = new Resend(process.env.RESEND_API_KEY || '');
-const emailFrom = process.env.EMAIL_FROM || 'contact@tagmeconnections.con';
-const adminEmail = process.env.ADMIN_EMAIL || 'contact@tagmeconnections.con';
+// Email sending disabled - we're not using a database
+// import { Resend } from 'resend';
+// import { inlineEmailCSS } from './utils/email-inline-css.js';
+// import { generateAdminContactCreationEmail } from './utils/email-templates.mjs';
 
 // Helper function to get base URL from request headers
 function getBaseUrlFromRequest(req: Request): string {
@@ -84,8 +80,9 @@ export default async (req: Request, context: Context) => {
         // Upload contact card to S3 (this will also create card record in database)
         const s3Response = await uploadContactCardToS3(sessionId, configuration, req);
 
-        // Send admin notification email
-        await sendAdminNotificationEmail(sessionId, configuration, s3Response, customer);
+        // Note: Email notifications disabled - we're not using a database
+        // Previously sent admin notification email here:
+        // await sendAdminNotificationEmail(sessionId, configuration, s3Response, customer);
 
         return new Response(JSON.stringify({
           success: true,
@@ -162,25 +159,26 @@ async function uploadContactCardToS3(sessionId: string, configuration: any, req:
   }
 }
 
-async function sendAdminNotificationEmail(sessionId: string, configuration: any, s3Data: any, customer?: Customer | null) {
-  try {
-    const emailHtml = generateAdminContactCreationEmail({
-      sessionId,
-      configuration,
-      s3Data,
-      customer
-    });
-
-    await resend.emails.send({
-      from: emailFrom,
-      to: [adminEmail],
-      subject: `Admin Contact Created - ${configuration.name} (${sessionId})`,
-      html: inlineEmailCSS(emailHtml)
-    });
-
-    console.log('Admin notification email sent successfully');
-  } catch (error) {
-    console.error('Error sending admin notification email:', error);
-    throw error;
-  }
-}
+// Email sending disabled - we're not using a database
+// async function sendAdminNotificationEmail(sessionId: string, configuration: any, s3Data: any, customer?: Customer | null) {
+//   try {
+//     const emailHtml = generateAdminContactCreationEmail({
+//       sessionId,
+//       configuration,
+//       s3Data,
+//       customer
+//     });
+//
+//     await resend.emails.send({
+//       from: emailFrom,
+//       to: [adminEmail],
+//       subject: `Admin Contact Created - ${configuration.name} (${sessionId})`,
+//       html: inlineEmailCSS(emailHtml)
+//     });
+//
+//     console.log('Admin notification email sent successfully');
+//   } catch (error) {
+//     console.error('Error sending admin notification email:', error);
+//     throw error;
+//   }
+// }

@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useParams } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 
 export function meta() {
@@ -86,13 +85,7 @@ export default function AdminCardDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (cardId) {
-      fetchCardDetails();
-    }
-  }, [cardId]);
-
-  const fetchCardDetails = async () => {
+  const fetchCardDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -131,7 +124,13 @@ export default function AdminCardDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cardId, toast]);
+
+  useEffect(() => {
+    if (cardId) {
+      fetchCardDetails();
+    }
+  }, [cardId, fetchCardDetails]);
 
   const getStatusBadge = (status: string, error?: string) => {
     switch (status) {
@@ -329,7 +328,7 @@ export default function AdminCardDetail() {
             </Button>
             {card.s3_base_url && (
               <Button asChild variant="outline">
-                <a href={`${card.s3_base_url}/index.html`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://${card.s3_base_url}/index.html`} target="_blank" rel="noopener noreferrer">
                   View Live Card
                 </a>
               </Button>
@@ -359,8 +358,8 @@ export default function AdminCardDetail() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-500">UUID</label>
-                  <p className="text-sm font-mono bg-gray-100 p-2 rounded mt-1">
+                  <label className="text-sm font-medium text-gray-500">Folder Name</label>
+                  <p className="text-sm bg-gray-100 p-2 rounded mt-1">
                     {card.uuid}
                   </p>
                 </div>
@@ -538,21 +537,46 @@ export default function AdminCardDetail() {
                 ) : (
                   <div className="space-y-3">
                     {assets.map((asset) => (
-                      <div key={asset.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">
+                      <div 
+                        key={asset.id || asset.s3_key} 
+                        className={`flex items-center justify-between p-3 border rounded-lg ${
+                          asset._missing_in_s3 ? 'border-yellow-300 bg-yellow-50' : 
+                          asset._orphaned_s3 ? 'border-blue-300 bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <Badge 
+                            variant="outline"
+                            className={asset._missing_in_s3 ? 'border-yellow-600 text-yellow-800' :
+                                      asset._orphaned_s3 ? 'border-blue-600 text-blue-800' : ''}
+                          >
                             {asset.asset_type.toUpperCase()}
                           </Badge>
-                          <div>
-                            <p className="text-sm font-medium">{asset.s3_key}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium truncate">
+                                {asset.s3_key.split('/').pop() || asset.s3_key}
+                              </p>
+                              {asset._missing_in_s3 && (
+                                <Badge variant="secondary" className="text-xs">Missing in S3</Badge>
+                              )}
+                              {asset._orphaned_s3 && (
+                                <Badge variant="secondary" className="text-xs">Orphaned</Badge>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-500">
                               {asset.mime_type} • {formatFileSize(asset.file_size)}
                             </p>
                           </div>
                         </div>
-                        <Button asChild size="sm" variant="outline">
-                          <a href={asset.s3_url} target="_blank" rel="noopener noreferrer">
-                            Download
+                        <Button asChild size="sm" variant="outline" disabled={asset._missing_in_s3}>
+                          <a 
+                            href={asset.s3_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={asset._missing_in_s3 ? 'pointer-events-none opacity-50' : ''}
+                          >
+                            {asset._missing_in_s3 ? 'Unavailable' : 'Download'}
                           </a>
                         </Button>
                       </div>

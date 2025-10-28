@@ -14,7 +14,7 @@ import MobileCardPreview from "~/components/MobileCardPreview";
 export function meta() {
   return [
     { title: "Create Contact - Admin - TagMe Connections" },
-    { name: "description", content: "Admin tool to create contact cards without purchasing. All cards will be uploaded to S3 and admin will be notified." },
+    { name: "description", content: "Admin tool to create contact cards without purchasing. All cards will be uploaded to S3." },
   ];
 }
 
@@ -313,7 +313,7 @@ function AdminCreateForm() {
               Admin Contact Creator
             </h1>
             <p className="text-lg text-gray-600">
-                Create contact cards without purchasing. All cards will be uploaded to S3 and admin will be notified.
+                Create contact cards without purchasing. All cards will be uploaded to S3.
               </p>
           </div>
 

@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Search, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
 
 export function meta() {
   return [
@@ -20,50 +19,6 @@ export function handle() {
   return {
     breadcrumb: { label: "Update Contact" }
   };
-}
-
-interface CardWithCustomer {
-  id: string;
-  uuid: string;
-  customer?: {
-    email: string;
-    name?: string;
-  };
-  card_data: {
-    name?: string;
-    email?: string;
-    title?: string;
-    company?: string;
-    phone?: string;
-    mobile?: string;
-    website?: string;
-    description?: string;
-    street?: string;
-    city?: string;
-    state?: string;
-    postal?: string;
-    country?: string;
-    pronouns?: string;
-    prefix?: string;
-    fname?: string;
-    lname?: string;
-    biz?: string;
-    desc?: string;
-    photo?: string;
-  };
-  primary_actions: Array<{ name: string; value: string; color?: string }>;
-  secondary_actions: Array<{ name: string; value: string; color?: string }>;
-  logo_or_header: boolean;
-  has_logo: boolean;
-  has_photo: boolean;
-  has_cover: boolean;
-  s3_base_url?: string;
-  generation_status: {
-    status: 'success' | 'error' | 'pending';
-    error?: string;
-    timestamp: string;
-  };
-  created_at: string;
 }
 
 interface ContactCardData {
@@ -95,13 +50,11 @@ export default function AdminUpdate() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const [cards, setCards] = useState<CardWithCustomer[]>([]);
   const [selectedCardId, setSelectedCardId] = useState("");
-  const [isLoadingCards, setIsLoadingCards] = useState(false);
+  const [cardUuid, setCardUuid] = useState("");
   const [isLoadingCard, setIsLoadingCard] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [contactData, setContactData] = useState<ContactCardData>({});
-  const [socialMedia, setSocialMedia] = useState<Record<string, string>>({});
   const [primaryActions, setPrimaryActions] = useState<Array<{ name: string; value: string; color?: string }>>([]);
   const [secondaryActions, setSecondaryActions] = useState<Array<{ name: string; value: string; color?: string }>>([]);
   const [logoOrHeader, setLogoOrHeader] = useState(false);
@@ -111,42 +64,7 @@ export default function AdminUpdate() {
     cover?: { url?: string; blob?: string; ext?: string; mime?: string };
   }>({});
 
-  // Check if cardId is provided in URL params
-  useEffect(() => {
-    const cardId = searchParams.get('cardId');
-    if (cardId) {
-      setSelectedCardId(cardId);
-      fetchCardDetails(cardId);
-    }
-  }, [searchParams]);
-
-  // Fetch cards list on component mount
-  useEffect(() => {
-    fetchCards();
-  }, []);
-
-  const fetchCards = async () => {
-    try {
-      setIsLoadingCards(true);
-      const response = await fetch('/.netlify/functions/get-cards?limit=100');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch cards');
-      }
-
-      const data = await response.json();
-      setCards(data.cards);
-    } catch (error) {
-      console.error('Error fetching cards:', error);
-      toast.error("Failed to load cards", {
-        description: "Please try again later."
-      });
-    } finally {
-      setIsLoadingCards(false);
-    }
-  };
-
-  const fetchCardDetails = async (cardId: string) => {
+  const fetchCardDetails = useCallback(async (cardId: string) => {
     try {
       setIsLoadingCard(true);
       const response = await fetch(`/.netlify/functions/get-card-details?cardId=${cardId}`);
@@ -157,6 +75,9 @@ export default function AdminUpdate() {
 
       const data = await response.json();
       const card = data.card;
+      
+      // Store card UUID for update operations
+      setCardUuid(card.uuid);
       
       // Convert database card to form data
       const formData: ContactCardData = {
@@ -189,15 +110,6 @@ export default function AdminUpdate() {
       setLogoOrHeader(card.logo_or_header || false);
       setImages(formData.images || {});
 
-      // Convert actions to social media format
-      const socialMediaData: Record<string, string> = {};
-      [...card.primary_actions, ...card.secondary_actions].forEach(action => {
-        if (action.value) {
-          socialMediaData[action.name] = action.value;
-        }
-      });
-      setSocialMedia(socialMediaData);
-
     } catch (error) {
       console.error('Error fetching card details:', error);
       toast.error("Failed to load card details", {
@@ -206,17 +118,25 @@ export default function AdminUpdate() {
     } finally {
       setIsLoadingCard(false);
     }
-  };
+  }, []);
 
-  const handleCardSelect = (cardId: string) => {
-    setSelectedCardId(cardId);
-    fetchCardDetails(cardId);
-  };
+  // Check if cardId is provided in URL params
+  useEffect(() => {
+    const cardId = searchParams.get('cardId');
+    if (cardId) {
+      setSelectedCardId(cardId);
+      fetchCardDetails(cardId);
+    } else {
+      toast.error("Missing Card ID", {
+        description: "Please provide a cardId in the URL parameters."
+      });
+    }
+  }, [searchParams, fetchCardDetails]);
 
   const handleUpdate = async () => {
-    if (!selectedCardId) {
+    if (!cardUuid) {
       toast.error("No Card Selected", {
-        description: "Please select a card to update."
+        description: "Please provide a valid card ID."
       });
       return;
     }
@@ -224,12 +144,6 @@ export default function AdminUpdate() {
     setIsUpdating(true);
 
     try {
-      // Find the selected card to get UUID
-      const selectedCard = cards.find(card => card.id === selectedCardId);
-      if (!selectedCard) {
-        throw new Error('Selected card not found');
-      }
-
       // Prepare update data
       const updateData = {
         ...contactData,
@@ -245,7 +159,7 @@ export default function AdminUpdate() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          uuid: selectedCard.uuid,
+          uuid: cardUuid,
           contactData: updateData
         }),
       });
@@ -275,12 +189,12 @@ export default function AdminUpdate() {
 
       // Reset form
       setContactData({});
-      setSocialMedia({});
       setPrimaryActions([]);
       setSecondaryActions([]);
       setLogoOrHeader(false);
       setImages({});
       setSelectedCardId("");
+      setCardUuid("");
 
     } catch (error) {
       console.error('Error updating contact:', error);
@@ -293,16 +207,6 @@ export default function AdminUpdate() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -310,6 +214,7 @@ export default function AdminUpdate() {
         <div className="bg-gray-50 py-4 mb-6">
           <nav className="flex items-center space-x-2 text-sm">
             <button
+              type="button"
               onClick={() => navigate('/admin')}
               className="text-gray-600 hover:text-green-600 flex items-center gap-1"
             >
@@ -325,45 +230,9 @@ export default function AdminUpdate() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Update Contact Card</h1>
           <p className="text-gray-600 mt-2">
-            Select an existing contact card from the database and update its details.
+            Update the details of an existing contact card.
           </p>
         </div>
-
-        {/* Card Selection */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Select Contact Card</CardTitle>
-            <CardDescription>Choose a contact card to update from the database</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingCards ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                <span>Loading cards...</span>
-              </div>
-            ) : (
-              <Select value={selectedCardId} onValueChange={handleCardSelect}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a contact card to update..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {cards.map((card) => (
-                    <SelectItem key={card.id} value={card.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {card.card_data.name || 'Untitled Card'}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {card.customer?.email || 'No customer'} • {formatDate(card.created_at)}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Contact Form */}
         {selectedCardId && (
