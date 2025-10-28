@@ -13,6 +13,7 @@ A modern, production-ready template for building full-stack React applications u
 - 🎉 TailwindCSS for styling
 - 🐳 Docker Compose for local development
 - 📖 [React Router docs](https://reactrouter.com/)
+- 
 
 ## Getting Started
 
