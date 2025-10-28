@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { useLoaderData } from "react-router";
+import type { ClientLoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
-import { Skeleton } from "~/components/ui/skeleton";
 import { toast } from "sonner";
 import { 
   Table, 
@@ -18,6 +19,20 @@ export function meta() {
     { title: "Orders - Admin - TagMe Connections" },
     { name: "description", content: "Manage orders and fulfillment" },
   ];
+}
+
+export async function clientLoader(_args: ClientLoaderFunctionArgs) {
+  try {
+    const response = await fetch('/.netlify/functions/get-orders');
+    if (!response.ok) throw new Error('Failed to fetch orders');
+    const data = await response.json();
+    return {
+      orders: data.orders || [],
+    };
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw error;
+  }
 }
 
 export function handle() {
@@ -50,28 +65,14 @@ interface Order {
 }
 
 export default function AdminOrdersIndex() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { orders: initialOrders } = useLoaderData<typeof clientLoader>();
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
-  const fetchOrders = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/.netlify/functions/get-orders');
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      const data = await response.json();
-      setOrders(data.orders || []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error("Failed to load orders");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Sync with loader data when it changes
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    setOrders(initialOrders);
+  }, [initialOrders]);
 
   const updateFulfillment = async (orderId: string, field: 'shipped' | 'fulfilled', value: boolean) => {
     setUpdating(prev => ({ ...prev, [orderId]: true }));
@@ -98,28 +99,6 @@ export default function AdminOrdersIndex() {
     }
   };
 
-  const getStripeReceiptUrl = async (sessionId: string) => {
-    try {
-      const response = await fetch('/.netlify/functions/get-stripe-receipt-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to get receipt URL');
-      const data = await response.json();
-      
-      if (data.receipt_url) {
-        window.open(data.receipt_url, '_blank');
-      } else {
-        toast.info('Receipt URL not available');
-      }
-    } catch (error) {
-      console.error('Error fetching receipt URL:', error);
-      toast.error('Failed to get receipt URL');
-    }
-  };
-
   const getTotalAmount = (cartData: Order['cart_data']) => {
     return cartData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
@@ -133,29 +112,6 @@ export default function AdminOrdersIndex() {
       minute: '2-digit',
     });
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold">Orders</h1>
-          <p className="text-gray-600">Manage orders and fulfillment</p>
-        </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-          <div className="space-y-2">
-            {Array.from({ length: 5 }, (_, i) => i).map((skeletonIdx) => (
-              <Skeleton key={skeletonIdx} className="h-20 w-full" />
-            ))}
-          </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -193,7 +149,7 @@ export default function AdminOrdersIndex() {
                 </TableHeader>
                 <TableBody>
                   {orders.map((order) => (
-                    <TableRow key={order.id} className="cursor-pointer hover:bg-gray-50" onClick={() => window.location.href = `/admin/orders/${order.id}`}>
+                    <TableRow key={order.id} className="cursor-pointer hover:bg-gray-50" onClick={() => { window.location.href = `/admin/orders/${order.id}`; }}>
                       <TableCell>
                         <div className="text-sm">
                           {formatDate(order.created_at)}

@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback, useId } from "react";
-import { Link } from "react-router";
+import { Link, useLoaderData, useSearchParams } from "react-router";
+import type { ClientLoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { useToast } from "~/components/ui/use-toast";
 import { 
   TableProvider, 
   TableHeader, 
@@ -22,6 +22,45 @@ export function meta() {
     { title: "All Cards - Admin - TagMe Connections" },
     { name: "description", content: "Browse, search, and manage all contact cards created through the system." },
   ];
+}
+
+export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
+  const url = new URL(request.url);
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+  const offset = parseInt(url.searchParams.get('offset') || '0');
+  const customerEmail = url.searchParams.get('customer_email') || '';
+  const status = url.searchParams.get('status') || '';
+  const dateFrom = url.searchParams.get('date_from') || '';
+  const dateTo = url.searchParams.get('date_to') || '';
+
+  try {
+    const searchParams = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+
+    if (customerEmail) searchParams.append('customer_email', customerEmail);
+    if (status) searchParams.append('status', status);
+    if (dateFrom) searchParams.append('date_from', dateFrom);
+    if (dateTo) searchParams.append('date_to', dateTo);
+
+    const response = await fetch(`/.netlify/functions/get-cards?${searchParams}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch cards');
+    }
+
+    const data: CardsListResponse = await response.json();
+    return {
+      cards: data.cards || [],
+      total: data.total || 0,
+      page: Math.floor(offset / limit) + 1,
+      limit,
+    };
+  } catch (error) {
+    console.error('Error fetching cards:', error);
+    throw error;
+  }
 }
 
 export function handle() {
@@ -63,22 +102,27 @@ interface CardsListResponse {
 }
 
 export default function AdminCardsIndex() {
-  const { toast } = useToast();
   const searchEmailId = useId();
   const statusFilterId = useId();
   const dateFromId = useId();
   const dateToId = useId();
-  const [cards, setCards] = useState<CardWithCustomer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Filters
-  const [searchEmail, setSearchEmail] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const data = useLoaderData<typeof clientLoader>();
+  const { cards, total, page: loaderPage, limit } = data;
+  
+  const [page, setPage] = useState(loaderPage);
+  
+  // Sync page when loader data changes
+  useEffect(() => {
+    setPage(loaderPage);
+  }, [loaderPage]);
+  
+  // Filters - get from URL or use defaults
+  const [searchEmail, setSearchEmail] = useState(searchParams.get('customer_email') || "");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || "all");
+  const [dateFrom, setDateFrom] = useState(searchParams.get('date_from') || "");
+  const [dateTo, setDateTo] = useState(searchParams.get('date_to') || "");
 
   const getStatusBadge = useCallback((status: string, error?: string) => {
     switch (status) {
@@ -189,48 +233,22 @@ export default function AdminCardsIndex() {
     [formatDate, getStatusBadge]
   );
 
-  const fetchCards = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-        offset: ((page - 1) * limit).toString(),
-      });
-
-      if (searchEmail) params.append('customer_email', searchEmail);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (dateFrom) params.append('date_from', dateFrom);
-      if (dateTo) params.append('date_to', dateTo);
-
-      const response = await fetch(`/.netlify/functions/get-cards?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch cards');
-      }
-
-      const data: CardsListResponse = await response.json();
-      setCards(data.cards);
-      setTotal(data.total);
-    } catch (error) {
-      console.error('Error fetching cards:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load cards. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [page, limit, searchEmail, statusFilter, dateFrom, dateTo, toast]);
-
-  useEffect(() => {
-    fetchCards();
-  }, [fetchCards]);
+  const updatePage = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    const offset = (newPage - 1) * limit;
+    params.set('offset', offset.toString());
+    setSearchParams(params);
+  };
 
   const handleSearch = () => {
-    setPage(1);
-    fetchCards();
+    const params = new URLSearchParams();
+    if (searchEmail) params.set('customer_email', searchEmail);
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
+    params.set('limit', limit.toString());
+    params.set('offset', '0'); // Reset to page 1
+    setSearchParams(params);
   };
 
   const clearFilters = () => {
@@ -238,7 +256,7 @@ export default function AdminCardsIndex() {
     setStatusFilter("all");
     setDateFrom("");
     setDateTo("");
-    setPage(1);
+    setSearchParams({});
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -340,12 +358,7 @@ export default function AdminCardsIndex() {
         {/* Cards Table */}
         <Card>
           <CardContent className="p-0">
-            {loading ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading cards...</p>
-              </div>
-            ) : cards.length === 0 ? (
+            {cards.length === 0 ? (
               <div className="p-8 text-center">
                 <p className="text-gray-600">No cards found matching your criteria.</p>
               </div>
@@ -383,7 +396,7 @@ export default function AdminCardsIndex() {
               <Button
                 variant="outline"
                 disabled={page === 1}
-                onClick={() => setPage(page - 1)}
+                onClick={() => updatePage(page - 1)}
               >
                 Previous
               </Button>
@@ -394,7 +407,7 @@ export default function AdminCardsIndex() {
                   <Button
                     key={pageNum}
                     variant={pageNum === page ? "default" : "outline"}
-                    onClick={() => setPage(pageNum)}
+                    onClick={() => updatePage(pageNum)}
                   >
                     {pageNum}
                   </Button>
@@ -404,7 +417,7 @@ export default function AdminCardsIndex() {
               <Button
                 variant="outline"
                 disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
+                onClick={() => updatePage(page + 1)}
               >
                 Next
               </Button>

@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useId } from "react";
+import { useState, useEffect, useId } from "react";
+import { useLoaderData } from "react-router";
+import type { ClientLoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -15,6 +17,24 @@ export function meta() {
   ];
 }
 
+export async function clientLoader(_args: ClientLoaderFunctionArgs) {
+  try {
+    const response = await fetch('/.netlify/functions/admin-users-list');
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch admin users');
+    }
+
+    const data = await response.json();
+    return {
+      users: data.users || [],
+    };
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    throw error;
+  }
+}
+
 export function handle() {
   return {
     breadcrumb: { label: "Admin Users" }
@@ -29,40 +49,18 @@ interface AdminUser {
 
 export default function AdminUsers() {
   const { toast } = useToast();
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { users: initialUsers } = useLoaderData<typeof clientLoader>();
+  const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const emailInputId = useId();
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/.netlify/functions/admin-users-list');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch admin users');
-      }
-
-      const data = await response.json();
-      setUsers(data.users || []);
-    } catch (error) {
-      console.error('Error fetching admin users:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load admin users. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
+  // Sync with loader data
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    setUsers(initialUsers);
+  }, [initialUsers]);
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +98,13 @@ export default function AdminUsers() {
 
       setNewEmail("");
       setIsSheetOpen(false);
-      fetchUsers();
+      // Add the new user to the list
+      const newUser: AdminUser = {
+        id: data.user?.id || crypto.randomUUID(),
+        email: newEmail.trim(),
+        created_at: new Date().toISOString()
+      };
+      setUsers(prev => [...prev, newUser]);
     } catch (error) {
       console.error('Error adding admin user:', error);
       toast({
@@ -140,7 +144,8 @@ export default function AdminUsers() {
         variant: "default",
       });
 
-      fetchUsers();
+      // Remove the user from the list
+      setUsers(prev => prev.filter(u => u.id !== user.id));
     } catch (error) {
       console.error('Error deleting admin user:', error);
       toast({
@@ -227,11 +232,7 @@ export default function AdminUsers() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading admin users...
-            </div>
-          ) : users.length === 0 ? (
+          {users.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No admin users found. Add your first admin user above.
             </div>

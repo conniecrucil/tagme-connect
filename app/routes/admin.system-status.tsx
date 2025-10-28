@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useLoaderData } from "react-router";
+import type { ClientLoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -9,6 +11,22 @@ export function meta() {
     { title: "System Status - Admin - TagMe Connections" },
     { name: "description", content: "Check system configuration and environment variables status." },
   ];
+}
+
+export async function clientLoader(_args: ClientLoaderFunctionArgs) {
+  try {
+    const response = await fetch(`/.netlify/functions/check-system-status`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch system status');
+    }
+
+    const data: SystemStatusResponse = await response.json();
+    return { systemStatus: data };
+  } catch (error) {
+    console.error('Error fetching system status:', error);
+    throw error;
+  }
 }
 
 export function handle() {
@@ -81,13 +99,12 @@ interface SystemStatusResponse {
 
 export default function AdminSystemStatus() {
   const { toast } = useToast();
-  const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { systemStatus: loaderStatus } = useLoaderData<typeof clientLoader>();
+  const [systemStatus, setSystemStatus] = useState(loaderStatus);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSystemStatus = useCallback(async () => {
+  const fetchSystemStatus = async () => {
     try {
-      setLoading(true);
       setError(null);
       
       const response = await fetch(`/.netlify/functions/check-system-status`);
@@ -106,14 +123,8 @@ export default function AdminSystemStatus() {
         description: "Failed to load system status. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchSystemStatus();
-  }, [fetchSystemStatus]);
+  };
 
   const getStatusBadge = (isConfigured: boolean) => {
     return isConfigured ? (
@@ -143,19 +154,6 @@ export default function AdminSystemStatus() {
       second: '2-digit'
     });
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-            <span className="ml-2 text-gray-600">Loading system status...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (error || !systemStatus) {
     return (
