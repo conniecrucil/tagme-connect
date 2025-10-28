@@ -1,11 +1,14 @@
-import { Link } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
+import { DashboardMetricCard } from "~/components/DashboardMetricCard";
+import { DashboardMetricsGridSkeleton } from "~/components/DashboardMetricSkeleton";
+import { CreditCard, Users, ShoppingCart, FileText } from "lucide-react";
 
 export function meta() {
   return [
     { title: "Admin Dashboard - TagMe Connections" },
-    { name: "description", content: "Admin dashboard for managing TagMe contact card system. Create contacts, update existing cards, and manage email templates." },
+    { name: "description", content: "Admin dashboard for managing TagMe contact card system. Track metrics, create contacts, and manage orders." },
   ];
 }
 
@@ -15,17 +18,91 @@ export function handle() {
   };
 }
 
+interface DashboardMetrics {
+  cards: {
+    total: number;
+    purchased: number;
+    admin: number;
+  };
+  revenue: {
+    total: number;
+    formatted: string;
+  };
+  customers: {
+    total: number;
+    currentQuarter: number;
+    previousQuarter: number;
+    change: number;
+    changePercent: number;
+  };
+}
+
+export async function clientLoader() {
+  const response = await fetch('/.netlify/functions/get-dashboard-metrics');
+  if (!response.ok) {
+    throw new Error('Failed to fetch dashboard metrics');
+  }
+  const data = await response.json();
+  return data as DashboardMetrics;
+}
+
+
 export default function AdminIndex() {
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+  const metrics = useLoaderData<DashboardMetrics>();
+
+  // Show loading skeleton if data isn't available yet
+  if (!metrics) {
+    return (
+      <div className="space-y-6">
+        <div>
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">
-            Manage your TagMe contact card system
+            Track your TagMe contact card system metrics
           </p>
         </div>
+        <DashboardMetricsGridSkeleton />
+      </div>
+    );
+  }
 
+  return (
+    <div className="space-y-6">
+   
+
+      {/* Metrics Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <DashboardMetricCard
+          title="Total Cards"
+          value={metrics.cards.total}
+          subtitle={`${metrics.cards.purchased} purchased, ${metrics.cards.admin} admin`}
+          icon={<FileText className="h-4 w-4" />}
+        />
+        <DashboardMetricCard
+          title="Total Revenue"
+          value={metrics.revenue.formatted}
+          subtitle="From online purchases"
+          icon={<CreditCard className="h-4 w-4" />}
+        />
+        <DashboardMetricCard
+          title="Total Customers"
+          value={metrics.customers.total}
+          trend={{
+            value: metrics.customers.changePercent,
+            isPositive: metrics.customers.change >= 0,
+          }}
+          icon={<Users className="h-4 w-4" />}
+        />
+        <DashboardMetricCard
+          title="Pending Orders"
+          value="View All"
+          subtitle="Manage orders and fulfillment"
+          icon={<ShoppingCart className="h-4 w-4" />}
+        />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
@@ -37,20 +114,6 @@ export default function AdminIndex() {
             <CardContent>
               <Button asChild className="w-full">
                 <Link to="/admin/create">Create New Contact</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Update Contact</CardTitle>
-              <CardDescription>
-                Retrieve and update existing TAG Core card sites by URL. Edit contact details and re-publish under the same UUID.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
-                <Link to="/admin/update">Update Existing Contact</Link>
               </Button>
             </CardContent>
           </Card>
@@ -71,6 +134,20 @@ export default function AdminIndex() {
 
           <Card>
             <CardHeader>
+              <CardTitle>View Orders</CardTitle>
+              <CardDescription>
+                Manage customer orders, track fulfillment, and view purchase history.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/orders">View Orders</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>System Status</CardTitle>
               <CardDescription>
                 Check system configuration and environment variables status. Verify all services are properly configured.
@@ -79,35 +156,6 @@ export default function AdminIndex() {
             <CardContent>
               <Button asChild className="w-full">
                 <Link to="/admin/system-status">Check System Status</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>View Analytics</CardTitle>
-              <CardDescription>
-                View contact card analytics, usage statistics, and performance metrics.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
-              </Button>
-            </CardContent>
-          </Card>
-
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Reports</CardTitle>
-              <CardDescription>
-                Generate and download reports for contacts, sales, and usage.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
               </Button>
             </CardContent>
           </Card>
@@ -136,20 +184,6 @@ export default function AdminIndex() {
             <CardContent>
               <Button asChild className="w-full">
                 <Link to="/admin/preview">Preview Cards</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Support</CardTitle>
-              <CardDescription>
-                Access support tools, view tickets, and manage customer inquiries.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
               </Button>
             </CardContent>
           </Card>
