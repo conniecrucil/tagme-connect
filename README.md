@@ -23,6 +23,7 @@ A modern, production-ready template for building full-stack React applications u
 - Environment variables configured (see `ENVIRONMENT_VARIABLES.md`)
 - `NETLIFY_ACCESS_TOKEN` environment variable set (for running Netlify dev in Docker)
 
+
 ### Installation
 
 1. Install the dependencies:
