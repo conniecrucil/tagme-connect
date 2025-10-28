@@ -18,18 +18,31 @@ This document outlines all the environment variables required for the Netlify PO
 - `COMPANY_NAME` - Your company name
 - `COMPANY_WEBSITE` - Your company website URL
 
-### AWS S3 Configuration (NEW)
+### AWS S3 Configuration
 - `APP_AWS_ACCESS_KEY_ID` - Your AWS access key ID
 - `APP_AWS_SECRET_ACCESS_KEY` - Your AWS secret access key
 - `APP_AWS_REGION` - AWS region for your S3 bucket (e.g., us-east-1)
-- `VITE_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards
+- `VITE_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards (used for SDK operations)
+- `VITE_AWS_S3_BUCKET_URL` - Public URL base for accessing S3 bucket content (e.g., `https://cards.yourdomain.com` or CloudFront URL like `https://d1234567890.cloudfront.net`)
 
-### Admin Authentication
-- `ADMIN_USER` - Username for admin access
-- `ADMIN_PASS` - Password for admin access
+
+
+### Auth0 Configuration
+- `VITE_AUTH0_DOMAIN` - Your Auth0 tenant domain (e.g., `your-tenant.us.auth0.com`)
+- `VITE_AUTH0_CLIENT_ID` - Auth0 application client ID
+- `AUTH0_CLIENT_SECRET` - Auth0 application client secret (server-side only, not exposed to client)
+- `AUTH0_AUDIENCE` - Optional Auth0 API identifier (defaults to Auth0 Management API)
 
 ### Netlify Configuration
+- `NETLIFY_ACCESS_TOKEN` - Netlify personal access token (required for running netlify dev in Docker)
 - `NETLIFY_SITE_URL` - Your Netlify site URL (e.g., https://your-site.netlify.app)
+
+### Supabase Configuration (SaaS - Server-side only)
+- `PROJECT_URL` - Your Supabase project URL (e.g., `https://xxxxx.supabase.co`)
+  - Get from your Supabase project settings under "Project Settings" → "API"
+- `SUPABASE_KEY` - Supabase service role key for server-side operations (Netlify functions only)
+  - Get from your Supabase project settings under "Project Settings" → "API" → "Service role key"
+  - **Keep secret!** This key has full access to your database
 
 ## Setting Environment Variables
 
@@ -37,28 +50,49 @@ This document outlines all the environment variables required for the Netlify PO
 Create a `.env` file in the root directory with the above variables:
 
 ```bash
+# Stripe
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
 STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
+
+# Email (Resend)
 RESEND_API_KEY=your_resend_api_key_here
 EMAIL_FROM=hello@yourdomain.com
 ADMIN_EMAIL=admin@yourdomain.com
 SUPPORT_EMAIL=support@yourdomain.com
+
+# Company Info
 COMPANY_NAME=Your Company Name
 COMPANY_WEBSITE=https://yourdomain.com
+
+# AWS S3
 APP_AWS_ACCESS_KEY_ID=your_aws_access_key_id
 APP_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 APP_AWS_REGION=us-east-1
-APP_AWS_S3_BUCKET_NAME=your-s3-bucket-name
+VITE_AWS_S3_BUCKET_NAME=your-s3-bucket-name
+VITE_AWS_S3_BUCKET_URL=https://cards.yourdomain.com
+
+# Admin Auth (Legacy - Deprecated)
 ADMIN_USER=admin
 ADMIN_PASS=your_secure_admin_password
+
+# Auth0 (Google-only OAuth)
+VITE_AUTH0_DOMAIN=your-tenant.us.auth0.com
+VITE_AUTH0_CLIENT_ID=your_client_id_here
+AUTH0_CLIENT_SECRET=your_client_secret_here
+AUTH0_AUDIENCE=https://your-tenant.us.auth0.com/api/v2/
+
+# Netlify
 NETLIFY_SITE_URL=https://your-site.netlify.app
+
+# Supabase (SaaS - Server-side only for Netlify functions)
+PROJECT_URL=https://your-project-id.supabase.co
+SUPABASE_KEY=your_service_role_key_here
 ```
 
 ### For Netlify Deployment
 Set these variables in your Netlify dashboard under Site Settings > Environment Variables.
 
 ## S3 Bucket Setup
-
 1. Create an S3 bucket in your AWS account
 2. Configure the bucket for public read access on uploaded objects:
    - Go to bucket permissions → Block public access settings
@@ -98,6 +132,12 @@ Set these variables in your Netlify dashboard under Site Settings > Environment 
    - `s3:PutObject`
    - `s3:PutObjectAcl`
    - `s3:GetObject` (for verification)
+
+### Setting up Custom Domain or CloudFront (Recommended)
+For better performance and branding, you can use a custom domain or CloudFront distribution:
+
+- **Option 1 - CloudFront**: Create a CloudFront distribution pointing to your S3 bucket and use that URL in `VITE_AWS_S3_BUCKET_URL`
+- **Option 2 - Custom Domain**: Configure a custom domain with DNS CNAME pointing to your S3 bucket or CloudFront distribution
 
 ## Security Notes
 

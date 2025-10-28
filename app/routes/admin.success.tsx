@@ -11,6 +11,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Success" }
+  };
+}
+
 export default function AdminSuccess() {
   const location = useLocation();
   const { creationDetails, contactName, contactEmail } = location.state || {};
@@ -148,7 +154,7 @@ export default function AdminSuccess() {
                       variant="outline"
                       asChild
                     >
-                      <a href={transformS3UrlToDomain(creationDetails.s3Urls.html)} target="_blank" rel="noopener noreferrer">
+                      <a href={`https://${transformS3UrlToDomain(creationDetails.s3Urls.html)}`} target="_blank" rel="noopener noreferrer">
                         View
                       </a>
                     </Button>
@@ -200,7 +206,7 @@ export default function AdminSuccess() {
             <CardDescription>All processes completed successfully</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -229,19 +235,6 @@ export default function AdminSuccess() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Admin Notified</p>
-                  <p className="text-xs text-gray-500">Email sent successfully</p>
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -274,7 +267,7 @@ export default function AdminSuccess() {
                 <p className="text-sm text-blue-700 mt-1">
                   The contact card is now live and shareable. You can share the online link with anyone, 
                   and they'll be able to view the contact information and download the vCard file directly 
-                  to their device. The admin has been notified via email with all the creation details.
+                  to their device.
                 </p>
               </div>
             </div>

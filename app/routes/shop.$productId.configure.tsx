@@ -11,6 +11,8 @@ import { useConfiguration } from "~/providers/configuration-provider";
 import { primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions } from "~/providers/configuration-provider";
 import SortableActionsList from "~/components/SortableActionsList";
 import MobileCardPreview from "~/components/MobileCardPreview";
+import { addToCart } from "~/lib/cartUtils";
+import { configurationDB } from "~/lib/indexedDB";
 
 export function meta({ params }: { params: { productId: string } }) {
   const productName = params.productId === 'tag-basic-card' ? 'TAG Basic Card' : 'TAG Core Card';
@@ -221,25 +223,31 @@ export default function ConfigureProduct() {
         id: `${productId === 'tag-basic-card' ? 'basic' : 'core'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
       };
 
-      const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
-      existingCart.push(cartItem);
-      localStorage.setItem('cart', JSON.stringify(existingCart));
+      try {
+        await addToCart(cartItem);
 
-      // Clear the cached configuration since it's now in the cart
-      const storageKey = `configuration-${productId}`;
-      localStorage.removeItem(storageKey);
+        // Clear the cached configuration since it's now in the cart
+        await configurationDB.removeConfiguration(productId);
 
-      // Dispatch custom event to update header cart count
-      window.dispatchEvent(new CustomEvent('cartUpdated'));
+        // Dispatch custom event to update header cart count
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
 
-      toast({
-        variant: "success",
-        title: "Added to Cart",
-        description: "Your card configuration has been added to cart!",
-      });
+        toast({
+          variant: "success",
+          title: "Added to Cart",
+          description: "Your card configuration has been added to cart!",
+        });
 
-      // Navigate to cart
-      navigate('/cart');
+        // Navigate to cart
+        navigate('/cart');
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to add item to cart. Please try again.",
+        });
+      }
     } catch (error) {
       console.error('Error validating configuration:', error);
       console.log(error);
@@ -332,8 +340,43 @@ export default function ConfigureProduct() {
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                          {/* Brand Logo Option */}
+                         
+
+                          {/* Cover Photo Option */}
                           <div
+                            className={`p-4 border-2 rounded-lg transition-all duration-200 ${
+                              logoOrHeader
+                                ? 'border-green-500 bg-green-50'
+                                : images.logo.url
+                                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                                : 'border-gray-300 bg-white hover:border-gray-400 cursor-pointer'
+                            }`}
+                            onClick={() => !images.logo.url && setLogoOrHeader(true)}
+                          >
+                            <div className="flex items-start space-x-3">
+                              <input
+                                type="radio"
+                                name="headerType"
+                                checked={logoOrHeader}
+                                onChange={() => !images.logo.url && setLogoOrHeader(true)}
+                                disabled={!!images.logo.url}
+                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500 disabled:cursor-not-allowed"
+                              />
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-900 mb-1">Card with Header</h3>
+                                <p className="text-sm text-gray-600">
+                                  Use a decorative header image for visual impact
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">Recommended size: 960×640px</p>
+                                {images.logo.url && (
+                                  <p className="text-xs text-red-500 mt-1">Remove brand logo to switch</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                           {/* Brand Logo Option */}
+                           <div
                             className={`p-4 border-2 rounded-lg transition-all duration-200 ${
                               !logoOrHeader
                                 ? 'border-green-500 bg-green-50'
@@ -364,45 +407,12 @@ export default function ConfigureProduct() {
                               </div>
                             </div>
                           </div>
-
-                          {/* Cover Photo Option */}
-                          <div
-                            className={`p-4 border-2 rounded-lg transition-all duration-200 ${
-                              logoOrHeader
-                                ? 'border-green-500 bg-green-50'
-                                : images.logo.url
-                                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
-                                : 'border-gray-300 bg-white hover:border-gray-400 cursor-pointer'
-                            }`}
-                            onClick={() => !images.logo.url && setLogoOrHeader(true)}
-                          >
-                            <div className="flex items-start space-x-3">
-                              <input
-                                type="radio"
-                                name="headerType"
-                                checked={logoOrHeader}
-                                onChange={() => !images.logo.url && setLogoOrHeader(true)}
-                                disabled={!!images.logo.url}
-                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500 disabled:cursor-not-allowed"
-                              />
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 mb-1">Cover Photo</h3>
-                                <p className="text-sm text-gray-600">
-                                  Use a background image for visual impact
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">Recommended size: 960×640px</p>
-                                {images.logo.url && (
-                                  <p className="text-xs text-red-500 mt-1">Remove brand logo to switch</p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
                         </div>
 
                         {/* Upload Section */}
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                           {logoOrHeader ? (
-                            // Cover Photo Upload
+                            // Header Image Upload
                             images.cover.url ? (
                               <div className="space-y-2">
                                 <img
@@ -426,7 +436,7 @@ export default function ConfigureProduct() {
                                   variant="outline"
                                   onClick={() => fileInputRefs.cover.current?.click()}
                                 >
-                                  Upload Cover Photo
+                                  Upload Header Image
                                 </Button>
                                 <input
                                   ref={fileInputRefs.cover}
@@ -937,53 +947,53 @@ export default function ConfigureProduct() {
                 </Card>
               </div>
             </div>
+
+            {/* Purchase Section - Common for both card types, appears after preview on mobile */}
+            <div className="mt-8 max-w-2xl mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Purchase</CardTitle>
+                  <CardDescription>Add your configured card to cart</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                      Quantity:
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                      >
+                        -
+                      </button>
+                      <span className="w-12 text-center font-medium">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    form="configuration-form"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium transition-colors"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Adding to Cart...' : `Add to Cart - $${((productId === 'tag-basic-card' ? 40 : 47) * quantity).toFixed(2)}`}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </form>
 
         </div>
       </section>
-
-      {/* Fixed Purchase Section - Lower Right */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Card className="w-80 shadow-xl border-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Purchase</CardTitle>
-            <CardDescription className="text-sm">Add your configured card to cart</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                Quantity:
-              </label>
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
-                >
-                  -
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              form="configuration-form"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium transition-colors"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Adding to Cart...' : `Add to Cart - $${(47 * quantity).toFixed(2)}`}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

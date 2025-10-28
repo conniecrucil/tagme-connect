@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Toast, ToastClose, ToastDescription, ToastTitle, ToastAction } from "./toast"
 
 type ToasterToast = {
   id: string
@@ -7,6 +6,8 @@ type ToasterToast = {
   description?: React.ReactNode
   action?: React.ReactElement
   variant?: "default" | "destructive" | "success"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {
@@ -49,10 +50,15 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string, variant?: "default" | "destructive" | "success") => {
   if (toastTimeouts.has(toastId)) {
     return
   }
+
+  // Error toasts should stay visible longer (8 seconds) so users can read them
+  // Success toasts are shorter (3 seconds)  
+  // Default toasts are medium (5 seconds)
+  const duration = variant === "destructive" ? 8000 : variant === "success" ? 3000 : 5000;
 
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
@@ -60,7 +66,7 @@ const addToRemoveQueue = (toastId: string) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, 1000)
+  }, duration)
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -85,10 +91,11 @@ export const reducer = (state: State, action: Action): State => {
       const { toastId } = action
 
       if (toastId) {
-        addToRemoveQueue(toastId)
+        const toast = state.toasts.find(t => t.id === toastId);
+        addToRemoveQueue(toastId, toast?.variant)
       } else {
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
+          addToRemoveQueue(toast.id, toast.variant)
         })
       }
 
@@ -129,9 +136,9 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type ToastFunctionParams = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({ ...props }: ToastFunctionParams) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -171,7 +178,8 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return {
     ...state,

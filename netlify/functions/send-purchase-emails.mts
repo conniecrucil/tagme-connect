@@ -3,6 +3,8 @@ import type { Context } from '@netlify/functions';
 import { transformS3UrlToDomain } from './utils/url-transform.js';
 import { inlineEmailCSS } from './utils/email-inline-css.js';
 import { generateCustomerConfirmationEmail, generateAdminNotificationEmail } from './utils/email-templates.mjs';
+import { getOrderByStripeSession, upsertCustomer, createCard } from './utils/supabase.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
@@ -168,13 +170,63 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
       };
     }
 
-    // Upload contact cards to S3 (one per card) - only for core cards
+    // Get the order from database
+    const order = await getOrderByStripeSession(session.id);
+    
+    // Create or get customer
+    let customer = null;
+    try {
+      customer = await upsertCustomer({
+        email: customerInfo.email,
+        name: customerInfo.name,
+        phone: customerInfo.phone,
+        stripe_customer_id: session.customer,
+        metadata: {
+          session_id: session.id
+        }
+      });
+    } catch (err) {
+      console.error('Error creating/updating customer:', err);
+    }
+
+    // Upload contact cards to S3 and create card records (one per card)
     const s3Urls = [];
     for (const item of cart) {
       for (let i = 0; i < item.quantity; i++) {
-        if (item.configuration && item.productType === 'core') {
-          try {
-            // Create a copy of configuration without images to avoid logo upload conflicts
+        try {
+          if (item.productType === 'basic') {
+            // Create basic card record in database
+            const folderId = uuidv4();
+            const designFileUrl = item.configuration?.images?.cardDesign?.url || null;
+            
+            await createCard({
+              customer_id: customer?.id,
+              order_id: order?.id,
+              uuid: folderId,
+              card_type: 'basic',
+              website_url: item.url || item.configuration?.website,
+              design_file_url: designFileUrl,
+              card_data: {
+                email: customerInfo.email,
+                name: customerInfo.name,
+                phone: customerInfo.phone,
+                website: item.url || item.configuration?.website
+              },
+              primary_actions: [],
+              secondary_actions: [],
+              logo_or_header: false,
+              has_logo: false,
+              has_photo: false,
+              has_cover: false,
+              generation_status: {
+                status: 'success',
+                timestamp: new Date().toISOString()
+              }
+            });
+            
+            console.log(`Created basic card ${i + 1} in database for order ${order?.id}`);
+          } else if (item.configuration && item.productType === 'core') {
+            // Upload core card to S3
             const configurationWithoutImages = {
               ...item.configuration,
               images: {
@@ -185,9 +237,9 @@ async function handleCheckoutSessionCompleted(session: any, cart?: any, customer
             };
             const s3Response = await uploadContactCardToS3(session.id, configurationWithoutImages, i + 1, req);
             s3Urls.push(s3Response);
-          } catch (error) {
-            console.error(`Failed to upload card ${i + 1} to S3:`, error);
           }
+        } catch (error) {
+          console.error(`Failed to process card ${i + 1}:`, error);
         }
       }
     }

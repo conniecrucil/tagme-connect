@@ -9,6 +9,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Customer Confirmation" }
+  };
+}
+
 export default function CustomerConfirmationTemplate() {
   // Sample data for preview
   const sampleData = {

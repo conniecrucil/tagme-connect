@@ -9,6 +9,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Admin Notification" }
+  };
+}
+
 export default function AdminNotificationTemplate() {
   // Sample data for preview - showing multiple card types
   const sampleCards = [

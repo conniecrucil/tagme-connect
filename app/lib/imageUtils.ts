@@ -88,3 +88,7 @@ export function getMimeTypeFromDataURL(dataURL: string): string {
   const mimeMatch = dataURL.match(/data:([^;]+);/);
   return mimeMatch ? mimeMatch[1] : 'image/jpeg';
 }
+
+
+
+

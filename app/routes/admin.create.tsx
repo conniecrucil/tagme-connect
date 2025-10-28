@@ -6,7 +6,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { UnifiedIcon } from "~/components/UnifiedIcon";
-import { useToast } from "~/components/ui/use-toast";
+import { toast } from "sonner";
 import { ConfigurationProvider, primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions, useConfiguration } from "~/providers/configuration-provider";
 import SortableActionsList from "~/components/SortableActionsList";
 import MobileCardPreview from "~/components/MobileCardPreview";
@@ -14,13 +14,18 @@ import MobileCardPreview from "~/components/MobileCardPreview";
 export function meta() {
   return [
     { title: "Create Contact - Admin - TagMe Connections" },
-    { name: "description", content: "Admin tool to create contact cards without purchasing. All cards will be uploaded to S3 and admin will be notified." },
+    { name: "description", content: "Admin tool to create contact cards without purchasing. All cards will be uploaded to S3." },
   ];
+}
+
+export function handle() {
+  return {
+    breadcrumb: { label: "Create Contact" }
+  };
 }
 
 function AdminCreateForm() {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Use configuration context
   const {
@@ -173,19 +178,39 @@ function AdminCreateForm() {
         logoOrHeader: logoOrHeader
       };
 
+      // Get customer email from form (if provided)
+      const customerEmail = (e.target as HTMLFormElement).elements.namedItem('customerEmail') as HTMLInputElement;
+      const customerEmailValue = customerEmail?.value?.trim() || '';
+
       // Call admin creation API
       const response = await fetch('/.netlify/functions/admin-create-contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ configuration }),
+        body: JSON.stringify({ 
+          configuration,
+          customerEmail: customerEmailValue || undefined
+        }),
       });
 
-      const result = await response.json();
+      // Parse response and handle errors more robustly
+      let result: any;
+      const contentType = response.headers.get('content-type');
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Unexpected response format. Server returned ${response.status} ${response.statusText}`);
+      }
+      
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error(`Invalid JSON response from server (${response.status} ${response.statusText})`);
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create contact');
+        const errorMessage = result?.error || result?.message || `Failed to create contact (${response.status})`;
+        throw new Error(errorMessage);
       }
 
       // Navigate to success page with creation details
@@ -199,10 +224,9 @@ function AdminCreateForm() {
 
     } catch (error) {
       console.error('Error creating contact:', error);
-      toast({
-        title: "Creation Failed",
-        description: error instanceof Error ? error.message : "An error occurred while creating the contact.",
-        variant: "destructive",
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while creating the contact.";
+      toast.error("Creation Failed", {
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
@@ -281,19 +305,6 @@ function AdminCreateForm() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
-      <div className="bg-gray-50 py-4">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center space-x-2 text-sm">
-            <Link to="/admin" className="text-gray-600 hover:text-green-600">
-              Admin Dashboard
-            </Link>
-            <span className="text-gray-400">›</span>
-            <span className="text-gray-900">Create Contact</span>
-          </nav>
-        </div>
-      </div>
-
       {/* Configuration Form */}
       <section className="py-20">
         <div className="container mx-auto px-4 max-w-6xl">
@@ -302,7 +313,7 @@ function AdminCreateForm() {
               Admin Contact Creator
             </h1>
             <p className="text-lg text-gray-600">
-                Create contact cards without purchasing. All cards will be uploaded to S3 and admin will be notified.
+                Create contact cards without purchasing. All cards will be uploaded to S3.
               </p>
           </div>
 
@@ -310,6 +321,28 @@ function AdminCreateForm() {
             <div className="grid lg:grid-cols-2 gap-12">
               {/* Left Panel - Form */}
               <div className="space-y-8">
+                {/* Customer Email Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Customer Information (Optional)</CardTitle>
+                    <CardDescription>Link this card to a customer for tracking purposes</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Label htmlFor="customerEmail">Customer Email</Label>
+                      <Input
+                        id="customerEmail"
+                        name="customerEmail"
+                        type="email"
+                        placeholder="customer@example.com"
+                        className="w-full"
+                      />
+                      <p className="text-sm text-gray-500">
+                        If provided, this card will be linked to the customer record. If the customer doesn't exist, a new record will be created.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
                 {/* Header Image Section */}
                 <Card>
                   <CardHeader>
@@ -573,7 +606,7 @@ function AdminCreateForm() {
                         id="title"
                         value={vCardData.title}
                         onChange={(e) => handleInputChange('title', e.target.value)}
-                        placeholder="Software Engineer"
+                        placeholder="Designer"
                       />
                     </div>
 

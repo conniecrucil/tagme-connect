@@ -1,5 +1,8 @@
 import { UnifiedIcon } from "~/components/UnifiedIcon";
 import type { VCardData, Action, ImageData } from "~/providers/configuration-provider";
+import logoImg from "~/assets/300x300.png";
+import headerImg from "~/assets/960x640.png";
+import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/ui/tooltip";
 
 interface MobileCardPreviewProps {
   vCardData: VCardData;
@@ -20,14 +23,6 @@ export default function MobileCardPreview({
   secondaryActions,
   logoOrHeader
 }: MobileCardPreviewProps) {
-  // Helper function to get initials from name
-  const getInitials = (name: string) => {
-    if (!name) return '?';
-    const parts = name.trim().split(' ');
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
-
   // Build full name
   const fullName = `${vCardData.prefix ? vCardData.prefix + ' ' : ''}${vCardData.fname} ${vCardData.lname}`.trim();
 
@@ -45,7 +40,8 @@ export default function MobileCardPreview({
       <div
         className="w-full h-20 relative"
         style={{
-          backgroundColor: '#e4eaea',
+          backgroundColor: (images.logo.url && !logoOrHeader) ? 'transparent' : 
+                          images.cover.url ? 'transparent' : 'transparent',
           backgroundImage: images.cover.url ? `url(${images.cover.url})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center'
@@ -58,39 +54,51 @@ export default function MobileCardPreview({
             className="w-full h-full object-cover"
           />
         )}
+        {logoOrHeader && !images.cover.url && (
+          <img
+            src={headerImg}
+            alt="Card Header"
+            className="w-full h-full object-cover"
+          />
+        )}
       </div>
 
       {/* Profile Section */}
       <div className="p-3 text-center">
         {/* Profile Photo */}
         <div className="relative inline-block mb-3">
-          <div 
-            className="w-28 h-28 rounded-full mx-auto border-2 border-white shadow-md flex items-center justify-center text-2xl text-gray-500"
-            style={{ backgroundColor: '#f0f0f0' }}
-          >
-            {images.photo.url ? (
+          {images.photo.url ? (
+            <div 
+              className="w-28 h-28 rounded-full mx-auto border-2 shadow-md overflow-hidden"
+              style={{ borderColor: '#a2e4d6' }}
+            >
               <img
                 src={images.photo.url}
                 alt="Profile"
-                className="w-full h-full rounded-full object-cover"
+                className="w-full h-full object-cover"
               />
-            ) : (
-              getInitials(fullName)
-            )}
-          </div>
+            </div>
+          ) : (
+            <img
+              src={logoImg}
+              alt="Profile"
+              className="w-28 h-28 rounded-full mx-auto border-2 shadow-md object-cover"
+              style={{ borderColor: '#a2e4d6' }}
+            />
+          )}
         </div>
 
         {/* Name and Title */}
-        <h1 className="text-lg font-bold text-gray-900 mb-1">
+        <h1 className="text-2xl font-bold text-black mb-1">
           {fullName || 'Your Name'}
         </h1>
         
         {vCardData.title && (
-          <p className="text-xs text-gray-600 mb-1">{vCardData.title}</p>
+          <p className="text-base text-black mb-1">{vCardData.title}</p>
         )}
         
         {vCardData.biz && (
-          <p className="text-xs text-gray-500 mb-2">{vCardData.biz}</p>
+          <p className="text-base mb-2" style={{ color: '#a2e4d6' }}>{vCardData.biz}</p>
         )}
 
         {vCardData.pronouns && (
@@ -102,73 +110,79 @@ export default function MobileCardPreview({
       <div className="px-3 pb-3">
         {/* Email */}
         {vCardData.email && (
-          <a href={`mailto:${vCardData.email}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <a href={`mailto:${vCardData.email}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-500">Email</div>
-              <div className="text-base text-gray-800">{vCardData.email}</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>EMAIL</div>
+              <div className="text-lg text-black">{vCardData.email}</div>
             </div>
           </a>
         )}
 
         {/* Phone */}
         {vCardData.phone && (
-          <a href={`tel:${vCardData.phone}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <a href={`tel:${vCardData.phone}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-500">Phone</div>
-              <div className="text-base text-gray-800">{vCardData.phone}</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>PHONE</div>
+              <div className="text-lg text-black">{vCardData.phone}</div>
             </div>
           </a>
         )}
 
         {/* Mobile */}
         {vCardData.mobile && (
-          <a href={`tel:${vCardData.mobile}`} className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <a href={`tel:${vCardData.mobile}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-500">Mobile</div>
-              <div className="text-base text-gray-800">{vCardData.mobile}</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>MOBILE</div>
+              <div className="text-lg text-black">{vCardData.mobile}</div>
             </div>
           </a>
         )}
 
         {/* Website */}
         {vCardData.website && (
-          <a href={vCardData.website} target="_blank" rel="noopener noreferrer" className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <a href={vCardData.website} target="_blank" rel="noopener noreferrer" className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-500">Website</div>
-              <div className="text-base text-gray-800">{vCardData.website}</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>WEBSITE</div>
+              <div className="text-lg text-black">{vCardData.website}</div>
             </div>
           </a>
         )}
 
         {/* Address */}
         {fullAddress && (
-          <div className="flex items-center py-2 border-b border-gray-100">
+          <div className="flex items-center py-3 border-b border-gray-200">
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-500">Address</div>
-              <div className="text-base text-gray-800">{fullAddress}</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>ADDRESS</div>
+              <div className="text-lg text-black">{fullAddress}</div>
             </div>
           </div>
         )}
 
         {/* Custom Message */}
         {vCardData.desc && (
-          <div className="py-2 border-b border-gray-100">
-            <div className="text-base text-gray-800 italic">{vCardData.desc}</div>
+          <div className="py-3 border-b border-gray-200">
+            <div className="text-lg text-black">{vCardData.desc}</div>
           </div>
         )}
       </div>
 
       {/* Save Contact Button */}
-      <div className="px-3 pb-3">
-        <button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-          <span>📥</span>
-          Save Contact
-        </button>
+      <div className={`px-3 ${activePrimaryActions.length > 0 || activeSecondaryActions.length > 0 ? 'pb-3' : 'pb-6'} mt-8`}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="w-3/4 mx-auto font-bold py-3 px-4 rounded transition-colors flex items-center justify-center text-gray-900 hover:text-white" style={{ backgroundColor: '#6ed097', color: '#222' }}>
+              Save Contact
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Clicking this button on a live custom website will download the contact file. It is disabled here.</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Actions Section */}
       {(activePrimaryActions.length > 0 || activeSecondaryActions.length > 0) && (
-        <div className="px-3 pb-3">
+        <div className="px-3 pb-6">
           {/* Separator between save contact and actions */}
           <hr className="border-gray-200 my-3" />
           
@@ -191,7 +205,7 @@ export default function MobileCardPreview({
                 
                 return (
                   <a
-                    key={index}
+                    key={`${action.name}-${index}`}
                     href={href}
                     target={isPhoneAction ? "_self" : "_blank"}
                     rel={isPhoneAction ? "" : "noopener noreferrer"}
@@ -230,7 +244,7 @@ export default function MobileCardPreview({
                 
                 return (
                   <a
-                    key={index}
+                    key={`${action.name}-${index}`}
                     href={href}
                     target={isPhoneAction ? "_self" : "_blank"}
                     rel={isPhoneAction ? "" : "noopener noreferrer"}

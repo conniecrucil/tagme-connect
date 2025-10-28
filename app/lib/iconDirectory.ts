@@ -1,10 +1,10 @@
-const bucket = import.meta.env.VITE_AWS_S3_BUCKET_NAME;
+const bucketUrl = import.meta.env.VITE_AWS_S3_BUCKET_URL;
 
 export const iconDirectory = {
     appsumo: {
       name: "AppSumo",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}.s3.amazonaws.com/icons/appsumo.svg`,
+      iconLocation: `${bucketUrl}/icons/appsumo.svg`,
       backgroundColor: "#ff6b35",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9_-]+$"
@@ -12,7 +12,7 @@ export const iconDirectory = {
     behance: {
       name: "Behance",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}.s3.amazonaws.com/icons/behance.svg`,
+      iconLocation: `${bucketUrl}/icons/behance.svg`,
       backgroundColor: "#1769ff",
       inputType: "url" as const,
       validationRegex: "^https://www\\.behance\\.net/[a-zA-Z0-9_-]+$"
@@ -20,7 +20,7 @@ export const iconDirectory = {
     bitcoin: {
       name: "Bitcoin",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/bitcoin.svg`,
+      iconLocation: `${bucketUrl}/icons/bitcoin.svg`,
       backgroundColor: "#f7931a",
       inputType: "text" as const,
       validationRegex: "^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$"
@@ -28,7 +28,7 @@ export const iconDirectory = {
     box: {
       name: "Box",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/box.svg`,
+      iconLocation: `${bucketUrl}/icons/box.svg`,
       backgroundColor: "#0061d5",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9-]+\\.app\\.box\\.com/[a-zA-Z0-9_-]+$"
@@ -36,28 +36,28 @@ export const iconDirectory = {
     calendar: {
       name: "Calendar",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/calendar.svg`,
+      iconLocation: `${bucketUrl}/icons/calendar.svg`,
       backgroundColor: "#007bff",
       inputType: "url" as const,
     },
     call: {
       name: "Phone Call",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/call.svg`,
+      iconLocation: `${bucketUrl}/icons/call.svg`,
       backgroundColor: "#28a745",
       inputType: "tel" as const
     },
     code: {
       name: "Code",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/code.svg`,
+      iconLocation: `${bucketUrl}/icons/code.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
     },
     codeberg: {
       name: "Codeberg",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/codeberg.svg`,
+      iconLocation: `${bucketUrl}/icons/codeberg.svg`,
       backgroundColor: "#2185d0",
       inputType: "url" as const,
       validationRegex: "^https://codeberg\\.org/[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$"
@@ -65,7 +65,7 @@ export const iconDirectory = {
     diaspora: {
       name: "Diaspora",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/diaspora.svg`,
+      iconLocation: `${bucketUrl}/icons/diaspora.svg`,
       backgroundColor: "#7c4dff",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9.-]+\\.diaspora-foundation\\.org/people/[a-f0-9]{40}$"
@@ -73,7 +73,7 @@ export const iconDirectory = {
     discord: {
       name: "Discord",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/discord.svg`,
+      iconLocation: `${bucketUrl}/icons/discord.svg`,
       backgroundColor: "#5865f2",
       inputType: "text" as const,
       validationRegex: "^.{3,32}#[0-9]{4}$"
@@ -81,7 +81,7 @@ export const iconDirectory = {
     documents: {
       name: "Documents",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/documents.svg`,
+      iconLocation: `${bucketUrl}/icons/documents.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
       validationRegex: "^https://docs\\.google\\.com/[a-zA-Z0-9/_.-]+$"
@@ -89,7 +89,7 @@ export const iconDirectory = {
     dribbble: {
       name: "Dribbble",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/dribbble.svg`,
+      iconLocation: `${bucketUrl}/icons/dribbble.svg`,
       backgroundColor: "#ea4c89",
       inputType: "url" as const,
       validationRegex: "^https://dribbble\\.com/[a-zA-Z0-9_.-]+$"
@@ -97,7 +97,7 @@ export const iconDirectory = {
     email: {
       name: "Email",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/email.svg`,
+      iconLocation: `${bucketUrl}/icons/email.svg`,
       backgroundColor: "#0078d4",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
@@ -105,7 +105,7 @@ export const iconDirectory = {
     facebook: {
       name: "Facebook",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/facebook.svg`,
+      iconLocation: `${bucketUrl}/icons/facebook.svg`,
       backgroundColor: "#1877f2",
       inputType: "url" as const,
       validationRegex: "^https://www\\.facebook\\.com/[a-zA-Z0-9_.-]+$"
@@ -113,14 +113,14 @@ export const iconDirectory = {
     fax: {
       name: "Fax",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/fax.svg`,
+      iconLocation: `${bucketUrl}/icons/fax.svg`,
       backgroundColor: "#6c757d",
       inputType: "tel" as const
     },
     friendica: {
       name: "Friendica",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/friendica.svg`,
+      iconLocation: `${bucketUrl}/icons/friendica.svg`,
       backgroundColor: "#4e7c96",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9.-]+/profile/[a-zA-Z0-9_.-]+$"
@@ -128,7 +128,7 @@ export const iconDirectory = {
     funkwhale: {
       name: "Funkwhale",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/funkwhale.svg`,
+      iconLocation: `${bucketUrl}/icons/funkwhale.svg`,
       backgroundColor: "#1a237e",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9.-]+/@[a-zA-Z0-9_.-]+$"
@@ -136,7 +136,7 @@ export const iconDirectory = {
     github: {
       name: "GitHub",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/github.svg`,
+      iconLocation: `${bucketUrl}/icons/github.svg`,
       backgroundColor: "#333333",
       inputType: "url" as const,
       validationRegex: "^https://github\\.com/[a-zA-Z0-9_.-]+$"
@@ -144,7 +144,7 @@ export const iconDirectory = {
     gitlab: {
       name: "GitLab",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/gitlab.svg`,
+      iconLocation: `${bucketUrl}/icons/gitlab.svg`,
       backgroundColor: "#fc6d26",
       inputType: "url" as const,
       validationRegex: "^https://gitlab\\.com/[a-zA-Z0-9_.-]+$"
@@ -152,7 +152,7 @@ export const iconDirectory = {
     google: {
       name: "Google",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/google.svg`,
+      iconLocation: `${bucketUrl}/icons/google.svg`,
       backgroundColor: "#4285f4",
       inputType: "url" as const,
       validationRegex: "^https://plus\\.google\\.com/\\+[a-zA-Z0-9_.-]+$"
@@ -160,7 +160,7 @@ export const iconDirectory = {
     gumroad: {
       name: "Gumroad",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/gumroad.svg`,
+      iconLocation: `${bucketUrl}/icons/gumroad.svg`,
       backgroundColor: "#36a9ae",
       inputType: "url" as const,
       validationRegex: "^https://gumroad\\.com/[a-zA-Z0-9_.-]+$"
@@ -168,7 +168,7 @@ export const iconDirectory = {
     highlevel: {
       name: "HighLevel",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/highlevel.svg`,
+      iconLocation: `${bucketUrl}/icons/highlevel.svg`,
       backgroundColor: "#6366f1",
       inputType: "url" as const,
       validationRegex: "^https://app\\.gohighlevel\\.com/[a-zA-Z0-9/_.-]+$"
@@ -176,7 +176,7 @@ export const iconDirectory = {
     home: {
       name: "Home",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/home.svg`,
+      iconLocation: `${bucketUrl}/icons/home.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
       validationRegex: "^https?://[^\\s]+\\.[a-zA-Z]{2,}$"
@@ -184,7 +184,7 @@ export const iconDirectory = {
     instagram: {
       name: "Instagram",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/instagram.svg`,
+      iconLocation: `${bucketUrl}/icons/instagram.svg`,
       backgroundColor: "#e4405f",
       inputType: "url" as const,
       validationRegex: "^https://www\\.instagram\\.com/[a-zA-Z0-9_.-]+$"
@@ -192,7 +192,7 @@ export const iconDirectory = {
     key: {
       name: "Key",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/key.svg`,
+      iconLocation: `${bucketUrl}/icons/key.svg`,
       backgroundColor: "#6c757d",
       inputType: "text" as const,
       validationRegex: "^[a-f0-9]{64}$"
@@ -200,7 +200,7 @@ export const iconDirectory = {
     line: {
       name: "Line",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/line.svg`,
+      iconLocation: `${bucketUrl}/icons/line.svg`,
       backgroundColor: "#00c300",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9_.-]+$"
@@ -208,7 +208,7 @@ export const iconDirectory = {
     linkedin: {
       name: "LinkedIn",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/linkedin.svg`,
+      iconLocation: `${bucketUrl}/icons/linkedin.svg`,
       backgroundColor: "#0077b5",
       inputType: "url" as const,
       validationRegex: "^https://www\\.linkedin\\.com/in/[a-zA-Z0-9_.-]+$"
@@ -216,7 +216,7 @@ export const iconDirectory = {
     littleredbook: {
       name: "Little Red Book",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/littleredbook.svg`,
+      iconLocation: `${bucketUrl}/icons/littleredbook.svg`,
       backgroundColor: "#ff2442",
       inputType: "url" as const,
       validationRegex: "^https://www\\.xiaohongshu\\.com/user/profile/[a-zA-Z0-9]+$"
@@ -226,7 +226,7 @@ export const iconDirectory = {
     mastodon: {
       name: "Mastodon",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/mastodon.svg`,
+      iconLocation: `${bucketUrl}/icons/mastodon.svg`,
       backgroundColor: "#6364ff",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9.-]+/@[a-zA-Z0-9_.-]+@[a-zA-Z0-9.-]+$"
@@ -234,7 +234,7 @@ export const iconDirectory = {
     medium: {
       name: "Medium",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/medium.svg`,
+      iconLocation: `${bucketUrl}/icons/medium.svg`,
       backgroundColor: "#000000",
       inputType: "url" as const,
       validationRegex: "^https://medium\\.com/@[a-zA-Z0-9_.-]+$"
@@ -242,7 +242,7 @@ export const iconDirectory = {
     messenger: {
       name: "Messenger",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/messenger.svg`,
+      iconLocation: `${bucketUrl}/icons/messenger.svg`,
       backgroundColor: "#006aff",
       inputType: "url" as const,
       validationRegex: "^https://m\\.me/[a-zA-Z0-9_.-]+$"
@@ -250,14 +250,14 @@ export const iconDirectory = {
     mobile: {
       name: "Mobile",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/mobile.svg`,
+      iconLocation: `${bucketUrl}/icons/mobile.svg`,
       backgroundColor: "#6c757d",
       inputType: "tel" as const
     },
     monero: {
       name: "Monero",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/monero.svg`,
+      iconLocation: `${bucketUrl}/icons/monero.svg`,
       backgroundColor: "#ff6600",
       inputType: "text" as const,
       validationRegex: "^[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}$"
@@ -265,7 +265,7 @@ export const iconDirectory = {
     music: {
       name: "Music",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/music.svg`,
+      iconLocation: `${bucketUrl}/icons/music.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
       validationRegex: "^https://open\\.spotify\\.com/[a-zA-Z0-9/_.-]+$"
@@ -273,14 +273,14 @@ export const iconDirectory = {
     office: {
       name: "Office",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/office.svg`,
+      iconLocation: `${bucketUrl}/icons/office.svg`,
       backgroundColor: "#6c757d",
       inputType: "tel" as const,
     },
     opencollective: {
       name: "Open Collective",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/opencollective.svg`,
+      iconLocation: `${bucketUrl}/icons/opencollective.svg`,
       backgroundColor: "#7fadf2",
       inputType: "url" as const,
       validationRegex: "^https://opencollective\\.com/[a-zA-Z0-9_.-]+$"
@@ -288,7 +288,7 @@ export const iconDirectory = {
     patreon: {
       name: "Patreon",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/patreon.svg`,
+      iconLocation: `${bucketUrl}/icons/patreon.svg`,
       backgroundColor: "#ff424d",
       inputType: "url" as const,
       validationRegex: "^https://www\\.patreon\\.com/[a-zA-Z0-9_.-]+$"
@@ -296,7 +296,7 @@ export const iconDirectory = {
     pause: {
       name: "Pause",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/pause.svg`,
+      iconLocation: `${bucketUrl}/icons/pause.svg`,
       backgroundColor: "#6c757d",
       inputType: "text" as const,
       validationRegex: "^.{1,50}$"
@@ -304,7 +304,7 @@ export const iconDirectory = {
     paypal: {
       name: "PayPal",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/paypal.svg`,
+      iconLocation: `${bucketUrl}/icons/paypal.svg`,
       backgroundColor: "#0070ba",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
@@ -312,7 +312,7 @@ export const iconDirectory = {
     peertube: {
       name: "PeerTube",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/peertube.svg`,
+      iconLocation: `${bucketUrl}/icons/peertube.svg`,
       backgroundColor: "#f1680d",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9.-]+/accounts/[a-zA-Z0-9_.-]+$"
@@ -320,7 +320,7 @@ export const iconDirectory = {
     pinterest: {
       name: "Pinterest",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/pinterest.svg`,
+      iconLocation: `${bucketUrl}/icons/pinterest.svg`,
       backgroundColor: "#e60023",
       inputType: "url" as const,
       validationRegex: "^https://www\\.pinterest\\.com/[a-zA-Z0-9_.-]+$"
@@ -328,7 +328,7 @@ export const iconDirectory = {
     pixelfed: {
       name: "Pixelfed",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/pixelfed.svg`,
+      iconLocation: `${bucketUrl}/icons/pixelfed.svg`,
       backgroundColor: "#ff0080",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9.-]+/@[a-zA-Z0-9_.-]+$"
@@ -336,7 +336,7 @@ export const iconDirectory = {
     quora: {
       name: "Quora",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/quora.svg`,
+      iconLocation: `${bucketUrl}/icons/quora.svg`,
       backgroundColor: "#b92b27",
       inputType: "url" as const,
       validationRegex: "^https://www\\.quora\\.com/profile/[a-zA-Z0-9_.-]+$"
@@ -344,7 +344,7 @@ export const iconDirectory = {
     reddit: {
       name: "Reddit",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/reddit.svg`,
+      iconLocation: `${bucketUrl}/icons/reddit.svg`,
       backgroundColor: "#ff4500",
       inputType: "url" as const,
       validationRegex: "^https://www\\.reddit\\.com/user/[a-zA-Z0-9_.-]+$"
@@ -352,7 +352,7 @@ export const iconDirectory = {
     seamless: {
       name: "Seamless",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/seamless.svg`,
+      iconLocation: `${bucketUrl}/icons/seamless.svg`,
       backgroundColor: "#00bcd4",
       inputType: "url" as const,
       validationRegex: "^https://www\\.seamless\\.com/[a-zA-Z0-9/_.-]+$"
@@ -360,7 +360,7 @@ export const iconDirectory = {
     share: {
       name: "Share",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/share.svg`,
+      iconLocation: `${bucketUrl}/icons/share.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
       validationRegex: "^https?://[^\\s]+$"
@@ -368,14 +368,14 @@ export const iconDirectory = {
     signal: {
       name: "Signal",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/signal.svg`,
+      iconLocation: `${bucketUrl}/icons/signal.svg`,
       backgroundColor: "#3a76f0",
       inputType: "tel" as const
     },
     siilo: {
       name: "Siilo",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/siilo.svg`,
+      iconLocation: `${bucketUrl}/icons/siilo.svg`,
       backgroundColor: "#00d4aa",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9_.-]+$"
@@ -383,7 +383,7 @@ export const iconDirectory = {
     skool: {
       name: "Skool",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/skool.svg`,
+      iconLocation: `${bucketUrl}/icons/skool.svg`,
       backgroundColor: "#4f46e5",
       inputType: "url" as const,
       validationRegex: "^https://www\\.skool\\.com/[a-zA-Z0-9_.-]+$"
@@ -391,7 +391,7 @@ export const iconDirectory = {
     skype: {
       name: "Skype",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/skype.svg`,
+      iconLocation: `${bucketUrl}/icons/skype.svg`,
       backgroundColor: "#00aff0",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9_.-]+$"
@@ -399,14 +399,14 @@ export const iconDirectory = {
     sms: {
       name: "SMS",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/sms.svg`,
+      iconLocation: `${bucketUrl}/icons/sms.svg`,
       backgroundColor: "#6c757d",
       inputType: "tel" as const
     },
     snapchat: {
       name: "Snapchat",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/snapchat.svg`,
+      iconLocation: `${bucketUrl}/icons/snapchat.svg`,
       backgroundColor: "#fffc00",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9_.-]+$"
@@ -414,7 +414,7 @@ export const iconDirectory = {
     soundcloud: {
       name: "SoundCloud",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/soundcloud.svg`,
+      iconLocation: `${bucketUrl}/icons/soundcloud.svg`,
       backgroundColor: "#ff5500",
       inputType: "url" as const,
       validationRegex: "^https://soundcloud\\.com/[a-zA-Z0-9_.-]+$"
@@ -422,7 +422,7 @@ export const iconDirectory = {
     spotify: {
       name: "Spotify",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/spotify.svg`,
+      iconLocation: `${bucketUrl}/icons/spotify.svg`,
       backgroundColor: "#1db954",
       inputType: "url" as const,
       validationRegex: "^https://open\\.spotify\\.com/[a-zA-Z0-9/_.-]+$"
@@ -430,7 +430,7 @@ export const iconDirectory = {
     square: {
       name: "Square",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/square.svg`,
+      iconLocation: `${bucketUrl}/icons/square.svg`,
       backgroundColor: "#0066cc",
       inputType: "url" as const,
       validationRegex: "^https://square\\.up\\.com/[a-zA-Z0-9/_.-]+$"
@@ -438,7 +438,7 @@ export const iconDirectory = {
     store: {
       name: "Store",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/store.svg`,
+      iconLocation: `${bucketUrl}/icons/store.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
       validationRegex: "^https?://[^\\s]+\\.[a-zA-Z]{2,}$"
@@ -446,7 +446,7 @@ export const iconDirectory = {
     telegram: {
       name: "Telegram",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/telegram.svg`,
+      iconLocation: `${bucketUrl}/icons/telegram.svg`,
       backgroundColor: "#0088cc",
       inputType: "text" as const,
       validationRegex: "^@[a-zA-Z0-9_]{5,32}$"
@@ -454,14 +454,14 @@ export const iconDirectory = {
     text: {
       name: "Text",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/text.svg`,
+      iconLocation: `${bucketUrl}/icons/text.svg`,
       backgroundColor: "#6c757d",
       inputType: "tel" as const
     },
     threads: {
       name: "Threads",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/threads.svg`,
+      iconLocation: `${bucketUrl}/icons/threads.svg`,
       backgroundColor: "#000000",
       inputType: "url" as const,
       validationRegex: "^https://www\\.threads\\.net/@[a-zA-Z0-9_.-]+$"
@@ -469,7 +469,7 @@ export const iconDirectory = {
     tiktok: {
       name: "TikTok",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/tiktok.svg`,
+      iconLocation: `${bucketUrl}/icons/tiktok.svg`,
       backgroundColor: "#000000",
       inputType: "url" as const,
       validationRegex: "^https://www\\.tiktok\\.com/@[a-zA-Z0-9_.-]+$"
@@ -477,7 +477,7 @@ export const iconDirectory = {
     tumblr: {
       name: "Tumblr",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/tumblr.svg`,
+      iconLocation: `${bucketUrl}/icons/tumblr.svg`,
       backgroundColor: "#001935",
       inputType: "url" as const,
       validationRegex: "^https://[a-zA-Z0-9_.-]+\\.tumblr\\.com$"
@@ -485,7 +485,7 @@ export const iconDirectory = {
     twitch: {
       name: "Twitch",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/twitch.svg`,
+      iconLocation: `${bucketUrl}/icons/twitch.svg`,
       backgroundColor: "#9146ff",
       inputType: "url" as const,
       validationRegex: "^https://www\\.twitch\\.tv/[a-zA-Z0-9_.-]+$"
@@ -493,7 +493,7 @@ export const iconDirectory = {
     ubereats: {
       name: "Uber Eats",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/ubereats.svg`,
+      iconLocation: `${bucketUrl}/icons/ubereats.svg`,
       backgroundColor: "#06c167",
       inputType: "url" as const,
       validationRegex: "^https://www\\.ubereats\\.com/[a-zA-Z0-9/_.-]+$"
@@ -501,7 +501,7 @@ export const iconDirectory = {
     upi: {
       name: "UPI",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/upi.svg`,
+      iconLocation: `${bucketUrl}/icons/upi.svg`,
       backgroundColor: "#6c757d",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9._-]+@[a-zA-Z]{2,}$"
@@ -509,7 +509,7 @@ export const iconDirectory = {
     venmo: {
       name: "Venmo",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/venmo.svg`,
+      iconLocation: `${bucketUrl}/icons/venmo.svg`,
       backgroundColor: "#3d95ce",
       inputType: "text" as const,
       validationRegex: "^@[a-zA-Z0-9_.-]+$"
@@ -517,14 +517,14 @@ export const iconDirectory = {
     viber: {
       name: "Viber",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/viber.svg`,
+      iconLocation: `${bucketUrl}/icons/viber.svg`,
       backgroundColor: "#665cac",
       inputType: "tel" as const
     },
     videos: {
       name: "Videos",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/videos.svg`,
+      iconLocation: `${bucketUrl}/icons/videos.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
       validationRegex: "^https://www\\.youtube\\.com/[a-zA-Z0-9/_.-]+$"
@@ -532,7 +532,7 @@ export const iconDirectory = {
     vimeo: {
       name: "Vimeo",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/vimeo.svg`,
+      iconLocation: `${bucketUrl}/icons/vimeo.svg`,
       backgroundColor: "#1ab7ea",
       inputType: "url" as const,
       validationRegex: "^https://vimeo\\.com/[a-zA-Z0-9_.-]+$"
@@ -540,7 +540,7 @@ export const iconDirectory = {
     vk: {
       name: "VK",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/vk.svg`,
+      iconLocation: `${bucketUrl}/icons/vk.svg`,
       backgroundColor: "#4680c2",
       inputType: "url" as const,
       validationRegex: "^https://vk\\.com/[a-zA-Z0-9_.-]+$"
@@ -548,7 +548,7 @@ export const iconDirectory = {
     wechat: {
       name: "WeChat",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/wechat.svg`,
+      iconLocation: `${bucketUrl}/icons/wechat.svg`,
       backgroundColor: "#07c160",
       inputType: "text" as const,
       validationRegex: "^[a-zA-Z0-9_.-]+$"
@@ -556,7 +556,7 @@ export const iconDirectory = {
     website: {
       name: "Website",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/website.svg`,
+      iconLocation: `${bucketUrl}/icons/website.svg`,
       backgroundColor: "#6c757d",
       inputType: "url" as const,
       validationRegex: "^https?://[^\\s]+\\.[a-zA-Z]{2,}$"
@@ -564,14 +564,14 @@ export const iconDirectory = {
     whatsapp: {
       name: "WhatsApp",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/whatsapp.svg`,
+      iconLocation: `${bucketUrl}/icons/whatsapp.svg`,
       backgroundColor: "#25d366",
       inputType: "tel" as const
     },
     x: {
       name: "X (Twitter)",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/x.svg`,
+      iconLocation: `${bucketUrl}/icons/x.svg`,
       backgroundColor: "#000000",
       inputType: "url" as const,
       validationRegex: "^https://x\\.com/[a-zA-Z0-9_.-]+$"
@@ -579,7 +579,7 @@ export const iconDirectory = {
     yelp: {
       name: "Yelp",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/yelp.svg`,
+      iconLocation: `${bucketUrl}/icons/yelp.svg`,
       backgroundColor: "#ff1a1a",
       inputType: "url" as const,
       validationRegex: "^https://www\\.yelp\\.com/biz/[a-zA-Z0-9_.-]+$"
@@ -587,7 +587,7 @@ export const iconDirectory = {
     youtube: {
       name: "YouTube",
       section: "secondary" as const,
-      iconLocation: `https://${bucket}/icons/youtube.svg`,
+      iconLocation: `${bucketUrl}/icons/youtube.svg`,
       backgroundColor: "#ff0000",
       inputType: "url" as const,
       validationRegex: "^https://www\\.youtube\\.com/[a-zA-Z0-9/_.-]+$"
@@ -595,7 +595,7 @@ export const iconDirectory = {
     zalo: {
       name: "Zalo",
       section: "primary" as const,
-      iconLocation: `https://${bucket}/icons/zalo.svg`,
+      iconLocation: `${bucketUrl}/icons/zalo.svg`,
       backgroundColor: "#0068ff",
       inputType: "tel" as const
     }

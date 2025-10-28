@@ -9,6 +9,12 @@ export function meta() {
   ];
 }
 
+export function handle() {
+  return {
+    breadcrumb: { label: "Homepage" }
+  };
+}
+
 export default function AdminIndex() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -45,6 +51,34 @@ export default function AdminIndex() {
             <CardContent>
               <Button asChild className="w-full">
                 <Link to="/admin/update">Update Existing Contact</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>View All Cards</CardTitle>
+              <CardDescription>
+                Browse, search, and manage all contact cards created through the system. Filter by customer, status, and date.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/cards">View All Cards</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>System Status</CardTitle>
+              <CardDescription>
+                Check system configuration and environment variables status. Verify all services are properly configured.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/system-status">Check System Status</Link>
               </Button>
             </CardContent>
           </Card>
@@ -88,6 +122,20 @@ export default function AdminIndex() {
             <CardContent>
               <Button asChild className="w-full">
                 <Link to="/admin/email-templates">View Templates</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Card Preview</CardTitle>
+              <CardDescription>
+                Preview how contact cards will look with dummy data. Test different layouts and configurations.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/admin/preview">Preview Cards</Link>
               </Button>
             </CardContent>
           </Card>

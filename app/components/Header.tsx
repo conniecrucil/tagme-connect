@@ -2,29 +2,29 @@ import { Link } from "react-router";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import tagmeLogo from "../assets/tagme-logo.svg";
+import { getCartCount } from "~/lib/cartUtils";
 
 export function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const updateCartCount = () => {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const totalItems = cart.reduce((sum: number, item: any) => sum + item.quantity, 0);
-      setCartCount(totalItems);
+    const updateCartCount = async () => {
+      try {
+        const totalItems = await getCartCount();
+        setCartCount(totalItems);
+      } catch (error) {
+        console.error('Error updating cart count:', error);
+      }
     };
 
     // Initial load
     updateCartCount();
 
-    // Listen for storage changes (when cart is updated in other tabs)
-    window.addEventListener('storage', updateCartCount);
-
     // Listen for custom cart update events
     window.addEventListener('cartUpdated', updateCartCount);
 
     return () => {
-      window.removeEventListener('storage', updateCartCount);
       window.removeEventListener('cartUpdated', updateCartCount);
     };
   }, []);

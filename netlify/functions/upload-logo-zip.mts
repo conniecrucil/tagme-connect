@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 
 const s3Client = new S3Client({
-  region: process.env.APP_AWS_REGION || 'us-east-1',
+  region: (process.env.APP_AWS_REGION || 'us-east-1'),
   credentials: {
     accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY!,
@@ -30,11 +30,11 @@ export default async (req: Request, context: any) => {
         });
       }
 
-      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      const bucketName = process.env.VITE_AWS_S3_BUCKET_NAME;
       
       if (!bucketName) {
-        console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
-        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
+        console.error('VITE_AWS_S3_BUCKET_NAME environment variable is not set');
+        throw new Error('VITE_AWS_S3_BUCKET_NAME environment variable is required');
       }
 
       // Validate image data structure
@@ -80,7 +80,7 @@ export default async (req: Request, context: any) => {
         await uploadToS3(bucketName, zipKey, zipBuffer, 'application/zip');
         
         // Return the S3 URL for the zip file
-        const zipUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${zipKey}`;
+        const zipUrl = `${process.env.VITE_AWS_S3_BUCKET_URL}/${zipKey}`;
         
         return new Response(JSON.stringify({
           success: true,

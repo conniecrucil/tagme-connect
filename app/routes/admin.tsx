@@ -1,75 +1,74 @@
-import { useEffect, useState } from "react";
 import { Outlet } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
-import { useToast } from "~/components/ui/use-toast";
+import { useAuth0 } from "@auth0/auth0-react";
+import { Auth0ProviderWrapper } from "~/providers/auth0-provider";
+import { AppSidebar } from "~/components/app-sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "~/components/ui/sidebar";
+import { Separator } from "~/components/ui/separator";
+import { useEffect, useState } from "react";
+import { AdminBreadcrumbs } from "~/components/AdminBreadcrumbs";
 
-export default function Admin() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Temporarily bypass auth for development
-  const [isLoading, setIsLoading] = useState(false); // Skip loading for development
-  const { toast } = useToast();
+export function handle() {
+  return {
+    breadcrumb: { label: "Admin Dashboard" }
+  };
+}
 
-  useEffect(() => {
-    // checkAuth(); // Temporarily disabled for development
-  }, []);
 
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/.netlify/functions/admin-auth");
-      
-      if (response.status === 200) {
-        setIsAuthenticated(true);
-      } else if (response.status === 401) {
-        // Prompt for basic auth
-        const username = prompt("Enter admin username:");
-        const password = prompt("Enter admin password:");
-        
-        if (username && password) {
-          const credentials = btoa(`${username}:${password}`);
-          const authResponse = await fetch("/.netlify/functions/admin-auth", {
-            headers: {
-              Authorization: `Basic ${credentials}`,
-            },
-          });
-          
-          if (authResponse.status === 200) {
-            setIsAuthenticated(true);
-            toast({
-              title: "Authentication Successful",
-              description: "Welcome to the admin dashboard.",
-            });
-          } else {
-            toast({
-              title: "Authentication Failed",
-              description: "Invalid credentials. Please try again.",
-              variant: "destructive",
-            });
-          }
-        }
-      } else {
-        toast({
-          title: "Authentication Error",
-          description: "An error occurred during authentication.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Network Error",
-        description: "Unable to connect to authentication service.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+function AdminContent() {
+  const { isAuthenticated, isLoading, loginWithRedirect, user, logout } = useAuth0();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(false);
+
+  const handleLogin = () => {
+    loginWithRedirect({
+      authorizationParams: {
+        connection: 'google-oauth2',
+      },
+      appState: {
+        returnTo: '/admin',
+      },
+    });
   };
 
-  if (isLoading) {
+  // Check authorization when user becomes authenticated
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (isAuthenticated && user?.email) {
+        setCheckingAuth(true);
+        try {
+          // In development, bypass authorization check if VITE_ADMIN_AUTH_BYPASS is true
+          const authBypass = import.meta.env.DEV && import.meta.env.VITE_ADMIN_AUTH_BYPASS === 'true';
+          
+          if (authBypass) {
+            console.log('[DEV] Authorization bypass enabled via VITE_ADMIN_AUTH_BYPASS');
+            setIsAuthorized(true);
+          } else {
+            const response = await fetch(
+              `/.netlify/functions/check-admin-authorization?email=${encodeURIComponent(user.email)}`
+            );
+            const data = await response.json();
+            setIsAuthorized(data.authorized === true);
+          }
+        } catch (error) {
+          console.error('Authorization check failed:', error);
+          setIsAuthorized(false);
+        } finally {
+          setCheckingAuth(false);
+        }
+      }
+    };
+
+    checkAuthorization();
+  }, [isAuthenticated, user?.email]);
+
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Authenticating...</p>
+          <p className="mt-2 text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -82,12 +81,12 @@ export default function Admin() {
           <CardHeader>
             <CardTitle>Admin Access Required</CardTitle>
             <CardDescription>
-              Please authenticate to access the admin dashboard.
+              Please sign in with Google to access the admin dashboard.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={checkAuth} className="w-full">
-              Authenticate
+            <Button onClick={handleLogin} className="w-full" size="lg">
+              Sign in with Google
             </Button>
           </CardContent>
         </Card>
@@ -95,6 +94,77 @@ export default function Admin() {
     );
   }
 
-  // If authenticated, render child routes
-  return <Outlet />;
+  // Show loading while checking authorization
+  if (checkingAuth || isAuthorized === null) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized message if user is not in admin list
+  if (isAuthenticated && !isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>
+              You are signed in as <strong>{user?.email}</strong>, but you do not have permission to access the admin panel.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-sm text-gray-600">
+              Please contact an administrator if you believe you should have access.
+            </p>
+            <Button 
+              onClick={() => logout()} 
+              className="w-full" 
+              variant="outline"
+            >
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Pass user data to AppSidebar
+  const userData = {
+    name: user?.name || 'Admin User',
+    email: user?.email || '',
+    avatar: user?.picture,
+  };
+
+  // If authenticated, render child routes with sidebar
+  return (
+    <SidebarProvider>
+      <AppSidebar user={userData} />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <AdminBreadcrumbs />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <Outlet />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+export default function Admin() {
+  return (
+    <Auth0ProviderWrapper>
+      <AdminContent />
+    </Auth0ProviderWrapper>
+  );
 }

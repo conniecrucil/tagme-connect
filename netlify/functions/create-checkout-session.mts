@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import type { Context } from '@netlify/functions';
+import { upsertCustomer, createOrder, type Customer } from './utils/supabase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
@@ -60,16 +61,27 @@ export default async (req: Request, context: Context) => {
     // Generate a unique session ID for storing cart data
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Store cart data in a temporary location (in production, use a database)
-    // For now, we'll store it in the file system
-    const cartData = {
-      cart,
-      customerInfo,
-      timestamp: new Date().toISOString()
-    };
-    
-    // In a real implementation, you'd store this in a database
-    // For this POC, we'll store it in a JSON file
+    // Create or update customer in database if email provided
+    let customer: Customer | null = null;
+    if (customerInfo?.email) {
+      try {
+        customer = await upsertCustomer({
+          email: customerInfo.email,
+          name: customerInfo.name,
+          phone: customerInfo.phone,
+          metadata: {
+            source: 'checkout_session',
+            session_id: sessionId
+          }
+        });
+        console.log('Customer created/updated:', customer.id);
+      } catch (customerError) {
+        console.error('Failed to create/update customer:', customerError);
+        // Continue without customer - order will be created without customer link
+      }
+    }
+
+    // Remove temporary file-based cart storage (legacy code)
     const fs = await import('fs/promises');
     const path = await import('path');
     const dataDir = path.join(process.cwd(), 'temp-cart-data');
@@ -78,7 +90,12 @@ export default async (req: Request, context: Context) => {
       await fs.mkdir(dataDir, { recursive: true });
       await fs.writeFile(
         path.join(dataDir, `${sessionId}.json`),
-        JSON.stringify(cartData, null, 2)
+        JSON.stringify({
+          cart,
+          customerInfo,
+          timestamp: new Date().toISOString(),
+          customer_id: customer?.id
+        }, null, 2)
       );
     } catch (error) {
       console.error('Error storing cart data:', error);
@@ -95,6 +112,7 @@ export default async (req: Request, context: Context) => {
       customer_email: customerInfo?.email,
       metadata: {
         sessionId: sessionId,
+        customer_id: customer?.id || '',
         customerName: customerInfo?.name || 'Customer',
         customerEmail: customerInfo?.email || '',
         totalItems: cart.reduce((sum: number, item: any) => sum + item.quantity, 0).toString(),
@@ -104,6 +122,22 @@ export default async (req: Request, context: Context) => {
         allowed_countries: ['US', 'CA', 'GB', 'AU'],
       },
     });
+
+    // Create order in Supabase after getting Stripe session ID
+    try {
+      await createOrder({
+        customer_id: customer?.id || null,
+        stripe_session_id: session.id,
+        customer_info: customerInfo || {},
+        cart_data: cart,
+        status: 'pending',
+        shipped: false,
+        fulfilled: false,
+      });
+    } catch (orderError) {
+      console.error('Failed to create order record:', orderError);
+      // Continue with session creation even if order creation fails
+    }
 
       return new Response(JSON.stringify({
         sessionId: session.id,

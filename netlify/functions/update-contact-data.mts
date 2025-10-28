@@ -1,6 +1,16 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import type { Context } from '@netlify/functions';
 import { generateVCard, type VCardConfig } from './utils/vcard-generator.js';
+import { 
+  getCardByUuid, 
+  updateCard, 
+  deleteCardAssets, 
+  createCardAsset,
+  upsertCardAsset,
+  type CardData,
+  type Action,
+  type GenerationStatus
+} from './utils/supabase';
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -29,6 +39,8 @@ interface ContactCardData {
   primaryActions?: Array<{ name: string; value: string; color?: string }>;
   secondaryActions?: Array<{ name: string; value: string; color?: string }>;
   logoOrHeader?: boolean;
+  websiteUrl?: string;
+  designFileUrl?: string;
   images?: {
     logo?: { url?: string; blob?: string; ext?: string; mime?: string };
     photo?: { url?: string; blob?: string; ext?: string; mime?: string };
@@ -53,6 +65,8 @@ export default async (req: Request, context: Context) => {
     try {
       const { uuid, contactData } = await req.json();
 
+      console.log('Received update request with UUID:', uuid);
+
       if (!uuid || !contactData) {
         console.error('Missing required parameters:', { uuid: !!uuid, contactData: !!contactData });
         return new Response(JSON.stringify({ error: 'UUID and contact data are required' }), {
@@ -61,26 +75,151 @@ export default async (req: Request, context: Context) => {
         });
       }
 
-      const bucketName = process.env.APP_AWS_S3_BUCKET_NAME;
+      const bucketName = process.env.VITE_AWS_S3_BUCKET_NAME;
+      const bucketUrl = process.env.VITE_AWS_S3_BUCKET_URL;
       
       if (!bucketName) {
-        console.error('APP_AWS_S3_BUCKET_NAME environment variable is not set');
-        throw new Error('APP_AWS_S3_BUCKET_NAME environment variable is required');
+        console.error('VITE_AWS_S3_BUCKET_NAME environment variable is not set');
+        throw new Error('VITE_AWS_S3_BUCKET_NAME environment variable is required');
+      }
+      
+      if (!bucketUrl) {
+        console.error('VITE_AWS_S3_BUCKET_URL environment variable is not set');
+        throw new Error('VITE_AWS_S3_BUCKET_URL environment variable is required');
       }
 
       try {
-        // Verify the contact card exists
-        const exists = await contactCardExists(bucketName, uuid);
-        if (!exists) {
-          console.warn('Contact card not found:', uuid);
-          return new Response(JSON.stringify({ error: 'Contact card not found' }), {
-            status: 404,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
-
         // Update the contact card data in S3
-        const result = await updateContactCardInS3(bucketName, uuid, contactData);
+        // Note: We rely on the database check below to verify the card exists,
+        // since S3 ListObjects requires permissions that might not be available
+        const result = await updateContactCardInS3(bucketName, bucketUrl, uuid, contactData);
+
+        // Update database record
+        try {
+          const card = await getCardByUuid(uuid);
+          if (card) {
+            // Prepare updated card data
+            const updatedCardData: CardData = {
+              name: contactData.name,
+              title: contactData.title,
+              company: contactData.company,
+              phone: contactData.phone,
+              email: contactData.email,
+              website: contactData.website,
+              description: contactData.customMessage || contactData.desc,
+              street: contactData.street,
+              city: contactData.city,
+              state: contactData.state,
+              postal: contactData.postal,
+              country: contactData.country,
+              pronouns: contactData.pronouns,
+              prefix: contactData.prefix,
+              mobile: contactData.mobile,
+              fname: contactData.fname,
+              lname: contactData.lname,
+              biz: contactData.biz,
+              desc: contactData.desc,
+              photo: contactData.photo
+            };
+
+            // Prepare updated actions
+            const primaryActions: Action[] = contactData.primaryActions || [];
+            const secondaryActions: Action[] = contactData.secondaryActions || [];
+
+            // Determine asset flags
+            const hasLogo = !!(contactData.images?.logo?.blob);
+            const hasPhoto = !!(contactData.images?.photo?.blob);
+            const hasCover = !!(contactData.images?.cover?.blob);
+
+            // Update card record (preserve card_type, but update website_url and design_file_url if provided)
+            await updateCard(card.id, {
+              website_url: contactData.websiteUrl,
+              design_file_url: contactData.designFileUrl,
+              card_data: updatedCardData,
+              primary_actions: primaryActions,
+              secondary_actions: secondaryActions,
+              logo_or_header: contactData.logoOrHeader || false,
+              has_logo: hasLogo,
+              has_photo: hasPhoto,
+              has_cover: hasCover,
+              generated_at: new Date().toISOString(),
+              generation_status: {
+                status: 'success',
+                timestamp: new Date().toISOString()
+              }
+            });
+
+            // Update assets using upsert - update existing records instead of deleting and recreating
+            // NO LONGER DELETE ALL ASSETS - we now update existing ones
+            
+            // If images exist, create asset records for them
+            if (hasLogo || hasPhoto || hasCover) {
+
+              // Update or create asset records for uploaded images
+              if (hasLogo && result.imageUrls?.logo) {
+                await upsertCardAsset({
+                  card_id: card.id,
+                  asset_type: 'logo',
+                  s3_key: `${uuid}/logo.${(contactData.images!.logo!.ext || 'jpg').split(';')[0]}`,
+                  s3_url: result.imageUrls.logo,
+                  mime_type: contactData.images!.logo!.mime || 'image/jpeg'
+                });
+              }
+
+              if (hasPhoto && result.imageUrls?.photo) {
+                await upsertCardAsset({
+                  card_id: card.id,
+                  asset_type: 'photo',
+                  s3_key: `${uuid}/photo.${(contactData.images!.photo!.ext || 'jpg').split(';')[0]}`,
+                  s3_url: result.imageUrls.photo,
+                  mime_type: contactData.images!.photo!.mime || 'image/jpeg'
+                });
+              }
+
+              if (hasCover && result.imageUrls?.cover) {
+                await upsertCardAsset({
+                  card_id: card.id,
+                  asset_type: 'cover',
+                  s3_key: `${uuid}/cover.${(contactData.images!.cover!.ext || 'jpg').split(';')[0]}`,
+                  s3_url: result.imageUrls.cover,
+                  mime_type: contactData.images!.cover!.mime || 'image/jpeg'
+                });
+              }
+
+            }
+
+            // Always update HTML and VCF assets since contact data changed
+            await upsertCardAsset({
+              card_id: card.id,
+              asset_type: 'html',
+              s3_key: `${uuid}/index.html`,
+              s3_url: result.urls.html,
+              mime_type: 'text/html'
+            });
+
+            await upsertCardAsset({
+              card_id: card.id,
+              asset_type: 'vcf',
+              s3_key: `${uuid}/contact.vcf`,
+              s3_url: result.urls.vcard,
+              mime_type: 'text/vcard'
+            });
+
+            console.log('Database record updated successfully for card:', card.id);
+          } else {
+            console.warn('Card not found in database for UUID:', uuid);
+            return new Response(JSON.stringify({ 
+              error: 'Contact card not found in database',
+              details: `Card with UUID ${uuid} does not exist`
+            }), {
+              status: 404,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+        } catch (dbError) {
+          console.error('Database update failed:', dbError);
+          // Continue with S3 success but log database error
+        }
 
         return new Response(JSON.stringify({
           success: true,
@@ -142,7 +281,7 @@ async function contactCardExists(bucketName: string, uuid: string): Promise<bool
   }
 }
 
-async function updateContactCardInS3(bucketName: string, uuid: string, contactData: ContactCardData): Promise<{ urls: any; imageUrls: any }> {
+async function updateContactCardInS3(bucketName: string, bucketUrl: string, uuid: string, contactData: ContactCardData): Promise<{ urls: any; imageUrls: any }> {
   try {
     // Generate vCard content
     const vcardConfig: VCardConfig = {
@@ -158,8 +297,11 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
 
     const vcardContent = generateVCard(vcardConfig);
 
+    // Construct baseUrl for meta tags (used in OG properties)
+    const baseUrl = `${bucketUrl}/${uuid}`;
+
     // Generate HTML content for the contact card
-    const htmlContent = generateContactCardHTML(contactData);
+    const htmlContent = generateContactCardHTML(contactData, baseUrl);
 
     // Upload updated vCard file
     const vcardKey = `${uuid}/contact.vcf`;
@@ -175,31 +317,39 @@ async function updateContactCardInS3(bucketName: string, uuid: string, contactDa
     if (contactData.images) {
       const { logo, photo, cover } = contactData.images;
       
-      // Upload new images if they have blob data
-      if (logo?.blob) {
+      // Upload new images if they have base64 blob data
+      if (logo?.blob && logo.blob.startsWith('data:')) {
         const logoKey = `${uuid}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
         const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
-        imageUrls.logo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${logoKey}`;
+        imageUrls.logo = `${bucketUrl}/${logoKey}`;
+      } else if (logo?.blob && (logo.blob.startsWith('http://') || logo.blob.startsWith('https://'))) {
+        // Keep existing S3 URL
+        imageUrls.logo = logo.blob;
       }
       
-      if (photo?.blob) {
+      if (photo?.blob && photo.blob.startsWith('data:')) {
         const photoKey = `${uuid}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
         const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
-        imageUrls.photo = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${photoKey}`;
+        imageUrls.photo = `${bucketUrl}/${photoKey}`;
+      } else if (photo?.blob && (photo.blob.startsWith('http://') || photo.blob.startsWith('https://'))) {
+        // Keep existing S3 URL
+        imageUrls.photo = photo.blob;
       }
       
-      if (cover?.blob) {
+      if (cover?.blob && cover.blob.startsWith('data:')) {
         const coverKey = `${uuid}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
         const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
-        imageUrls.cover = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${coverKey}`;
+        imageUrls.cover = `${bucketUrl}/${coverKey}`;
+      } else if (cover?.blob && (cover.blob.startsWith('http://') || cover.blob.startsWith('https://'))) {
+        // Keep existing S3 URL
+        imageUrls.cover = cover.blob;
       }
     }
 
-    // Return the public URLs
-    const baseUrl = `https://${bucketName}.s3.${process.env.APP_AWS_REGION || 'us-east-1'}.amazonaws.com/${uuid}`;
+    // baseUrl was already constructed earlier for meta tags
     
     return {
       urls: {
@@ -231,8 +381,15 @@ async function uploadToS3(bucket: string, key: string, body: string | Buffer, co
   await s3Client.send(command);
 }
 
-function generateContactCardHTML(data: ContactCardData): string {
+function generateContactCardHTML(data: ContactCardData, baseUrl?: string): string {
   const { images } = data;
+  
+  // Helper function to get image URL from either url or blob property
+  const getImageUrl = (image: { url?: string; blob?: string } | undefined) => {
+    if (!image) return null;
+    // Prefer url if available, otherwise use blob (for existing S3 images)
+    return image.url || image.blob;
+  };
   
   // Generate CSS for mobile-first design
   const css = `
@@ -263,11 +420,11 @@ function generateContactCardHTML(data: ContactCardData): string {
       
       .header {
         height: 80px;
-        background: #e4eaea;
+        background: transparent;
         position: relative;
         background-size: cover;
         background-position: center;
-        ${images?.cover?.url ? `background-image: url('${images.cover.url}');` : ''}
+        ${getImageUrl(images?.cover) ? `background-image: url('${getImageUrl(images?.cover)}');` : ''}
       }
       
       .logo {
@@ -302,7 +459,7 @@ function generateContactCardHTML(data: ContactCardData): string {
         height: 64px;
         border-radius: 50%;
         margin: 0 auto 12px;
-        border: 2px solid white;
+        border: 2px solid #a2e4d6;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         background: #f0f0f0;
         display: flex;
@@ -320,21 +477,21 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .name {
-        font-size: 18px;
+        font-size: 24px;
         font-weight: 700;
-        color: #1a1a1a;
+        color: #000000;
         margin-bottom: 4px;
       }
       
       .title {
-        font-size: 12px;
-        color: #666;
+        font-size: 16px;
+        color: #000000;
         margin-bottom: 4px;
       }
       
       .company {
-        font-size: 12px;
-        color: #888;
+        font-size: 16px;
+        color: #a2e4d6;
         margin-bottom: 8px;
       }
       
@@ -344,9 +501,9 @@ function generateContactCardHTML(data: ContactCardData): string {
       
       .contact-item {
         display: flex;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid #f0f0f0;
+        align-items: flex-start;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
         text-decoration: none;
         color: inherit;
         transition: background-color 0.2s;
@@ -361,29 +518,26 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .contact-icon {
-        width: 16px;
-        height: 16px;
-        margin-right: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: none;
       }
       
       .contact-text {
         flex: 1;
-        font-size: 14px;
+        font-size: 16px;
       }
       
       .contact-label {
         font-weight: 500;
-        color: #6b7280;
+        color: #a2e4d6;
         font-size: 12px;
+        margin-bottom: 4px;
+        text-transform: uppercase;
       }
       
       .contact-value {
-        color: #1f2937;
+        color: #000000;
         margin-top: 2px;
-        font-size: 14px;
+        font-size: 18px;
       }
       
       .actions-section {
@@ -436,21 +590,23 @@ function generateContactCardHTML(data: ContactCardData): string {
       }
       
       .download-btn {
-        margin: 24px;
-        padding: 16px;
-        background: #10b981;
-        color: white;
+        margin: 32px auto 12px;
+        padding: 12px;
+        background: #6ed097;
+        color: #222;
         border: none;
         border-radius: 8px;
         font-size: 16px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        width: calc(100% - 48px);
-        transition: background 0.2s;
+        width: 75%;
+        display: block;
+        transition: all 0.2s;
       }
       
       .download-btn:hover {
-        background: #059669;
+        background: #5dc087;
+        color: white;
       }
       
       @media (max-width: 480px) {
@@ -605,20 +761,35 @@ function generateContactCardHTML(data: ContactCardData): string {
     });
   }
 
+  // Prepare description: use customMessage if available, otherwise default to "custom contact card"
+  const description = data.customMessage || 'custom contact card';
+  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Contact information for ${data.name || 'Contact'}${data.company ? ` at ${data.company}` : ''}">
+  <meta name="description" content="${description}">
   <meta name="author" content="${data.name || 'Contact'}">
+  
+  <!-- Open Graph Meta Tags -->
   <meta property="og:title" content="${data.name || 'Contact Card'}">
-  <meta property="og:description" content="Contact information for ${data.name || 'Contact'}${data.company ? ` at ${data.company}` : ''}">
+  <meta property="og:description" content="${description}">
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="Smart Contact Card">
+  ${getImageUrl(images?.photo) ? `<meta property="og:image" content="${getImageUrl(images?.photo)}">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta property="og:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  ${baseUrl ? `<meta property="og:url" content="${baseUrl}/index.html">` : ''}
+  ${data.name ? `<meta property="profile:first_name" content="${data.name.split(' ')[0]}">` : ''}
+  ${data.name && data.name.split(' ').length > 1 ? `<meta property="profile:last_name" content="${data.name.split(' ').slice(1).join(' ')}">` : ''}
+  
+  <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="${data.name || 'Contact Card'}">
-  <meta name="twitter:description" content="Contact information for ${data.name || 'Contact'}${data.company ? ` at ${data.company}` : ''}">
+  <meta name="twitter:description" content="${description}">
+  ${getImageUrl(images?.photo) ? `<meta name="twitter:image" content="${getImageUrl(images?.photo)}">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta name="twitter:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  
   <title>${data.name || 'Contact Card'}</title>
   
   <!-- Structured Data for SEO -->
@@ -635,7 +806,7 @@ function generateContactCardHTML(data: ContactCardData): string {
       "name": "${data.company}"
     },` : ''}
     ${data.title ? `"jobTitle": "${data.title}",` : ''}
-    ${images?.photo?.url ? `"image": "${images.photo.url}",` : ''}
+    ${getImageUrl(images?.photo) ? `"image": "${getImageUrl(images?.photo)}",` : ''}
     "sameAs": [
       ${(() => {
         const urls: string[] = [];
@@ -663,22 +834,22 @@ function generateContactCardHTML(data: ContactCardData): string {
 <body>
   <div class="contact-card">
     <!-- Header Section -->
-    <div class="header" ${images?.cover?.url && data.logoOrHeader ? `style="background-image: url('${images.cover.url}'); background-size: cover; background-position: center;"` : ''}>
-      ${images?.logo?.url && !data.logoOrHeader ? `
+    <div class="header" ${getImageUrl(images?.cover) && data.logoOrHeader ? `style="background-image: url('${getImageUrl(images?.cover)}'); background-size: cover; background-position: center;"` : ''}>
+      ${getImageUrl(images?.logo) && !data.logoOrHeader ? `
         <div class="logo">
-          <img src="${images.logo.url}" alt="Logo">
+          <img src="${getImageUrl(images?.logo)}" alt="Logo">
         </div>
       ` : ''}
     </div>
 
     <!-- Profile Section -->
     <div class="profile">
-      ${images?.photo?.url ? `
+      ${getImageUrl(images?.photo) ? `
         <div class="photo">
-          <img src="${images.photo.url}" alt="${data.name || 'Profile Photo'}">
+          <img src="${getImageUrl(images?.photo)}" alt="${data.name || 'Profile Photo'}">
         </div>
       ` : `
-        <div class="photo">👤</div>
+        <div class="photo"></div>
       `}
       
       <div class="name">${data.name || 'Contact'}</div>
@@ -710,7 +881,7 @@ function generateContactCardHTML(data: ContactCardData): string {
 
     <!-- Download vCard Button -->
     <button class="download-btn" onclick="downloadVCard()">
-      📥 Save Contact
+      Save Contact
     </button>
   </div>
 

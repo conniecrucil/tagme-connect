@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { getCart, clearCart } from "~/lib/cartUtils";
 
 interface OrderDetails {
   sessionId: string;
@@ -131,9 +132,9 @@ export default function Confirmation() {
             console.warn('Stripe session retrieval error, falling back to localStorage:', stripeError);
           }
           
-          // Get cart data from localStorage
-          let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-          let totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+          // Get cart data from IndexedDB
+          let cart = await getCart();
+          let totalAmount = cart.reduce((sum: number, item) => sum + (item.price * item.quantity), 0);
           
           // If no cart data, try to get from stored order data
           if (cart.length === 0) {
@@ -278,6 +279,30 @@ export default function Confirmation() {
             
             sendPurchaseEmails(sessionId, cart, customerInfo);
             
+            // Update order in database with shipping address if available
+            if (customerInfo.shipping) {
+              try {
+                const updateResponse = await fetch('/.netlify/functions/update-contact-data', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    sessionId,
+                    shippingAddress: customerInfo.shipping
+                  }),
+                });
+                
+                if (updateResponse.ok) {
+                  console.log('Order updated with shipping address');
+                } else {
+                  console.error('Failed to update order with shipping address');
+                }
+              } catch (error) {
+                console.error('Error updating order with shipping address:', error);
+              }
+            }
+            
             // Store order data in localStorage before clearing cart
             localStorage.setItem('lastOrder', JSON.stringify({
               sessionId,
@@ -294,7 +319,10 @@ export default function Confirmation() {
             }));
             
             // Clear the cart after successful order
-            localStorage.removeItem('cart');
+            await clearCart();
+            
+            // Dispatch custom event to update header cart count
+            window.dispatchEvent(new CustomEvent('cartUpdated'));
           } else {
             // No cart data found, set orderDetails to null to show error state
             setOrderDetails(null);

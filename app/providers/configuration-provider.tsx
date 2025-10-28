@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { primaryActionsConfig, secondaryActionsConfig, allAvailableActions } from "~/lib/actions-config";
+import { configurationDB } from "~/lib/indexedDB";
 import { PostHogProvider } from 'posthog-js/react';
 
 // Types for the configuration
@@ -102,7 +103,7 @@ export interface ConfigurationContextType {
   // Configuration methods
   saveConfiguration: () => Promise<void>;
   loadConfiguration: () => Promise<void>;
-  clearConfiguration: () => void;
+  clearConfiguration: () => Promise<void>;
 }
 
 // Create the context
@@ -188,16 +189,17 @@ export function ConfigurationProvider({
 
   const [primaryActions, setPrimaryActions] = useState<Action[]>([]);
   const [secondaryActions, setSecondaryActions] = useState<Action[]>([]);
-  const [logoOrHeader, setLogoOrHeader] = useState(false);
+  const [logoOrHeader, setLogoOrHeader] = useState(true);
   const [filterPrimary, setFilterPrimary] = useState("");
   const [filterSecondary, setFilterSecondary] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load configuration from localStorage on mount
   useEffect(() => {
-    if (productId) {
+    if (productId && productId !== 'admin-edit') {
       loadConfiguration();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const updateVCardField = (field: keyof VCardData, value: string) => {
@@ -208,15 +210,10 @@ export function ConfigurationProvider({
   };
 
   const updateImage = (type: 'logo' | 'photo' | 'cover' | 'cardDesign', imageData: ImageData) => {
-    console.log('updateImage called with type:', type, 'imageData:', imageData);
-    setImages(prev => {
-      const newImages = {
-        ...prev,
-        [type]: imageData
-      };
-      console.log('Updated images state:', newImages);
-      return newImages;
-    });
+    setImages(prev => ({
+      ...prev,
+      [type]: imageData
+    }));
   };
 
   const addAction = (type: 'primary' | 'secondary', actionName: string) => {
@@ -345,12 +342,8 @@ export function ConfigurationProvider({
 
       console.log('Saving configuration with images:', images);
 
-      // Save to localStorage
-      const storageKey = `configuration-${productId}`;
-      localStorage.setItem(storageKey, JSON.stringify({
-        configuration,
-        timestamp: Date.now()
-      }));
+      // Save to IndexedDB (which supports large data like images)
+      await configurationDB.saveConfiguration(productId, configuration);
 
       toast.success("Configuration Saved", {
         description: "Your card configuration has been saved successfully.",
@@ -374,11 +367,11 @@ export function ConfigurationProvider({
     }
 
     try {
-      const storageKey = `configuration-${productId}`;
-      const stored = localStorage.getItem(storageKey);
+      // Load from IndexedDB
+      const stored = await configurationDB.getConfiguration(productId);
 
       if (stored) {
-        const { configuration, timestamp } = JSON.parse(stored);
+        const { configuration, timestamp } = stored;
 
         // Check if configuration has expired (1 hour = 3600000 ms)
         const oneHour = 60 * 60 * 1000;
@@ -386,7 +379,7 @@ export function ConfigurationProvider({
         
         if (isExpired) {
           console.log('Configuration expired, clearing stored data');
-          localStorage.removeItem(storageKey);
+          await configurationDB.removeConfiguration(productId);
           toast.info("Configuration Expired", {
             description: "Your saved configuration has expired. Please configure your card again.",
           });
@@ -399,21 +392,31 @@ export function ConfigurationProvider({
         }
 
         // Restore vCard data
-        if (configuration.fname) setVCardData(prev => ({ ...prev, fname: configuration.fname }));
-        if (configuration.lname) setVCardData(prev => ({ ...prev, lname: configuration.lname }));
-        if (configuration.prefix) setVCardData(prev => ({ ...prev, prefix: configuration.prefix }));
-        if (configuration.pronouns) setVCardData(prev => ({ ...prev, pronouns: configuration.pronouns }));
-        if (configuration.title) setVCardData(prev => ({ ...prev, title: configuration.title }));
-        if (configuration.company) setVCardData(prev => ({ ...prev, biz: configuration.company }));
-        if (configuration.customMessage) setVCardData(prev => ({ ...prev, desc: configuration.customMessage }));
-        if (configuration.email) setVCardData(prev => ({ ...prev, email: configuration.email }));
-        if (configuration.phone) setVCardData(prev => ({ ...prev, phone: configuration.phone }));
-        if (configuration.mobile) setVCardData(prev => ({ ...prev, mobile: configuration.mobile }));
-        if (configuration.website) setVCardData(prev => ({ ...prev, website: configuration.website }));
-        if (configuration.photo) setVCardData(prev => ({ ...prev, photo: configuration.photo }));
+        setVCardData(prev => ({
+          ...prev,
+          fname: configuration.fname ?? prev.fname,
+          lname: configuration.lname ?? prev.lname,
+          prefix: configuration.prefix ?? prev.prefix,
+          pronouns: configuration.pronouns ?? prev.pronouns,
+          title: configuration.title ?? prev.title,
+          biz: configuration.company ?? prev.biz,
+          desc: configuration.customMessage ?? prev.desc,
+          email: configuration.email ?? prev.email,
+          phone: configuration.phone ?? prev.phone,
+          mobile: configuration.mobile ?? prev.mobile,
+          website: configuration.website ?? prev.website,
+          photo: configuration.photo ?? prev.photo
+        }));
 
-        // Restore images
-        if (configuration.images) setImages(configuration.images);
+        // Restore images if they exist, otherwise keep defaults
+        if (configuration.images) {
+          setImages({
+            logo: configuration.images.logo || { url: null, blob: null, ext: null, mime: null, resized: null },
+            photo: configuration.images.photo || { url: null, blob: null, ext: null, mime: null, resized: null },
+            cover: configuration.images.cover || { url: null, blob: null, ext: null, mime: null, resized: null },
+            cardDesign: configuration.images.cardDesign || { url: null, blob: null, ext: null, mime: null, resized: null }
+          });
+        }
 
         // Restore actions
         if (configuration.primaryActions) setPrimaryActions(configuration.primaryActions);
@@ -434,7 +437,7 @@ export function ConfigurationProvider({
     }
   };
 
-  const clearConfiguration = () => {
+  const clearConfiguration = async () => {
     if (!productId) {
       toast.error("Clear Failed", {
         description: "Product ID is missing. Unable to clear configuration.",
@@ -443,8 +446,7 @@ export function ConfigurationProvider({
     }
 
     try {
-      const storageKey = `configuration-${productId}`;
-      localStorage.removeItem(storageKey);
+      await configurationDB.removeConfiguration(productId);
 
       // Reset all state to initial values
       setVCardData({
