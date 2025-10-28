@@ -5,14 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/com
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { toast } from "sonner";
-
-interface CartItem {
-  productId: string;
-  productType: 'basic' | 'core';
-  quantity: number;
-  configuration?: any;
-  price: number;
-}
+import { getCart, type CartItem } from "~/lib/cartUtils";
 
 export function meta() {
   return [
@@ -33,20 +26,28 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCart(cartData);
+    const loadCart = async () => {
+      try {
+        const cartData = await getCart();
+        setCart(cartData);
+        
+        // Pre-fill customer info from first cart item if available
+        if (cartData.length > 0 && cartData[0].configuration) {
+          const config = cartData[0].configuration;
+          setCustomerInfo({
+            name: config?.name || '',
+            email: config?.email || '',
+            phone: config?.phone || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    // Pre-fill customer info from first cart item if available
-    if (cartData.length > 0 && cartData[0].configuration) {
-      const config = cartData[0].configuration;
-      setCustomerInfo({
-        name: config?.name || '',
-        email: config?.email || '',
-        phone: config?.phone || ''
-      });
-    }
-    
-    setIsLoading(false);
+    loadCart();
   }, []);
 
   const getTotalPrice = () => {

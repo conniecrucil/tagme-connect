@@ -23,14 +23,6 @@ interface SystemStatus {
     region: boolean;
     bucketName: boolean;
   };
-  minio: {
-    endpoint: boolean;
-    accessKey: boolean;
-    secretKey: boolean;
-    bucketName: boolean;
-    forcePathStyle: boolean;
-    websiteEndpoint: boolean;
-  };
   admin: {
     user: boolean;
     pass: boolean;
@@ -40,7 +32,6 @@ interface SystemStatus {
   };
   supabase: {
     url: boolean;
-    anonKey: boolean;
     serviceRoleKey: boolean;
     databaseUrl: boolean;
   };
@@ -145,14 +136,6 @@ export const handler: Handler = async (event) => {
         region: !!process.env.APP_AWS_REGION,
         bucketName: !!process.env.VITE_AWS_S3_BUCKET_NAME,
       },
-      minio: {
-        endpoint: !!process.env.MINIO_ENDPOINT,
-        accessKey: !!process.env.MINIO_ACCESS_KEY,
-        secretKey: !!process.env.MINIO_SECRET_KEY,
-        bucketName: !!process.env.MINIO_BUCKET_NAME,
-        forcePathStyle: !!process.env.MINIO_FORCE_PATH_STYLE,
-        websiteEndpoint: !!process.env.MINIO_WEBSITE_ENDPOINT,
-      },
       admin: {
         user: !!process.env.ADMIN_USER,
         pass: !!process.env.ADMIN_PASS,
@@ -162,7 +145,6 @@ export const handler: Handler = async (event) => {
       },
       supabase: {
         url: !!process.env.PROJECT_URL || !!process.env.SUPABASE_URL,
-        anonKey: !!process.env.SUPABASE_ANON_KEY,
         serviceRoleKey: !!process.env.SUPABASE_KEY,
         databaseUrl: !!process.env.DATABASE_URL || !!(process.env.PROJECT_URL && process.env.SUPABASE_KEY),
       },
@@ -202,22 +184,15 @@ export const handler: Handler = async (event) => {
       
       // Supabase (required for database operations)
       status.supabase.url,
-      status.supabase.anonKey,
       status.supabase.serviceRoleKey,
       status.supabase.databaseUrl,
-      
-      // MinIO (required for file storage in dev)
-      status.minio.endpoint,
-      status.minio.accessKey,
-      status.minio.secretKey,
-      status.minio.bucketName,
     ];
 
     const criticalServices = allRequired.filter(Boolean).length;
     const totalCritical = allRequired.length;
     const isHealthy = criticalServices === totalCritical;
 
-    // AWS is optional for dev (MinIO is used instead)
+    // AWS is optional for dev (using local storage in development)
     const awsServices = [
       status.aws.accessKeyId,
       status.aws.secretAccessKey,

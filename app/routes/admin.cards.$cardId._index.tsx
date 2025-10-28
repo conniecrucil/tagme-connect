@@ -289,7 +289,7 @@ export default function AdminCardDetail() {
                 {card.card_data.description && (
                   <div>
                     <label className="text-sm font-medium text-gray-500">Description</label>
-                    <p className="text-sm mt-1">{card.card_data.description}</p>
+                    <p className="text-sm text-gray-400 mt-1">{card.card_data.description}</p>
                   </div>
                 )}
               </CardContent>

@@ -18,22 +18,6 @@ INSERT INTO orders (
     NOW() - INTERVAL '7 days'
 );
 
--- Insert sample contact card
-INSERT INTO contact_cards (
-    id,
-    uuid,
-    order_id,
-    card_data,
-    s3_url,
-    created_at
-) VALUES (
-    '00000000-0000-0000-0000-000000000002',
-    'sample-uuid-1234',
-    '00000000-0000-0000-0000-000000000001',
-    '{"name": "John Doe", "email": "john@example.com", "title": "CEO", "company": "Example Corp"}'::jsonb,
-    'https://example-bucket.s3.amazonaws.com/sample-uuid-1234/index.html',
-    NOW() - INTERVAL '7 days'
-);
 
 -- Add more sample orders for variety
 INSERT INTO orders (
@@ -110,11 +94,14 @@ INSERT INTO customers (
     NOW() - INTERVAL '15 days'
 );
 
--- Insert 2 contact cards for some customers
+-- Insert 2 core contact cards and 1 basic card for some customers
 INSERT INTO cards (
     id,
     customer_id,
     uuid,
+    card_type,
+    website_url,
+    design_file_url,
     card_data,
     primary_actions,
     secondary_actions,
@@ -131,6 +118,9 @@ INSERT INTO cards (
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     '11111111-1111-1111-1111-111111111111',
     'alex-chen-techcorp-001',
+    'core',
+    NULL,
+    NULL,
     '{"name": "Alex Chen", "email": "alex.chen@techcorp.com", "phone": "+1-555-0101", "title": "CTO", "company": "TechCorp", "website": "https://techcorp.com", "description": "Leading technology innovation and digital transformation initiatives.", "street": "123 Tech Street", "city": "San Francisco", "state": "CA", "postal": "94105", "country": "US", "pronouns": "he/him", "prefix": "Mr."}'::jsonb,
     '[{"name": "Email", "value": "alex.chen@techcorp.com", "color": "#007bff"}, {"name": "Call", "value": "+1-555-0101", "color": "#28a745"}, {"name": "Website", "value": "https://techcorp.com", "color": "#6f42c1"}]'::jsonb,
     '[{"name": "LinkedIn", "value": "https://linkedin.com/in/alexchen", "color": "#0077b5"}, {"name": "Twitter", "value": "https://twitter.com/alexchen", "color": "#1da1f2"}]'::jsonb,
@@ -147,6 +137,9 @@ INSERT INTO cards (
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     '22222222-2222-2222-2222-222222222222',
     'sarah-williams-design-002',
+    'core',
+    NULL,
+    NULL,
     '{"name": "Sarah Williams", "email": "sarah.williams@designstudio.com", "phone": "+1-555-0102", "title": "Creative Director", "company": "Design Studio", "website": "https://designstudio.com", "description": "Passionate about creating beautiful, functional designs that tell compelling stories.", "street": "456 Design Ave", "city": "New York", "state": "NY", "postal": "10001", "country": "US", "pronouns": "she/her", "prefix": "Ms."}'::jsonb,
     '[{"name": "Email", "value": "sarah.williams@designstudio.com", "color": "#007bff"}, {"name": "Portfolio", "value": "https://sarahwilliams.design", "color": "#e83e8c"}, {"name": "Call", "value": "+1-555-0102", "color": "#28a745"}]'::jsonb,
     '[{"name": "Instagram", "value": "https://instagram.com/sarahdesigns", "color": "#e4405f"}, {"name": "Behance", "value": "https://behance.net/sarahwilliams", "color": "#1769ff"}]'::jsonb,
@@ -158,6 +151,26 @@ INSERT INTO cards (
     NOW() - INTERVAL '20 days',
     jsonb_build_object('status', 'success', 'timestamp', (NOW() - INTERVAL '20 days')),
     NOW() - INTERVAL '20 days'
+),
+-- Insert a basic card example
+(
+    'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    '33333333-3333-3333-3333-333333333333',
+    'mike-rodriguez-consulting-basic',
+    'basic',
+    'https://rodriguezconsulting.com',
+    'http://localhost:9010/designs/mike-basic-design.jpg',
+    '{}'::jsonb,
+    '[]'::jsonb,
+    '[]'::jsonb,
+    false,
+    false,
+    false,
+    false,
+    NULL,
+    NULL,
+    jsonb_build_object('status', 'success', 'timestamp', NOW()),
+    NOW() - INTERVAL '10 days'
 );
 
 -- Insert card assets for the generated cards

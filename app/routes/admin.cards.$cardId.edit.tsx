@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/com
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { UnifiedIcon } from "~/components/UnifiedIcon";
 import { toast } from "sonner";
 import { ConfigurationProvider, primaryActions as availablePrimaryActions, secondaryActions as availableSecondaryActions, useConfiguration } from "~/providers/configuration-provider";
 import SortableActionsList from "~/components/SortableActionsList";
@@ -82,6 +81,17 @@ export function handle() {
     breadcrumb: { label: "Edit" }
   };
 }
+
+// Helper function to normalize S3 URLs
+const normalizeS3Url = (url: string | null): string | null => {
+  if (!url) return null;
+  // If it's already a data URI or has a protocol, return as-is
+  if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // Otherwise prepend https://
+  return `https://${url}`;
+};
 
 function AdminEditForm() {
   const navigate = useNavigate();
@@ -177,31 +187,46 @@ function AdminEditForm() {
 
       assets.forEach(asset => {
         if (asset.asset_type === 'logo' && asset.s3_url) {
+          const normalizedUrl = normalizeS3Url(asset.s3_url);
           imageMap.logo = {
-            url: asset.s3_url,
-            blob: asset.s3_url,
+            url: normalizedUrl,
+            blob: normalizedUrl,
             ext: asset.s3_key.split('.').pop() || null,
             mime: asset.mime_type || null,
             resized: null
           };
         } else if (asset.asset_type === 'photo' && asset.s3_url) {
+          const normalizedUrl = normalizeS3Url(asset.s3_url);
           imageMap.photo = {
-            url: asset.s3_url,
-            blob: asset.s3_url,
+            url: normalizedUrl,
+            blob: normalizedUrl,
             ext: asset.s3_key.split('.').pop() || null,
             mime: asset.mime_type || null,
             resized: null
           };
         } else if (asset.asset_type === 'cover' && asset.s3_url) {
+          const normalizedUrl = normalizeS3Url(asset.s3_url);
           imageMap.cover = {
-            url: asset.s3_url,
-            blob: asset.s3_url,
+            url: normalizedUrl,
+            blob: normalizedUrl,
             ext: asset.s3_key.split('.').pop() || null,
             mime: asset.mime_type || null,
             resized: null
           };
         }
       });
+
+      // Fallback to card_data.photo if no asset exists (legacy support)
+      if (!imageMap.photo.url && card.card_data.photo) {
+        const normalizedPhotoUrl = normalizeS3Url(card.card_data.photo);
+        imageMap.photo = {
+          url: normalizedPhotoUrl,
+          blob: normalizedPhotoUrl,
+          ext: null,
+          mime: null,
+          resized: null
+        };
+      }
 
       setImages(prev => ({
         ...prev,
@@ -332,6 +357,8 @@ function AdminEditForm() {
         postal: vCardData.postal,
         country: vCardData.country,
         mobile: vCardData.mobile,
+        biz: vCardData.biz,
+        desc: vCardData.desc,
         photo: vCardData.photo,
         primaryActions: primaryActions.filter(a => a.value),
         secondaryActions: secondaryActions.filter(a => a.value),
@@ -339,15 +366,15 @@ function AdminEditForm() {
         logoOrHeader: logoOrHeader
       };
 
-      // TODO: Update to use an update endpoint instead of create
-      // For now, using the create endpoint as a temporary solution
-      const response = await fetch('/.netlify/functions/admin-create-contact', {
+      // Call the update endpoint with the card UUID
+      const response = await fetch('/.netlify/functions/update-contact-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          configuration
+          uuid: data.card.uuid,
+          contactData: configuration
         }),
       });
 
@@ -369,6 +396,12 @@ function AdminEditForm() {
         const errorMessage = result?.error || result?.message || `Failed to update contact (${response.status})`;
         throw new Error(errorMessage);
       }
+
+      // Show success message
+      toast.success("Update Successful", {
+        description: "Changes have been applied. Please wait a few seconds for the update to propagate.",
+        duration: 5000,
+      });
 
       // Navigate back to card details page
       navigate(`/admin/cards/${data.cardId}`);
@@ -664,21 +697,37 @@ function AdminEditForm() {
                     <div className="space-y-2">
                       <Label>Avatar Photo</Label>
                       <p className="text-sm text-gray-500">Recommended size: 300×300px</p>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                         {images.photo.url ? (
-                          <div className="space-y-2">
-                            <img src={images.photo.url} alt="Photo" className="w-20 h-20 mx-auto rounded-full object-cover" />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeImage('photo')}
-                            >
-                              Remove
-                            </Button>
+                          <div className="space-y-3">
+                            <div className="flex justify-center">
+                              <img 
+                                src={images.photo.url} 
+                                alt="Avatar" 
+                                className="w-32 h-32 rounded-full object-cover border-4 border-gray-200" 
+                              />
+                            </div>
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => fileInputRefs.photo.current?.click()}
+                              >
+                                Replace Photo
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => removeImage('photo')}
+                              >
+                                Remove
+                              </Button>
+                            </div>
                           </div>
                         ) : (
-                          <div>
+                          <div className="text-center">
                             <Button
                               type="button"
                               variant="outline"
@@ -686,18 +735,18 @@ function AdminEditForm() {
                             >
                               Upload Photo
                             </Button>
-                            <input
-                              ref={fileInputRefs.photo}
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleImageUpload('photo', file);
-                              }}
-                            />
                           </div>
                         )}
+                        <input
+                          ref={fileInputRefs.photo}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload('photo', file);
+                          }}
+                        />
                       </div>
                     </div>
                   </CardContent>
@@ -757,7 +806,7 @@ function AdminEditForm() {
                         id="title"
                         value={vCardData.title}
                         onChange={(e) => handleInputChange('title', e.target.value)}
-                        placeholder="Software Engineer"
+                        placeholder="Designer"
                       />
                     </div>
 

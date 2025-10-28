@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -39,14 +38,6 @@ interface SystemStatus {
     region: boolean;
     bucketName: boolean;
   };
-  minio: {
-    endpoint: boolean;
-    accessKey: boolean;
-    secretKey: boolean;
-    bucketName: boolean;
-    forcePathStyle: boolean;
-    websiteEndpoint: boolean;
-  };
   admin: {
     user: boolean;
     pass: boolean;
@@ -56,7 +47,6 @@ interface SystemStatus {
   };
   supabase: {
     url: boolean;
-    anonKey: boolean;
     serviceRoleKey: boolean;
     databaseUrl: boolean;
   };
@@ -184,17 +174,6 @@ export default function AdminSystemStatus() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="bg-gray-50 py-4 mb-6">
-          <nav className="flex items-center space-x-2 text-sm">
-            <Link to="/admin" className="text-gray-600 hover:text-green-600">
-              Admin Dashboard
-            </Link>
-            <span className="text-gray-400">›</span>
-            <span className="text-gray-900">System Status</span>
-          </nav>
-        </div>
-
         {/* Header */}
         <div className="mb-8 flex justify-between items-start">
           <div>
@@ -342,7 +321,7 @@ export default function AdminSystemStatus() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 Supabase Configuration
-                {systemStatus.status.supabase.url && systemStatus.status.supabase.anonKey && 
+                {systemStatus.status.supabase.url && 
                  systemStatus.status.supabase.serviceRoleKey && systemStatus.status.supabase.databaseUrl ? (
                   <Badge className="bg-green-100 text-green-800">Ready</Badge>
                 ) : (
@@ -357,10 +336,6 @@ export default function AdminSystemStatus() {
                 {getStatusBadge(systemStatus.status.supabase.url)}
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm">Anon Key</span>
-                {getStatusBadge(systemStatus.status.supabase.anonKey)}
-              </div>
-              <div className="flex justify-between items-center">
                 <span className="text-sm">Service Role Key</span>
                 {getStatusBadge(systemStatus.status.supabase.serviceRoleKey)}
               </div>
@@ -371,64 +346,7 @@ export default function AdminSystemStatus() {
             </CardContent>
           </Card>
 
-          {/* MinIO Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                MinIO Configuration
-                {systemStatus.status.minio.endpoint && systemStatus.status.minio.accessKey && 
-                 systemStatus.status.minio.secretKey && systemStatus.status.minio.bucketName ? (
-                  <Badge className="bg-green-100 text-green-800">Ready</Badge>
-                ) : (
-                  <Badge className="bg-red-100 text-red-800">Incomplete</Badge>
-                )}
-              </CardTitle>
-              <CardDescription>Local file storage configuration</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Endpoint</span>
-                {getStatusBadge(systemStatus.status.minio.endpoint)}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Access Key</span>
-                {getStatusBadge(systemStatus.status.minio.accessKey)}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Secret Key</span>
-                {getStatusBadge(systemStatus.status.minio.secretKey)}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Bucket Name</span>
-                {getStatusBadge(systemStatus.status.minio.bucketName)}
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Admin Authentication */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Admin Authentication
-                {systemStatus.status.admin.user && systemStatus.status.admin.pass ? (
-                  <Badge className="bg-green-100 text-green-800">Ready</Badge>
-                ) : (
-                  <Badge className="bg-red-100 text-red-800">Incomplete</Badge>
-                )}
-              </CardTitle>
-              <CardDescription>Admin access configuration</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Admin User</span>
-                {getStatusBadge(systemStatus.status.admin.user)}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Admin Password</span>
-                {getStatusBadge(systemStatus.status.admin.pass)}
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Connectivity Status */}
           <Card className="lg:col-span-2">
@@ -529,55 +447,6 @@ export default function AdminSystemStatus() {
           </CardContent>
         </Card>
 
-        {/* Setup Instructions */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Setup Instructions</CardTitle>
-            <CardDescription>
-              How to configure missing environment variables
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">1. Create Environment File</h4>
-                <p className="text-sm text-gray-600 mb-2">
-                  Copy the example environment file and fill in your values:
-                </p>
-                <code className="block bg-gray-100 p-2 rounded text-sm">
-                  cp .env.example .env
-                </code>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">2. Configure Required Services</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• <strong>Stripe:</strong> Get API keys from <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">dashboard.stripe.com</a></li>
-                  <li>• <strong>Resend:</strong> Get API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">resend.com</a></li>
-                  <li>• <strong>Supabase:</strong> Set up local instance with Docker or use hosted service</li>
-                  <li>• <strong>MinIO:</strong> Automatically configured with Docker Compose</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">3. Restart Development Environment</h4>
-                <p className="text-sm text-gray-600 mb-2">
-                  After updating environment variables, restart the development environment:
-                </p>
-                <code className="block bg-gray-100 p-2 rounded text-sm">
-                  make dev-stop && make dev
-                </code>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">4. Documentation</h4>
-                <p className="text-sm text-gray-600">
-                  For detailed setup instructions, see <a href="/admin" className="text-blue-600 hover:underline">ENVIRONMENT_VARIABLES.md</a>
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

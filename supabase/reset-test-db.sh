@@ -25,9 +25,11 @@ execute_sql() {
 
 # Drop all tables
 echo "Dropping existing tables..."
-execute_sql "DROP TABLE IF EXISTS contact_cards CASCADE;"
+execute_sql "DROP TABLE IF EXISTS card_assets CASCADE;"
+execute_sql "DROP TABLE IF EXISTS cards CASCADE;"
+execute_sql "DROP TABLE IF EXISTS customers CASCADE;"
 execute_sql "DROP TABLE IF EXISTS orders CASCADE;"
-execute_sql "DROP TABLE IF EXISTS admin_users CASCADE;"
+execute_sql "DROP TABLE IF EXISTS admin_users_auth0 CASCADE;"
 
 # Drop functions
 echo "Dropping functions..."
@@ -35,7 +37,9 @@ execute_sql "DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;"
 
 # Recreate schema by running migrations
 echo "Recreating schema..."
-psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/migrations/001_initial_schema.sql"
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/migrations/000_complete_schema.sql"
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/migrations/001_add_order_fulfillment_fields.sql"
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/migrations/002_cleanup_cards_schema.sql"
 
 echo "Test database reset complete!"
 

@@ -98,8 +98,10 @@ export type TableHeadProps = {
 };
 
 export const TableHead = memo(({ header, className }: TableHeadProps) => (
-  <TableHeadRaw className={className}>
-    {header?.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+  <TableHeadRaw className={className} key={header.id}>
+    {header.isPlaceholder
+      ? null
+      : flexRender(header.column.columnDef.header, header.getContext())}
   </TableHeadRaw>
 ));
 
@@ -213,6 +215,7 @@ export const TableRow = ({ row, children, className }: TableRowProps) => (
   <TableRowRaw
     className={className}
     data-state={row.getIsSelected() && "selected"}
+    key={row.id}
   >
     {row.getVisibleCells().map((cell) => children({ cell }))}
   </TableRowRaw>

@@ -92,6 +92,9 @@ interface ContactCardData {
   primaryActions?: Array<{ name: string; value: string; color?: string }>;
   secondaryActions?: Array<{ name: string; value: string; color?: string }>;
   logoOrHeader?: boolean;
+  cardType?: 'basic' | 'core';
+  websiteUrl?: string;
+  designFileUrl?: string;
   images?: {
     logo?: { url?: string; blob?: string; ext?: string; mime?: string };
     photo?: { url?: string; blob?: string; ext?: string; mime?: string };
@@ -259,10 +262,16 @@ export default async (req: Request, context: Context) => {
           const hasPhoto = !!(contactData.images?.photo?.blob);
           const hasCover = !!(contactData.images?.cover?.blob);
 
+          // Determine card type
+          const cardType: 'basic' | 'core' = contactData.cardType || 'core';
+          
           // Create card record
           card = await createCard({
             customer_id: customer?.id,
             uuid: folderId,
+            card_type: cardType,
+            website_url: contactData.websiteUrl,
+            design_file_url: contactData.designFileUrl,
             card_data: cardData,
             primary_actions: primaryActions,
             secondary_actions: secondaryActions,
@@ -383,6 +392,9 @@ export default async (req: Request, context: Context) => {
           await createCard({
             customer_id: customer?.id,
             uuid: folderId,
+            card_type: contactData?.cardType || 'core',
+            website_url: contactData?.websiteUrl,
+            design_file_url: contactData?.designFileUrl,
             card_data: contactData ? {
               name: contactData.name,
               title: contactData.title,
@@ -474,6 +486,13 @@ async function uploadToS3(bucket: string, key: string, body: string | Buffer, co
 function generateContactCardHTML(data: ContactCardData, baseUrl?: string): string {
   const { images } = data;
   
+  // Helper function to get image URL from either url or blob property
+  const getImageUrl = (image: { url?: string; blob?: string } | undefined) => {
+    if (!image) return null;
+    // Prefer url if available, otherwise use blob (for existing S3 images)
+    return image.url || image.blob;
+  };
+  
   // Generate CSS for mobile-first design
   const css = `
     <style>
@@ -507,7 +526,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         position: relative;
         background-size: cover;
         background-position: center;
-        ${images?.cover?.url ? `background-image: url('${images.cover.url}');` : ''}
+        ${getImageUrl(images?.cover) ? `background-image: url('${getImageUrl(images?.cover)}');` : ''}
       }
       
       .logo {
@@ -844,8 +863,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
   <meta property="og:description" content="${description}">
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="Smart Contact Card">
-  ${images?.photo?.url ? `<meta property="og:image" content="${images.photo.url}">` : ''}
-  ${images?.photo?.url ? `<meta property="og:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta property="og:image" content="${getImageUrl(images?.photo)}">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta property="og:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
   ${baseUrl ? `<meta property="og:url" content="${baseUrl}/index.html">` : ''}
   ${data.name ? `<meta property="profile:first_name" content="${data.name.split(' ')[0]}">` : ''}
   ${data.name && data.name.split(' ').length > 1 ? `<meta property="profile:last_name" content="${data.name.split(' ').slice(1).join(' ')}">` : ''}
@@ -854,8 +873,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="${data.name || 'Contact Card'}">
   <meta name="twitter:description" content="${description}">
-  ${images?.photo?.url ? `<meta name="twitter:image" content="${images.photo.url}">` : ''}
-  ${images?.photo?.url ? `<meta name="twitter:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta name="twitter:image" content="${getImageUrl(images?.photo)}">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta name="twitter:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
   
   <title>${data.name || 'Contact Card'}</title>
   
@@ -873,7 +892,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       "name": "${data.company}"
     },` : ''}
     ${data.title ? `"jobTitle": "${data.title}",` : ''}
-    ${images?.photo?.url ? `"image": "${images.photo.url}",` : ''}
+    ${getImageUrl(images?.photo) ? `"image": "${getImageUrl(images?.photo)}",` : ''}
     "sameAs": [
       ${(() => {
         const urls: string[] = [];
@@ -901,19 +920,19 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
 <body>
   <div class="contact-card">
     <!-- Header Section -->
-    <div class="header" ${images?.cover?.url && data.logoOrHeader ? `style="background-image: url('${images.cover.url}'); background-size: cover; background-position: center;"` : ''}>
-      ${images?.logo?.url && !data.logoOrHeader ? `
+    <div class="header" ${getImageUrl(images?.cover) && data.logoOrHeader ? `style="background-image: url('${getImageUrl(images?.cover)}'); background-size: cover; background-position: center;"` : ''}>
+      ${getImageUrl(images?.logo) && !data.logoOrHeader ? `
         <div class="logo">
-          <img src="${images.logo.url}" alt="Logo">
+          <img src="${getImageUrl(images?.logo)}" alt="Logo">
         </div>
       ` : ''}
     </div>
 
     <!-- Profile Section -->
     <div class="profile">
-      ${images?.photo?.url ? `
+      ${getImageUrl(images?.photo) ? `
         <div class="photo">
-          <img src="${images.photo.url}" alt="${data.name || 'Profile Photo'}">
+          <img src="${getImageUrl(images?.photo)}" alt="${data.name || 'Profile Photo'}">
         </div>
       ` : `
         <div class="photo"></div>

@@ -8,6 +8,7 @@ import {
   Eye,
   Server,
   Users,
+  ShoppingCart,
 } from "lucide-react"
 import tagmeLogo from "../assets/tagme-logo.svg"
 
@@ -39,18 +40,32 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       isActive: false,
     },
     {
-      title: "Contacts",
+      title: "Orders",
+      url: "/admin/orders",
+      icon: ShoppingCart,
+      isActive: false,
+    },
+    {
+      title: "Website Contact Cards",
       url: "#",
       icon: Files,
       isActive: false,
       items: [
-        {
-          title: "Create Contact",
-          url: "/admin/create",
-        },
+       
         {
           title: "View All Cards",
           url: "/admin/cards",
+        },
+        {
+          title: (
+            <span className="inline-flex items-center gap-1 bg-primary px-2 py-1 rounded text-white font-semibold text-sm">
+              <span>Create Contact</span>
+              <svg width="16" height="16" fill="none" viewBox="0 0 20 20" className="ml-1">
+                <path d="M10 5v10M5 10h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </span>
+          ),
+          url: "/admin/create",
         },
       ],
     },

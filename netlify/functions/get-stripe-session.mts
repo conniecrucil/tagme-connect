@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
-import type { Context } from '@netlify/functions';
+import { getCustomerByEmail, updateCustomer } from './utils/supabase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
-export default async (req: Request, context: Context) => {
+export default async (req: Request) => {
   try {
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -29,8 +29,9 @@ export default async (req: Request, context: Context) => {
         // Retrieve the Stripe checkout session
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        // Extract shipping address if available
+        // Extract shipping address if available and update customer record
         let shippingAddress = null;
+        let dbShippingAddress = null;
         
         try {
           // Try to get shipping address from collected_information.shipping_details
@@ -44,21 +45,38 @@ export default async (req: Request, context: Context) => {
               postal_code: shippingDetails.postal_code,
               country: shippingDetails.country,
             };
-          } else if ((session as any).shipping?.address) {
+            // Convert to database format, handling null values
+            dbShippingAddress = {
+              street: shippingDetails.line1 || '',
+              city: shippingDetails.city || '',
+              state: shippingDetails.state || '',
+              postal: shippingDetails.postal_code || '',
+              country: shippingDetails.country || '',
+            };
+          } else if ((session as unknown as { shipping?: { address?: Stripe.Address } }).shipping?.address) {
             // Fallback to legacy shipping address location
+            const addr = (session as unknown as { shipping: { address: Stripe.Address } }).shipping.address;
             shippingAddress = {
-              line1: (session as any).shipping.address.line1,
-              line2: (session as any).shipping.address.line2,
-              city: (session as any).shipping.address.city,
-              state: (session as any).shipping.address.state,
-              postal_code: (session as any).shipping.address.postal_code,
-              country: (session as any).shipping.address.country,
+              line1: addr.line1,
+              line2: addr.line2,
+              city: addr.city,
+              state: addr.state,
+              postal_code: addr.postal_code,
+              country: addr.country,
+            };
+            // Convert to database format, handling null values
+            dbShippingAddress = {
+              street: addr.line1 || '',
+              city: addr.city || '',
+              state: addr.state || '',
+              postal: addr.postal_code || '',
+              country: addr.country || '',
             };
           } else if (session.metadata?.shipping_address) {
             // Fallback to metadata if available
             try {
               shippingAddress = JSON.parse(session.metadata.shipping_address);
-            } catch (e) {
+            } catch {
               console.log('Could not parse shipping address from metadata');
             }
           }
@@ -93,6 +111,35 @@ export default async (req: Request, context: Context) => {
           phone: session.customer_details?.phone,
         };
 
+        // Update customer record with stripe_customer_id and shipping_address
+        if (customerInfo.email) {
+          try {
+            const customer = await getCustomerByEmail(customerInfo.email);
+            if (customer) {
+              const updates: { stripe_customer_id?: string; shipping_address?: { street: string; city: string; state: string; postal: string; country: string } } = {};
+              
+              // Update stripe_customer_id if available
+              if (session.customer && typeof session.customer === 'string') {
+                updates.stripe_customer_id = session.customer;
+              }
+              
+              // Update shipping_address if available
+              if (dbShippingAddress) {
+                updates.shipping_address = dbShippingAddress;
+              }
+              
+              // Only update if we have changes to make
+              if (Object.keys(updates).length > 0) {
+                await updateCustomer(customer.id, updates);
+                console.log('Customer record updated with:', updates);
+              }
+            }
+          } catch (updateError) {
+            console.error('Error updating customer record:', updateError);
+            // Continue even if customer update fails
+          }
+        }
+
         const responseData = {
           sessionId: session.id,
           customerInfo,
@@ -119,7 +166,7 @@ export default async (req: Request, context: Context) => {
         
         // Check if it's a Stripe error indicating the session doesn't exist
         if (stripeError && typeof stripeError === 'object' && 'type' in stripeError) {
-          const error = stripeError as any;
+          const error = stripeError as Stripe.errors.StripeError;
           if (error.type === 'StripeInvalidRequestError' && error.code === 'resource_missing') {
             // Session not found - return 404 instead of 500
             return new Response(JSON.stringify({ error: 'Session not found' }), {

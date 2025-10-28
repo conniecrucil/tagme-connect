@@ -606,7 +606,7 @@ function AdminCreateForm() {
                         id="title"
                         value={vCardData.title}
                         onChange={(e) => handleInputChange('title', e.target.value)}
-                        placeholder="Software Engineer"
+                        placeholder="Designer"
                       />
                     </div>
 

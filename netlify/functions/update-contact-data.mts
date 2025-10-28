@@ -6,6 +6,7 @@ import {
   updateCard, 
   deleteCardAssets, 
   createCardAsset,
+  upsertCardAsset,
   type CardData,
   type Action,
   type GenerationStatus
@@ -38,6 +39,8 @@ interface ContactCardData {
   primaryActions?: Array<{ name: string; value: string; color?: string }>;
   secondaryActions?: Array<{ name: string; value: string; color?: string }>;
   logoOrHeader?: boolean;
+  websiteUrl?: string;
+  designFileUrl?: string;
   images?: {
     logo?: { url?: string; blob?: string; ext?: string; mime?: string };
     photo?: { url?: string; blob?: string; ext?: string; mime?: string };
@@ -62,6 +65,8 @@ export default async (req: Request, context: Context) => {
     try {
       const { uuid, contactData } = await req.json();
 
+      console.log('Received update request with UUID:', uuid);
+
       if (!uuid || !contactData) {
         console.error('Missing required parameters:', { uuid: !!uuid, contactData: !!contactData });
         return new Response(JSON.stringify({ error: 'UUID and contact data are required' }), {
@@ -84,17 +89,9 @@ export default async (req: Request, context: Context) => {
       }
 
       try {
-        // Verify the contact card exists
-        const exists = await contactCardExists(bucketName, uuid);
-        if (!exists) {
-          console.warn('Contact card not found:', uuid);
-          return new Response(JSON.stringify({ error: 'Contact card not found' }), {
-            status: 404,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
-
         // Update the contact card data in S3
+        // Note: We rely on the database check below to verify the card exists,
+        // since S3 ListObjects requires permissions that might not be available
         const result = await updateContactCardInS3(bucketName, bucketUrl, uuid, contactData);
 
         // Update database record
@@ -134,8 +131,10 @@ export default async (req: Request, context: Context) => {
             const hasPhoto = !!(contactData.images?.photo?.blob);
             const hasCover = !!(contactData.images?.cover?.blob);
 
-            // Update card record
+            // Update card record (preserve card_type, but update website_url and design_file_url if provided)
             await updateCard(card.id, {
+              website_url: contactData.websiteUrl,
+              design_file_url: contactData.designFileUrl,
               card_data: updatedCardData,
               primary_actions: primaryActions,
               secondary_actions: secondaryActions,
@@ -150,14 +149,15 @@ export default async (req: Request, context: Context) => {
               }
             });
 
-            // Update assets if images were uploaded
+            // Update assets using upsert - update existing records instead of deleting and recreating
+            // NO LONGER DELETE ALL ASSETS - we now update existing ones
+            
+            // If images exist, create asset records for them
             if (hasLogo || hasPhoto || hasCover) {
-              // Delete existing asset records
-              await deleteCardAssets(card.id);
 
-              // Create new asset records for uploaded images
+              // Update or create asset records for uploaded images
               if (hasLogo && result.imageUrls?.logo) {
-                await createCardAsset({
+                await upsertCardAsset({
                   card_id: card.id,
                   asset_type: 'logo',
                   s3_key: `${uuid}/logo.${(contactData.images!.logo!.ext || 'jpg').split(';')[0]}`,
@@ -167,7 +167,7 @@ export default async (req: Request, context: Context) => {
               }
 
               if (hasPhoto && result.imageUrls?.photo) {
-                await createCardAsset({
+                await upsertCardAsset({
                   card_id: card.id,
                   asset_type: 'photo',
                   s3_key: `${uuid}/photo.${(contactData.images!.photo!.ext || 'jpg').split(';')[0]}`,
@@ -177,7 +177,7 @@ export default async (req: Request, context: Context) => {
               }
 
               if (hasCover && result.imageUrls?.cover) {
-                await createCardAsset({
+                await upsertCardAsset({
                   card_id: card.id,
                   asset_type: 'cover',
                   s3_key: `${uuid}/cover.${(contactData.images!.cover!.ext || 'jpg').split(';')[0]}`,
@@ -186,27 +186,35 @@ export default async (req: Request, context: Context) => {
                 });
               }
 
-              // Always update HTML and VCF assets
-              await createCardAsset({
-                card_id: card.id,
-                asset_type: 'html',
-                s3_key: `${uuid}/index.html`,
-                s3_url: result.urls.html,
-                mime_type: 'text/html'
-              });
-
-              await createCardAsset({
-                card_id: card.id,
-                asset_type: 'vcf',
-                s3_key: `${uuid}/contact.vcf`,
-                s3_url: result.urls.vcard,
-                mime_type: 'text/vcard'
-              });
             }
+
+            // Always update HTML and VCF assets since contact data changed
+            await upsertCardAsset({
+              card_id: card.id,
+              asset_type: 'html',
+              s3_key: `${uuid}/index.html`,
+              s3_url: result.urls.html,
+              mime_type: 'text/html'
+            });
+
+            await upsertCardAsset({
+              card_id: card.id,
+              asset_type: 'vcf',
+              s3_key: `${uuid}/contact.vcf`,
+              s3_url: result.urls.vcard,
+              mime_type: 'text/vcard'
+            });
 
             console.log('Database record updated successfully for card:', card.id);
           } else {
             console.warn('Card not found in database for UUID:', uuid);
+            return new Response(JSON.stringify({ 
+              error: 'Contact card not found in database',
+              details: `Card with UUID ${uuid} does not exist`
+            }), {
+              status: 404,
+              headers: { 'Content-Type': 'application/json' },
+            });
           }
         } catch (dbError) {
           console.error('Database update failed:', dbError);
@@ -309,26 +317,35 @@ async function updateContactCardInS3(bucketName: string, bucketUrl: string, uuid
     if (contactData.images) {
       const { logo, photo, cover } = contactData.images;
       
-      // Upload new images if they have blob data
-      if (logo?.blob) {
+      // Upload new images if they have base64 blob data
+      if (logo?.blob && logo.blob.startsWith('data:')) {
         const logoKey = `${uuid}/logo.${(logo.ext || 'jpg').split(';')[0]}`;
         const logoBuffer = Buffer.from(logo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, logoKey, logoBuffer, logo.mime || 'image/jpeg');
         imageUrls.logo = `${bucketUrl}/${logoKey}`;
+      } else if (logo?.blob && (logo.blob.startsWith('http://') || logo.blob.startsWith('https://'))) {
+        // Keep existing S3 URL
+        imageUrls.logo = logo.blob;
       }
       
-      if (photo?.blob) {
+      if (photo?.blob && photo.blob.startsWith('data:')) {
         const photoKey = `${uuid}/photo.${(photo.ext || 'jpg').split(';')[0]}`;
         const photoBuffer = Buffer.from(photo.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, photoKey, photoBuffer, photo.mime || 'image/jpeg');
         imageUrls.photo = `${bucketUrl}/${photoKey}`;
+      } else if (photo?.blob && (photo.blob.startsWith('http://') || photo.blob.startsWith('https://'))) {
+        // Keep existing S3 URL
+        imageUrls.photo = photo.blob;
       }
       
-      if (cover?.blob) {
+      if (cover?.blob && cover.blob.startsWith('data:')) {
         const coverKey = `${uuid}/cover.${(cover.ext || 'jpg').split(';')[0]}`;
         const coverBuffer = Buffer.from(cover.blob.split(',')[1], 'base64');
         await uploadToS3(bucketName, coverKey, coverBuffer, cover.mime || 'image/jpeg');
         imageUrls.cover = `${bucketUrl}/${coverKey}`;
+      } else if (cover?.blob && (cover.blob.startsWith('http://') || cover.blob.startsWith('https://'))) {
+        // Keep existing S3 URL
+        imageUrls.cover = cover.blob;
       }
     }
 
@@ -367,6 +384,13 @@ async function uploadToS3(bucket: string, key: string, body: string | Buffer, co
 function generateContactCardHTML(data: ContactCardData, baseUrl?: string): string {
   const { images } = data;
   
+  // Helper function to get image URL from either url or blob property
+  const getImageUrl = (image: { url?: string; blob?: string } | undefined) => {
+    if (!image) return null;
+    // Prefer url if available, otherwise use blob (for existing S3 images)
+    return image.url || image.blob;
+  };
+  
   // Generate CSS for mobile-first design
   const css = `
     <style>
@@ -400,7 +424,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         position: relative;
         background-size: cover;
         background-position: center;
-        ${images?.cover?.url ? `background-image: url('${images.cover.url}');` : ''}
+        ${getImageUrl(images?.cover) ? `background-image: url('${getImageUrl(images?.cover)}');` : ''}
       }
       
       .logo {
@@ -753,8 +777,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
   <meta property="og:description" content="${description}">
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="Smart Contact Card">
-  ${images?.photo?.url ? `<meta property="og:image" content="${images.photo.url}">` : ''}
-  ${images?.photo?.url ? `<meta property="og:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta property="og:image" content="${getImageUrl(images?.photo)}">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta property="og:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
   ${baseUrl ? `<meta property="og:url" content="${baseUrl}/index.html">` : ''}
   ${data.name ? `<meta property="profile:first_name" content="${data.name.split(' ')[0]}">` : ''}
   ${data.name && data.name.split(' ').length > 1 ? `<meta property="profile:last_name" content="${data.name.split(' ').slice(1).join(' ')}">` : ''}
@@ -763,8 +787,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="${data.name || 'Contact Card'}">
   <meta name="twitter:description" content="${description}">
-  ${images?.photo?.url ? `<meta name="twitter:image" content="${images.photo.url}">` : ''}
-  ${images?.photo?.url ? `<meta name="twitter:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta name="twitter:image" content="${getImageUrl(images?.photo)}">` : ''}
+  ${getImageUrl(images?.photo) ? `<meta name="twitter:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}
   
   <title>${data.name || 'Contact Card'}</title>
   
@@ -782,7 +806,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       "name": "${data.company}"
     },` : ''}
     ${data.title ? `"jobTitle": "${data.title}",` : ''}
-    ${images?.photo?.url ? `"image": "${images.photo.url}",` : ''}
+    ${getImageUrl(images?.photo) ? `"image": "${getImageUrl(images?.photo)}",` : ''}
     "sameAs": [
       ${(() => {
         const urls: string[] = [];
@@ -810,19 +834,19 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
 <body>
   <div class="contact-card">
     <!-- Header Section -->
-    <div class="header" ${images?.cover?.url && data.logoOrHeader ? `style="background-image: url('${images.cover.url}'); background-size: cover; background-position: center;"` : ''}>
-      ${images?.logo?.url && !data.logoOrHeader ? `
+    <div class="header" ${getImageUrl(images?.cover) && data.logoOrHeader ? `style="background-image: url('${getImageUrl(images?.cover)}'); background-size: cover; background-position: center;"` : ''}>
+      ${getImageUrl(images?.logo) && !data.logoOrHeader ? `
         <div class="logo">
-          <img src="${images.logo.url}" alt="Logo">
+          <img src="${getImageUrl(images?.logo)}" alt="Logo">
         </div>
       ` : ''}
     </div>
 
     <!-- Profile Section -->
     <div class="profile">
-      ${images?.photo?.url ? `
+      ${getImageUrl(images?.photo) ? `
         <div class="photo">
-          <img src="${images.photo.url}" alt="${data.name || 'Profile Photo'}">
+          <img src="${getImageUrl(images?.photo)}" alt="${data.name || 'Profile Photo'}">
         </div>
       ` : `
         <div class="photo"></div>

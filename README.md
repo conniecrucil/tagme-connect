@@ -154,10 +154,15 @@ Make sure to deploy the output of `npm run build`
 The application uses the following main tables:
 
 - **orders**: Stores customer orders from Stripe checkout
-- **contact_cards**: Links contact cards to orders with S3 URLs
-- **admin_users**: Admin user accounts (prepared for future OTP implementation)
+- **customers**: Customer information including Stripe integration and shipping details
+- **cards**: Contact cards with all form data and generation status tracking
+  - Supports two card types: `basic` (website redirect only) and `core` (full contact information)
+  - Includes website_url for basic card redirects
+  - Includes design_file_url for storing the design file location
+- **card_assets**: Individual assets (images, HTML, VCF) associated with each card
+- **admin_users_auth0**: Admin user accounts for Auth0 authentication
 
-See `supabase/migrations/001_initial_schema.sql` for the complete schema definition.
+See `supabase/migrations/000_complete_schema.sql` for the complete schema definition.
 
 ## Troubleshooting
 

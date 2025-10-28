@@ -39,9 +39,6 @@ export function getSupabaseClient(): SupabaseClient {
     );
   }
 
-  console.log('Creating Supabase client with URL:', supabaseUrl);
-  console.log('Service key length:', supabaseServiceKey?.length || 0);
-  
   supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
@@ -69,6 +66,7 @@ export function getSupabaseClient(): SupabaseClient {
 // Legacy types (keeping for backward compatibility)
 export interface Order {
   id: string;
+  customer_id?: string | null;
   stripe_session_id: string;
   customer_info: {
     name?: string;
@@ -83,18 +81,13 @@ export interface Order {
     [key: string]: any;
   }>;
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  shipped: boolean;
+  fulfilled: boolean;
+  stripe_receipt_url?: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface ContactCard {
-  id: string;
-  uuid: string;
-  order_id: string;
-  card_data?: Record<string, any>;
-  s3_url?: string;
-  created_at: string;
-}
 
 export interface AdminUser {
   id: string;
@@ -166,7 +159,11 @@ export interface GenerationStatus {
 export interface Card {
   id: string;
   customer_id?: string;
+  order_id?: string;
   uuid: string;
+  card_type: 'basic' | 'core';
+  website_url?: string;
+  design_file_url?: string;
   card_data: CardData;
   primary_actions: Action[];
   secondary_actions: Action[];
@@ -233,6 +230,33 @@ export async function getOrderByStripeSession(stripeSessionId: string) {
   return data as Order | null;
 }
 
+export async function getOrderById(orderId: string) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, customers(shipping_address)')
+    .eq('id', orderId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
+  
+  if (!data) return null;
+  
+  // If customer has shipping_address, add it to customer_info
+  const order = data as any;
+  if (order.customers && order.customers.shipping_address) {
+    order.customer_info = {
+      ...order.customer_info,
+      shipping_address: order.customers.shipping_address
+    };
+  }
+  
+  // Remove the joined customers object
+  delete order.customers;
+  
+  return order as Order;
+}
+
 export async function updateOrderStatus(orderId: string, status: Order['status']) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
@@ -246,29 +270,63 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   return data as Order;
 }
 
-export async function createContactCard(cardData: Omit<ContactCard, 'id' | 'created_at'>) {
+export async function updateOrderFulfillment(orderId: string, updates: { shipped?: boolean; fulfilled?: boolean }) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('contact_cards')
-    .insert([cardData])
+    .from('orders')
+    .update(updates)
+    .eq('id', orderId)
     .select()
     .single();
 
   if (error) throw error;
-  return data as ContactCard;
+  return data as Order;
 }
 
-export async function getContactCardByUuid(uuid: string) {
+export async function listOrders(options: {
+  limit?: number;
+  offset?: number;
+  status?: Order['status'];
+  shipped?: boolean;
+  fulfilled?: boolean;
+} = {}) {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('contact_cards')
-    .select('*')
-    .eq('uuid', uuid)
-    .single();
+  const { limit = 50, offset = 0, status, shipped, fulfilled } = options;
 
-  if (error && error.code !== 'PGRST116') throw error;
-  return data as ContactCard | null;
+  let query = supabase
+    .from('orders')
+    .select('*', { count: 'exact' });
+
+  // Apply filters
+  if (status) {
+    query = query.eq('status', status);
+  }
+  
+  if (shipped !== undefined) {
+    query = query.eq('shipped', shipped);
+  }
+  
+  if (fulfilled !== undefined) {
+    query = query.eq('fulfilled', fulfilled);
+  }
+
+  // Apply pagination and ordering
+  query = query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  const { data, error, count } = await query;
+
+  if (error) throw error;
+
+  return {
+    orders: data as Order[],
+    total: count || 0,
+    page: Math.floor(offset / limit) + 1,
+    limit
+  };
 }
+
 
 // Customer CRUD operations
 export async function createCustomer(customerData: Omit<Customer, 'id' | 'created_at' | 'updated_at'>) {
@@ -375,6 +433,18 @@ export async function getCardByUuid(uuid: string) {
   return data as CardWithCustomer | null;
 }
 
+export async function getCardsByOrderId(orderId: string) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('cards')
+    .select('*')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data as Card[];
+}
+
 export async function updateCard(id: string, updates: Partial<Omit<Card, 'id' | 'created_at' | 'updated_at'>>) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
@@ -395,9 +465,10 @@ export async function listCards(options: {
   status?: 'success' | 'error' | 'pending';
   date_from?: string;
   date_to?: string;
+  card_type?: 'basic' | 'core';
 } = {}) {
   const supabase = getSupabaseClient();
-  const { limit = 20, offset = 0, customer_email, status, date_from, date_to } = options;
+  const { limit = 20, offset = 0, customer_email, status, date_from, date_to, card_type } = options;
 
   let query = supabase
     .from('cards')
@@ -413,6 +484,10 @@ export async function listCards(options: {
   
   if (status) {
     query = query.eq('generation_status->status', status);
+  }
+  
+  if (card_type) {
+    query = query.eq('card_type', card_type);
   }
   
   if (date_from) {
@@ -473,6 +548,50 @@ export async function deleteCardAssets(cardId: string) {
     .eq('card_id', cardId);
 
   if (error) throw error;
+}
+
+export async function getCardAssetByType(cardId: string, assetType: CardAsset['asset_type']) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('card_assets')
+    .select('*')
+    .eq('card_id', cardId)
+    .eq('asset_type', assetType)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as CardAsset | null;
+}
+
+export async function updateCardAsset(id: string, updates: Partial<Omit<CardAsset, 'id' | 'created_at'>>) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('card_assets')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as CardAsset;
+}
+
+export async function upsertCardAsset(assetData: Omit<CardAsset, 'id' | 'created_at'>) {
+  // First, try to find an existing asset with the same card_id and asset_type
+  const existingAsset = await getCardAssetByType(assetData.card_id, assetData.asset_type);
+  
+  if (existingAsset) {
+    // Update existing asset
+    return await updateCardAsset(existingAsset.id, {
+      s3_key: assetData.s3_key,
+      s3_url: assetData.s3_url,
+      mime_type: assetData.mime_type,
+      file_size: assetData.file_size,
+    });
+  } else {
+    // Create new asset
+    return await createCardAsset(assetData);
+  }
 }
 
 

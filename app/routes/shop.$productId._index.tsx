@@ -3,6 +3,8 @@ import { useConfiguration } from "~/providers/configuration-provider";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import { addToCart } from "~/lib/cartUtils";
+import { configurationDB } from "~/lib/indexedDB";
 
 export function meta({ params }: { params: { productId: string } }) {
   const productName = params.productId === 'tag-basic-card' ? 'TAG Basic Card' : 'TAG Core Card';
@@ -74,36 +76,39 @@ export default function ProductDetail() {
 
   // Check if there's existing configuration
   useEffect(() => {
-    if (productId && productId !== 'tag-basic-card') {
-      // For core card, check for configuration
-      const storageKey = `configuration-${productId}`;
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        try {
-          const { configuration, timestamp } = JSON.parse(stored);
-          
-          // Check if configuration has expired (1 hour = 3600000 ms)
-          const oneHour = 60 * 60 * 1000;
-          const isExpired = timestamp && (Date.now() - timestamp) > oneHour;
-          
-          if (isExpired) {
-            console.log('Configuration expired, clearing stored data');
-            localStorage.removeItem(storageKey);
-            setHasConfiguration(false);
-            return;
+    const checkConfiguration = async () => {
+      if (productId && productId !== 'tag-basic-card') {
+        // For core card, check for configuration
+        const stored = await configurationDB.getConfiguration(productId);
+        if (stored) {
+          try {
+            const { configuration, timestamp } = stored;
+            
+            // Check if configuration has expired (1 hour = 3600000 ms)
+            const oneHour = 60 * 60 * 1000;
+            const isExpired = timestamp && (Date.now() - timestamp) > oneHour;
+            
+            if (isExpired) {
+              console.log('Configuration expired, clearing stored data');
+              await configurationDB.removeConfiguration(productId);
+              setHasConfiguration(false);
+              return;
+            }
+            
+            // Check if configuration has meaningful data
+            const hasData = configuration.fname || configuration.lname || configuration.email || configuration.phone;
+            setHasConfiguration(hasData);
+          } catch (error) {
+            console.error('Error parsing stored configuration:', error);
           }
-          
-          // Check if configuration has meaningful data
-          const hasData = configuration.fname || configuration.lname || configuration.email || configuration.phone;
-          setHasConfiguration(hasData);
-        } catch (error) {
-          console.error('Error parsing stored configuration:', error);
         }
       }
-    }
+    };
+
+    checkConfiguration();
   }, [productId]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!productId) return;
 
     if (productId === 'tag-basic-card') {
@@ -115,7 +120,7 @@ export default function ProductDetail() {
       
       const cartItem = {
         productId,
-        productType: 'basic',
+        productType: 'basic' as const,
         quantity: quantity,
         url: url.trim(),
         configuration: {
@@ -127,20 +132,22 @@ export default function ProductDetail() {
         id: `basic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
       };
 
-      const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
-      existingCart.push(cartItem);
-      localStorage.setItem('cart', JSON.stringify(existingCart));
+      try {
+        await addToCart(cartItem);
+        
+        // Dispatch custom event to update header cart count
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
 
-      // Dispatch custom event to update header cart count
-      window.dispatchEvent(new CustomEvent('cartUpdated'));
-
-      // Show success message and navigate to cart
-      toast.success('Item added to cart!');
-      navigate('/cart');
+        // Show success message and navigate to cart
+        toast.success('Item added to cart!');
+        navigate('/cart');
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        toast.error('Failed to add item to cart. Please try again.');
+      }
     } else {
       // For core card, check for configuration
-      const storageKey = `configuration-${productId}`;
-      const stored = localStorage.getItem(storageKey);
+      const stored = await configurationDB.getConfiguration(productId);
 
       if (!stored) {
         // No configuration found, redirect to configure
@@ -149,7 +156,7 @@ export default function ProductDetail() {
       }
 
       try {
-        const { configuration, timestamp } = JSON.parse(stored);
+        const { configuration, timestamp } = stored;
         
         // Check if configuration has expired (1 hour = 3600000 ms)
         const oneHour = 60 * 60 * 1000;
@@ -157,7 +164,7 @@ export default function ProductDetail() {
         
         if (isExpired) {
           console.log('Configuration expired, redirecting to configure');
-          localStorage.removeItem(storageKey);
+          await configurationDB.removeConfiguration(productId);
           navigate('configure');
           return;
         }
@@ -168,26 +175,29 @@ export default function ProductDetail() {
 
         const cartItem = {
           productId,
-          productType: 'core',
+          productType: 'core' as const,
           quantity: quantity,
           configuration: updatedConfiguration,
           price: 47,
           id: `core-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID for each configuration
         };
 
-        const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
-        existingCart.push(cartItem);
-        localStorage.setItem('cart', JSON.stringify(existingCart));
+        try {
+          await addToCart(cartItem);
+          
+          // Clear the cached configuration since it's now in the cart
+          localStorage.removeItem(storageKey);
 
-        // Clear the cached configuration since it's now in the cart
-        localStorage.removeItem(storageKey);
+          // Dispatch custom event to update header cart count
+          window.dispatchEvent(new CustomEvent('cartUpdated'));
 
-        // Dispatch custom event to update header cart count
-        window.dispatchEvent(new CustomEvent('cartUpdated'));
-
-        // Show success message and navigate to cart
-        toast.success('Item added to cart!');
-        navigate('/cart');
+          // Show success message and navigate to cart
+          toast.success('Item added to cart!');
+          navigate('/cart');
+        } catch (error) {
+          console.error('Error adding to cart:', error);
+          toast.error('Failed to add item to cart. Please try again.');
+        }
       } catch (error) {
         console.error('Error processing add to cart:', error);
         navigate('configure');

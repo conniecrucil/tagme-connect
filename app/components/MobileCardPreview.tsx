@@ -161,7 +161,6 @@ export default function MobileCardPreview({
         {/* Custom Message */}
         {vCardData.desc && (
           <div className="py-3 border-b border-gray-200">
-            <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>NOTES</div>
             <div className="text-lg text-black">{vCardData.desc}</div>
           </div>
         )}

@@ -4,16 +4,8 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { QuantityInput } from "~/components/ui/quantity-input";
-
-interface CartItem {
-  productId: string;
-  productType: 'basic' | 'core';
-  quantity: number;
-  configuration?: any;
-  url?: string;
-  price: number;
-  id: string; // Unique identifier for each cart item configuration
-}
+import { getCart, updateCartItemQuantity, removeCartItem, type CartItem } from "~/lib/cartUtils";
+import { configurationDB } from "~/lib/indexedDB";
 
 export function meta() {
   return [
@@ -28,37 +20,58 @@ export default function Cart() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCart(cartData);
-    setIsLoading(false);
+    const loadCart = async () => {
+      try {
+        const cartData = await getCart();
+        setCart(cartData);
+      } catch (error) {
+        console.error('Error loading cart:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadCart();
   }, []);
 
-  const updateQuantity = (index: number, newQuantity: number) => {
+  const updateQuantity = async (index: number, newQuantity: number) => {
     if (newQuantity < 1) return;
     
-    const updatedCart = [...cart];
-    updatedCart[index].quantity = newQuantity;
-    setCart(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
+    const item = cart[index];
+    if (!item) return;
     
-    // Dispatch custom event to update header cart count
-    window.dispatchEvent(new CustomEvent('cartUpdated'));
+    try {
+      await updateCartItemQuantity(item.id, newQuantity);
+      
+      const updatedCart = [...cart];
+      updatedCart[index].quantity = newQuantity;
+      setCart(updatedCart);
+      
+      // Dispatch custom event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+    }
   };
 
-  const removeItem = (index: number) => {
+  const removeItem = async (index: number) => {
     const itemToRemove = cart[index];
-    const updatedCart = cart.filter((_, i) => i !== index);
-    setCart(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
+    if (!itemToRemove) return;
     
-    // Clear the cached configuration for this item since it's being removed from cart
-    if (itemToRemove) {
-      const storageKey = `configuration-${itemToRemove.productId}`;
-      localStorage.removeItem(storageKey);
+    try {
+      await removeCartItem(itemToRemove.id);
+      
+      const updatedCart = cart.filter((_, i) => i !== index);
+      setCart(updatedCart);
+      
+      // Clear the cached configuration for this item since it's being removed from cart
+      await configurationDB.removeConfiguration(itemToRemove.productId);
+      
+      // Dispatch custom event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (error) {
+      console.error('Error removing cart item:', error);
     }
-    
-    // Dispatch custom event to update header cart count
-    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const getTotalPrice = () => {

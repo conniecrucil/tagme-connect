@@ -81,19 +81,6 @@ export default async (req: Request, context: Context) => {
       }
     }
 
-    // Store cart data in Supabase orders table
-    try {
-      await createOrder({
-        stripe_session_id: '', // Will be updated after Stripe session creation
-        customer_info: customerInfo || {},
-        cart_data: cart,
-        status: 'pending'
-      });
-    } catch (orderError) {
-      console.error('Failed to create order record:', orderError);
-      // Continue with Stripe session creation
-    }
-    
     // Remove temporary file-based cart storage (legacy code)
     const fs = await import('fs/promises');
     const path = await import('path');
@@ -135,6 +122,22 @@ export default async (req: Request, context: Context) => {
         allowed_countries: ['US', 'CA', 'GB', 'AU'],
       },
     });
+
+    // Create order in Supabase after getting Stripe session ID
+    try {
+      await createOrder({
+        customer_id: customer?.id || null,
+        stripe_session_id: session.id,
+        customer_info: customerInfo || {},
+        cart_data: cart,
+        status: 'pending',
+        shipped: false,
+        fulfilled: false,
+      });
+    } catch (orderError) {
+      console.error('Failed to create order record:', orderError);
+      // Continue with session creation even if order creation fails
+    }
 
       return new Response(JSON.stringify({
         sessionId: session.id,
