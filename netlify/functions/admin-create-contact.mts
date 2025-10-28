@@ -6,6 +6,56 @@ import { upsertCustomer, type Customer } from './utils/supabase';
 // import { inlineEmailCSS } from './utils/email-inline-css.js';
 // import { generateAdminContactCreationEmail } from './utils/email-templates.mjs';
 
+interface ContactCardData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  company?: string;
+  title?: string;
+  website?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  postal?: string;
+  country?: string;
+  socialMedia?: Record<string, string>;
+  customMessage?: string;
+  primaryActions?: Array<{ name: string; value: string; color?: string }>;
+  secondaryActions?: Array<{ name: string; value: string; color?: string }>;
+  logoOrHeader?: boolean;
+  cardType?: 'basic' | 'core';
+  websiteUrl?: string;
+  designFileUrl?: string;
+  fname?: string;
+  lname?: string;
+  biz?: string;
+  desc?: string;
+  photo?: string;
+  pronouns?: string;
+  prefix?: string;
+  images?: {
+    logo?: { url?: string; blob?: string; ext?: string; mime?: string };
+    photo?: { url?: string; blob?: string; ext?: string; mime?: string };
+    cover?: { url?: string; blob?: string; ext?: string; mime?: string };
+  };
+}
+
+interface ErrorResponseData {
+  error: string;
+  details: string;
+  partialSuccess: boolean;
+  succeeded: {
+    customerCreated: boolean;
+    customerId: string | null;
+  };
+  failed: {
+    s3Upload: boolean;
+    cardCreation: boolean;
+  };
+  troubleshooting?: string;
+}
+
 // Helper function to get base URL from request headers
 function getBaseUrlFromRequest(req: Request): string {
   // Try to get the origin from request headers first
@@ -100,10 +150,29 @@ export default async (req: Request, context: Context) => {
 
       } catch (s3Error) {
         console.error('S3 upload error:', s3Error);
-        return new Response(JSON.stringify({ 
+        
+        // Provide detailed context about what succeeded and what failed
+        const errorMessage = s3Error instanceof Error ? s3Error.message : 'Unknown error';
+        const responseData: ErrorResponseData = {
           error: 'Failed to upload contact card to S3',
-          details: s3Error instanceof Error ? s3Error.message : 'Unknown error'
-        }), {
+          details: errorMessage,
+          partialSuccess: true,
+          succeeded: {
+            customerCreated: !!customer,
+            customerId: customer?.id || null
+          },
+          failed: {
+            s3Upload: true,
+            cardCreation: true
+          }
+        };
+
+        // Try to extract more details from the error if it's from upload-to-s3 function
+        if (typeof errorMessage === 'string' && errorMessage.includes('upload-to-s3')) {
+          responseData.troubleshooting = 'The contact card HTML and files failed to upload to storage. The customer record was created successfully. You may need to retry this operation or check the storage configuration.';
+        }
+
+        return new Response(JSON.stringify(responseData), {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
         });
@@ -131,7 +200,7 @@ export default async (req: Request, context: Context) => {
   }
 };
 
-async function uploadContactCardToS3(sessionId: string, configuration: any, req: Request) {
+async function uploadContactCardToS3(sessionId: string, configuration: ContactCardData, req: Request) {
   try {
     const baseUrl = getBaseUrlFromRequest(req);
     const response = await fetch(`${baseUrl}/.netlify/functions/upload-to-s3`, {
@@ -148,7 +217,20 @@ async function uploadContactCardToS3(sessionId: string, configuration: any, req:
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`S3 upload failed: ${response.status} ${response.statusText}`, errorText);
-      throw new Error(`S3 upload failed: ${response.statusText}`);
+      
+      // Try to parse error details from the response
+      let errorDetails = response.statusText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error && errorJson.details) {
+          errorDetails = `${errorJson.error}: ${errorJson.details}`;
+        }
+      } catch {
+        // If parsing fails, use the raw error text
+        errorDetails = errorText || response.statusText;
+      }
+      
+      throw new Error(`S3 upload failed: ${errorDetails}`);
     }
 
     const result = await response.json();

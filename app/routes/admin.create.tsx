@@ -11,6 +11,19 @@ import { ConfigurationProvider, primaryActions as availablePrimaryActions, secon
 import SortableActionsList from "~/components/SortableActionsList";
 import MobileCardPreview from "~/components/MobileCardPreview";
 
+interface ApiResponse {
+  success?: boolean;
+  error?: string;
+  details?: string;
+  partialSuccess?: boolean;
+  succeeded?: {
+    customerCreated?: boolean;
+    customerId?: string | null;
+  };
+  troubleshooting?: string;
+  message?: string;
+}
+
 export function meta() {
   return [
     { title: "Create Contact - Admin - TagMe Connections" },
@@ -195,7 +208,7 @@ function AdminCreateForm() {
       });
 
       // Parse response and handle errors more robustly
-      let result: any;
+      let result: ApiResponse;
       const contentType = response.headers.get('content-type');
       
       if (!contentType || !contentType.includes('application/json')) {
@@ -209,8 +222,24 @@ function AdminCreateForm() {
       }
 
       if (!response.ok) {
+        // Check if this is a partial success scenario (customer created but S3 upload failed)
+        if (result?.partialSuccess && result?.succeeded?.customerCreated) {
+          const errorDetails = result?.details || 'Unknown error';
+          const troubleshooting = result?.troubleshooting || '';
+          const customerId = result?.succeeded?.customerId;
+          
+          throw new Error(
+            `Partial Success: Customer record created (ID: ${customerId || 'N/A'}), but S3 upload failed.\n\n` +
+            `Error: ${errorDetails}\n\n` +
+            `${troubleshooting}\n\n` +
+            `Please retry the operation or contact support if the issue persists.`
+          );
+        }
+        
+        // Regular error case
         const errorMessage = result?.error || result?.message || `Failed to create contact (${response.status})`;
-        throw new Error(errorMessage);
+        const details = result?.details ? `: ${result.details}` : '';
+        throw new Error(`${errorMessage}${details}`);
       }
 
       // Navigate to success page with creation details
@@ -234,12 +263,12 @@ function AdminCreateForm() {
   };
 
   // Generate vCard content
-  const generateVCardContent = (config: any): string => {
+  const generateVCardContent = (config: Record<string, unknown>): string => {
     const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
     
     // Name
     if (config.name) {
-      const nameParts = config.name.split(' ');
+      const nameParts = String(config.name).split(' ');
       if (nameParts.length >= 2) {
         lines.push(`FN:${config.name}`);
         lines.push(`N:${nameParts[nameParts.length - 1]};${nameParts.slice(0, -1).join(' ')};;;`);
