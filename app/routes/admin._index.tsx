@@ -104,84 +104,84 @@ export default function AdminIndex() {
       <div className="mt-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Create Contact</CardTitle>
               <CardDescription>
                 Create contact cards without purchasing. All cards will be uploaded to S3 and admin will be notified.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button asChild className="w-full">
                 <Link to="/admin/create">Create New Contact</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>View All Cards</CardTitle>
               <CardDescription>
                 Browse, search, and manage all contact cards created through the system. Filter by customer, status, and date.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button asChild className="w-full">
                 <Link to="/admin/cards">View All Cards</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>View Orders</CardTitle>
               <CardDescription>
                 Manage customer orders, track fulfillment, and view purchase history.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button asChild className="w-full">
                 <Link to="/admin/orders">View Orders</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>System Status</CardTitle>
               <CardDescription>
                 Check system configuration and environment variables status. Verify all services are properly configured.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button asChild className="w-full">
                 <Link to="/admin/system-status">Check System Status</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Email Templates</CardTitle>
               <CardDescription>
                 Preview and manage email templates used in the system.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button asChild className="w-full">
                 <Link to="/admin/email-templates">View Templates</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Card Preview</CardTitle>
               <CardDescription>
                 Preview how contact cards will look with dummy data. Test different layouts and configurations.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button asChild className="w-full">
                 <Link to="/admin/preview">Preview Cards</Link>
               </Button>
