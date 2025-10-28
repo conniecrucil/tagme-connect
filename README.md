@@ -5,6 +5,7 @@ A modern, production-ready template for building full-stack React applications u
 ## Features
 
 - 🚀 Server-side rendering with React Router
+- 
 - ⚡️ Hot Module Replacement (HMR)
 - 🗄️ PostgreSQL database with Supabase
 - 📦 Asset bundling and optimization
