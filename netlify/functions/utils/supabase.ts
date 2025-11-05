@@ -21,21 +21,30 @@ let supabaseClient: SupabaseClient | null = null;
  * Get or create a Supabase client instance
  * Uses singleton pattern to reuse the client across function invocations
  * 
- * Requires environment variables:
- * - PROJECT_URL: Your Supabase project URL (e.g., https://xxxxx.supabase.co)
- * - SUPABASE_KEY: Service role key for server-side operations
+ * Supports both local development and SaaS Supabase:
+ * - SaaS: PROJECT_URL and SUPABASE_KEY (for production)
+ * - Local: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (for local development)
  */
 export function getSupabaseClient(): SupabaseClient {
   if (supabaseClient) {
     return supabaseClient;
   }
 
-  const supabaseUrl = process.env.PROJECT_URL;
-  const supabaseServiceKey = process.env.SUPABASE_KEY;
+  // Try SaaS variables first (PROJECT_URL, SUPABASE_KEY)
+  let supabaseUrl = process.env.PROJECT_URL;
+  let supabaseServiceKey = process.env.SUPABASE_KEY;
+
+  // Fallback to local development variables (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  if (!supabaseUrl || !supabaseServiceKey) {
+    supabaseUrl = process.env.SUPABASE_URL;
+    supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  }
 
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error(
-      'Missing Supabase environment variables. Please set PROJECT_URL and SUPABASE_KEY.'
+      'Missing Supabase environment variables. Please set either:\n' +
+      '- For SaaS: PROJECT_URL and SUPABASE_KEY\n' +
+      '- For local dev: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY'
     );
   }
 
@@ -54,7 +63,7 @@ export function getSupabaseClient(): SupabaseClient {
     },
   });
   
-  console.log('Supabase client created successfully');
+  console.log(`Supabase client created successfully for URL: ${supabaseUrl}`);
 
   return supabaseClient;
 }

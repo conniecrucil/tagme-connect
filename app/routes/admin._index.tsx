@@ -38,12 +38,20 @@ interface DashboardMetrics {
 }
 
 export async function clientLoader() {
-  const response = await fetch('/.netlify/functions/get-dashboard-metrics');
-  if (!response.ok) {
-    throw new Error('Failed to fetch dashboard metrics');
+  try {
+    const response = await fetch('/.netlify/functions/get-dashboard-metrics');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}: Failed to fetch dashboard metrics`;
+      console.error('Dashboard metrics fetch error:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    const data = await response.json();
+    return data as DashboardMetrics;
+  } catch (error) {
+    console.error('Error in clientLoader:', error);
+    throw error;
   }
-  const data = await response.json();
-  return data as DashboardMetrics;
 }
 
 

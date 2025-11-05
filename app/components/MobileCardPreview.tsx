@@ -69,8 +69,8 @@ export default function MobileCardPreview({
         <div className="relative inline-block mb-3">
           {images.photo.url ? (
             <div 
-              className="w-28 h-28 rounded-full mx-auto border-2 shadow-md overflow-hidden"
-              style={{ borderColor: '#a2e4d6' }}
+              className="w-[150px] h-[150px] rounded-full mx-auto border-2 shadow-md overflow-hidden"
+              style={{ borderColor: '#16a34a' }}
             >
               <img
                 src={images.photo.url}
@@ -82,8 +82,8 @@ export default function MobileCardPreview({
             <img
               src={logoImg}
               alt="Profile"
-              className="w-28 h-28 rounded-full mx-auto border-2 shadow-md object-cover"
-              style={{ borderColor: '#a2e4d6' }}
+              className="w-[150px] h-[150px] rounded-full mx-auto border-2 shadow-md object-cover"
+              style={{ borderColor: '#16a34a' }}
             />
           )}
         </div>
@@ -98,7 +98,7 @@ export default function MobileCardPreview({
         )}
         
         {vCardData.biz && (
-          <p className="text-base mb-2" style={{ color: '#a2e4d6' }}>{vCardData.biz}</p>
+          <p className="text-base mb-2" style={{ color: '#16a34a' }}>{vCardData.biz}</p>
         )}
 
         {vCardData.pronouns && (
@@ -112,7 +112,7 @@ export default function MobileCardPreview({
         {vCardData.email && (
           <a href={`mailto:${vCardData.email}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>EMAIL</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>EMAIL</div>
               <div className="text-lg text-black">{vCardData.email}</div>
             </div>
           </a>
@@ -122,7 +122,7 @@ export default function MobileCardPreview({
         {vCardData.phone && (
           <a href={`tel:${vCardData.phone}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>PHONE</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>PHONE</div>
               <div className="text-lg text-black">{vCardData.phone}</div>
             </div>
           </a>
@@ -132,7 +132,7 @@ export default function MobileCardPreview({
         {vCardData.mobile && (
           <a href={`tel:${vCardData.mobile}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>MOBILE</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>MOBILE</div>
               <div className="text-lg text-black">{vCardData.mobile}</div>
             </div>
           </a>
@@ -142,7 +142,7 @@ export default function MobileCardPreview({
         {vCardData.website && (
           <a href={vCardData.website} target="_blank" rel="noopener noreferrer" className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>WEBSITE</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>WEBSITE</div>
               <div className="text-lg text-black">{vCardData.website}</div>
             </div>
           </a>
@@ -152,7 +152,7 @@ export default function MobileCardPreview({
         {fullAddress && (
           <div className="flex items-center py-3 border-b border-gray-200">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#a2e4d6' }}>ADDRESS</div>
+              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>ADDRESS</div>
               <div className="text-lg text-black">{fullAddress}</div>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function MobileCardPreview({
       <div className={`px-3 ${activePrimaryActions.length > 0 || activeSecondaryActions.length > 0 ? 'pb-3' : 'pb-6'} mt-8`}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button type="button" className="w-3/4 mx-auto font-bold py-3 px-4 rounded transition-colors flex items-center justify-center text-gray-900 hover:text-white" style={{ backgroundColor: '#6ed097', color: '#222' }}>
+            <button type="button" className="w-3/4 mx-auto font-bold py-3 px-4 rounded transition-colors flex items-center justify-center text-white hover:text-white" style={{ backgroundColor: '#16a34a', color: '#fff' }}>
               Save Contact
             </button>
           </TooltipTrigger>

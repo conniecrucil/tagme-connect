@@ -657,8 +657,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       }
       
       .photo {
-        width: 64px;
-        height: 64px;
+        width: 150px;
+        height: 150px;
         border-radius: 50%;
         margin: 0 auto 12px;
         border: 2px solid #a2e4d6;
@@ -800,8 +800,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       .download-btn {
         margin: 32px auto 12px;
         padding: 12px;
-        background: #6ed097;
-        color: #222;
+        background: #16a34a;
+        color: #fff;
         border: none;
         border-radius: 8px;
         font-size: 16px;
@@ -813,7 +813,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       }
       
       .download-btn:hover {
-        background: #5dc087;
+        background: #15803d;
         color: white;
       }
       

@@ -32,6 +32,15 @@ export default async (req: Request, _context: Context) => {
       });
     }
 
+    // Validate environment variables before proceeding
+    if (!process.env.PROJECT_URL || !process.env.SUPABASE_KEY) {
+      throw new Error('Missing Supabase environment variables. Please set PROJECT_URL and SUPABASE_KEY.');
+    }
+
+    // Log the URL being used (without exposing the key)
+    const supabaseUrl = process.env.PROJECT_URL;
+    console.log(`Connecting to Supabase at: ${supabaseUrl}`);
+
     const supabase = getSupabaseClient();
 
     // Get card counts: purchased vs admin
@@ -128,9 +137,26 @@ export default async (req: Request, _context: Context) => {
     });
   } catch (error) {
     console.error('Error fetching dashboard metrics:', error);
+    
+    // Extract error message from various error types
+    let errorMessage = 'Unknown error';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (error && typeof error === 'object') {
+      // Handle Supabase errors which have message and details
+      const err = error as any;
+      errorMessage = err.message || err.details || err.hint || JSON.stringify(error);
+    } else {
+      errorMessage = String(error);
+    }
+    
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Error details:', { errorMessage, errorStack, rawError: error });
+    
     return new Response(JSON.stringify({ 
       error: 'Failed to fetch dashboard metrics',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: errorMessage,
+      stack: process.env.NETLIFY ? undefined : errorStack // Only include stack in dev
     }), {
       status: 500,
       headers: {

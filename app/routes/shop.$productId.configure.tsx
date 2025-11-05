@@ -885,7 +885,7 @@ export default function ConfigureProduct() {
                         /* Basic Card Preview - Simple Link Card */
                         <div className="bg-white text-black rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '400px', width: '100%' }}>
                           {/* Header Section */}
-                          <div className="w-full h-32 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                          <div className="w-full h-32 bg-gradient-to-br from-green-600 to-blue-100 flex items-center justify-center">
                             {images.logo.url ? (
                               <img
                                 src={images.logo.url}
