@@ -2,6 +2,8 @@
 
 A modern, production-ready template for building full-stack React applications using React Router with integrated Supabase database and Netlify Functions.
 
+
+
 ## Features
 
 - 🚀 Server-side rendering with React Router
