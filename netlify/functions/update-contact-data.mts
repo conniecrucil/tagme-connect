@@ -11,6 +11,7 @@ import {
   type Action,
   type GenerationStatus
 } from './utils/supabase';
+import { invalidateCloudFrontPaths } from './utils/cloudfront';
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -94,6 +95,18 @@ export default async (req: Request, context: Context) => {
         // Note: We rely on the database check below to verify the card exists,
         // since S3 ListObjects requires permissions that might not be available
         const result = await updateContactCardInS3(bucketName, bucketUrl, uuid, contactData);
+
+        try {
+          await invalidateCloudFrontPaths({
+            paths: [`/${uuid}/*`],
+            callerReference: `update-${uuid}-${Date.now()}`,
+          });
+        } catch (cloudfrontError) {
+          console.error('CloudFront invalidation failed after card update', {
+            uuid,
+            error: cloudfrontError instanceof Error ? cloudfrontError.message : cloudfrontError,
+          });
+        }
 
         // Update database record
         try {

@@ -24,6 +24,7 @@ This document outlines all the environment variables required for the Netlify PO
 - `APP_AWS_REGION` - AWS region for your S3 bucket (e.g., us-east-1)
 - `VITE_AWS_S3_BUCKET_NAME` - Name of your S3 bucket for storing contact cards (used for SDK operations)
 - `VITE_AWS_S3_BUCKET_URL` - Public URL base for accessing S3 bucket content (e.g., `https://cards.yourdomain.com` or CloudFront URL like `https://d1234567890.cloudfront.net`)
+- `AWS_CLOUDFRONT_DISTRIBUTION_ID` - CloudFront distribution ID used to invalidate cached card assets after updates
 
 
 
@@ -70,6 +71,7 @@ APP_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 APP_AWS_REGION=us-east-1
 VITE_AWS_S3_BUCKET_NAME=your-s3-bucket-name
 VITE_AWS_S3_BUCKET_URL=https://cards.yourdomain.com
+AWS_CLOUDFRONT_DISTRIBUTION_ID=E1234567890ABC
 
 # Admin Auth (Legacy - Deprecated)
 ADMIN_USER=admin
