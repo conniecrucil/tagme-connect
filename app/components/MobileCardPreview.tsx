@@ -112,7 +112,7 @@ export default function MobileCardPreview({
         {vCardData.email && (
           <a href={`mailto:${vCardData.email}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>EMAIL</div>
+              <div className="text-base font-semibold mb-1" style={{ color: '#16a34a' }}>EMAIL</div>
               <div className="text-lg text-black">{vCardData.email}</div>
             </div>
           </a>
@@ -122,7 +122,7 @@ export default function MobileCardPreview({
         {vCardData.phone && (
           <a href={`tel:${vCardData.phone}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>PHONE</div>
+              <div className="text-base font-semibold mb-1" style={{ color: '#16a34a' }}>PHONE</div>
               <div className="text-lg text-black">{vCardData.phone}</div>
             </div>
           </a>
@@ -132,7 +132,7 @@ export default function MobileCardPreview({
         {vCardData.mobile && (
           <a href={`tel:${vCardData.mobile}`} className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>MOBILE</div>
+              <div className="text-base font-semibold mb-1" style={{ color: '#16a34a' }}>MOBILE</div>
               <div className="text-lg text-black">{vCardData.mobile}</div>
             </div>
           </a>
@@ -142,7 +142,7 @@ export default function MobileCardPreview({
         {vCardData.website && (
           <a href={vCardData.website} target="_blank" rel="noopener noreferrer" className="flex items-center py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>WEBSITE</div>
+              <div className="text-base font-semibold mb-1" style={{ color: '#16a34a' }}>WEBSITE</div>
               <div className="text-lg text-black">{vCardData.website}</div>
             </div>
           </a>
@@ -152,7 +152,7 @@ export default function MobileCardPreview({
         {fullAddress && (
           <div className="flex items-center py-3 border-b border-gray-200">
             <div className="flex-1">
-              <div className="text-sm font-medium mb-1" style={{ color: '#16a34a' }}>ADDRESS</div>
+              <div className="text-base font-semibold mb-1" style={{ color: '#16a34a' }}>ADDRESS</div>
               <div className="text-lg text-black">{fullAddress}</div>
             </div>
           </div>
