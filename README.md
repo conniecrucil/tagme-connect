@@ -3,6 +3,8 @@
 | [Onboarding](./doc/ONBOARDING.md) | [Architecture](./doc/TECH_STACK.md) | [Deployment](./doc/DEPLOYMENT.md) |
 
 
+
+
 TagMe Connect is an e-commerce site for purchasing NFC-enabled business cards, and generating simple websites for any enhanced card, allowing those who lack their own website.
 
 ## Product Overview
