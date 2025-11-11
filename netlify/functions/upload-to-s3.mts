@@ -946,8 +946,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
     });
   }
 
-  // Prepare description: use customMessage if available, otherwise default to "custom contact card"
-  const description = data.customMessage || 'custom contact card';
+  // Prepare description: use customMessage if available, otherwise use default format
+  const description = data.customMessage || `Get Connected! The contact information for ${data.name}.`;
   
   return `<!DOCTYPE html>
 <html lang="en">
@@ -958,7 +958,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
   <meta name="author" content="${data.name || 'Contact'}">
   
   <!-- Open Graph Meta Tags -->
-  <meta property="og:title" content="${data.name || 'Contact Card'}">
+  <meta property="og:title" content="${data.name}${data.name ? ' - ' : ''}Tagme Connections">
   <meta property="og:description" content="${description}">
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="Smart Contact Card">
@@ -969,8 +969,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
   ${data.name && data.name.split(' ').length > 1 ? `<meta property="profile:last_name" content="${data.name.split(' ').slice(1).join(' ')}">` : ''}
   
   <!-- Twitter Card Meta Tags -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="${data.name || 'Contact Card'}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${data.name}${data.name ? ' - ' : ''}Tagme Connections">
   <meta name="twitter:description" content="${description}">
   ${getImageUrl(images?.photo) ? `<meta name="twitter:image" content="${getImageUrl(images?.photo)}">` : ''}
   ${getImageUrl(images?.photo) ? `<meta name="twitter:image:alt" content="${data.name || 'Contact'} profile photo">` : ''}

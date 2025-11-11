@@ -13,7 +13,7 @@ export function meta() {
 
 export function handle() {
   return {
-    breadcrumb: { label: "View" }
+    breadcrumb: { label: "User Card" }
   };
 }
 
@@ -173,20 +173,7 @@ export default function AdminCardDetail() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="bg-gray-50 py-4 mb-6">
-          <nav className="flex items-center space-x-2 text-sm">
-            <Link to="/admin" className="text-gray-600 hover:text-green-600">
-              Admin Dashboard
-            </Link>
-            <span className="text-gray-400">›</span>
-            <Link to="/admin/cards" className="text-gray-600 hover:text-green-600">
-              All Cards
-            </Link>
-            <span className="text-gray-400">›</span>
-            <span className="text-gray-900">Card Details</span>
-          </nav>
-        </div>
+       
 
         {/* Header */}
         <div className="mb-6 flex justify-between items-start">
