@@ -362,7 +362,7 @@ function AdminCreateForm() {
                       <Input
                         id="customerEmail"
                         name="customerEmail"
-                        type="email"
+                        type="text"
                         placeholder="customer@example.com"
                         className="w-full"
                       />
@@ -653,7 +653,7 @@ function AdminCreateForm() {
                       <Label htmlFor="email">Email Address</Label>
                       <Input
                         id="email"
-                        type="email"
+                        type="text"
                         value={vCardData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="john@example.com"

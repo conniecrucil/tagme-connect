@@ -714,7 +714,7 @@ export default function ConfigureProduct() {
                           <Label htmlFor="email">Email Address</Label>
                           <Input
                             id="email"
-                            type="email"
+                            type="text"
                             value={vCardData.email}
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             placeholder="john@example.com"

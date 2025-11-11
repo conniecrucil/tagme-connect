@@ -44,7 +44,7 @@ export default async (req: Request, context: Context) => {
       });
     }
 
-    // Validate email format
+    // Validate email format (supports internationalized email addresses per RFC 6531)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return new Response(JSON.stringify({ 

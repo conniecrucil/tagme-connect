@@ -103,7 +103,7 @@ export default function Contact() {
                       <Input 
                         id="email" 
                         name="email" 
-                        type="email" 
+                        type="text" 
                         required 
                         className="w-full"
                         placeholder="your.email@example.com"

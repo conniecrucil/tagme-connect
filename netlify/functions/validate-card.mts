@@ -172,6 +172,9 @@ function validateConfiguration(config: any) {
 
 
 function isValidEmail(email: string) {
+  // Support internationalized email addresses (RFC 6531)
+  // Local part: any non-whitespace, non-@ characters (supports Unicode)
+  // Domain: at least one character, @, at least one character with dot, TLD
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }

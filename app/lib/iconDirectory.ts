@@ -100,7 +100,7 @@ export const iconDirectory = {
       iconLocation: `${bucketUrl}/icons/email.svg`,
       backgroundColor: "#0078d4",
       inputType: "text" as const,
-      validationRegex: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      validationRegex: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
     },
     facebook: {
       name: "Facebook",
@@ -307,7 +307,7 @@ export const iconDirectory = {
       iconLocation: `${bucketUrl}/icons/paypal.svg`,
       backgroundColor: "#0070ba",
       inputType: "text" as const,
-      validationRegex: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      validationRegex: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
     },
     peertube: {
       name: "PeerTube",
@@ -504,7 +504,7 @@ export const iconDirectory = {
       iconLocation: `${bucketUrl}/icons/upi.svg`,
       backgroundColor: "#6c757d",
       inputType: "text" as const,
-      validationRegex: "^[a-zA-Z0-9._-]+@[a-zA-Z]{2,}$"
+      validationRegex: "^[^\\s@]+@[^\\s@]+$"
     },
     venmo: {
       name: "Venmo",
