@@ -10,13 +10,8 @@
     "dev:db:down": "docker-compose -f docker-compose.dev.yml down",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "test": "playwright test",
-    "test:headed": "playwright test --headed",
-    "test:ui": "playwright test --ui",
-    "test:db": "docker-compose -f docker-compose.test.yml up",
-    "test:db:down": "docker-compose -f docker-compose.test.yml down",
-    "test:docker": "docker-compose -f docker-compose.test.yml up --build playwright-tests",
-    "db:reset-test": "bash supabase/reset-test-db.sh"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.8.0",
@@ -69,17 +64,22 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",
-    "@playwright/test": "^1.55.0",
     "@react-router/dev": "^7.7.1",
     "@tailwindcss/vite": "^4.1.4",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.1",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "@vitest/ui": "^2.1.8",
+    "jsdom": "^23.0.1",
     "tailwindcss": "^4.1.4",
     "tw-animate-css": "^1.3.8",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^2.1.8"
   }
 }
