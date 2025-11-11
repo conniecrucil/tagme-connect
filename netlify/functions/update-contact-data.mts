@@ -473,7 +473,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         height: 150px;
         border-radius: 50%;
         margin: 0 auto 12px;
-        border: 2px solid #a2e4d6;
+        border: 2px solid #16a34a;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         background: #f0f0f0;
         display: flex;
@@ -505,7 +505,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       
       .company {
         font-size: 16px;
-        color: #a2e4d6;
+        color: #16a34a;
         margin-bottom: 8px;
       }
       
@@ -542,7 +542,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       
       .contact-label {
         font-weight: 500;
-        color: #a2e4d6;
+        color: #16a34a;
         font-size: 12px;
         margin-bottom: 4px;
         text-transform: uppercase;

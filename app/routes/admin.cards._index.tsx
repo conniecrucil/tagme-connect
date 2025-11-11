@@ -127,7 +127,7 @@ export default function AdminCardsIndex() {
   const getStatusBadge = useCallback((status: string, error?: string) => {
     switch (status) {
       case 'success':
-        return <Badge className="bg-green-100 text-green-800">Success</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Live</Badge>;
       case 'error':
         return <Badge className="bg-red-100 text-red-800" title={error}>Error</Badge>;
       case 'pending':

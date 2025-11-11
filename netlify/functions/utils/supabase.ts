@@ -467,6 +467,15 @@ export async function updateCard(id: string, updates: Partial<Omit<Card, 'id' | 
   return data as Card;
 }
 
+export async function deleteCard(id: string) {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('cards')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function listCards(options: {
   limit?: number;
   offset?: number;

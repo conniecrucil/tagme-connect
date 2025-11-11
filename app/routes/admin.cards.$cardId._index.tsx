@@ -1,7 +1,8 @@
-import { useRouteLoaderData, Link } from "react-router";
+import { useRouteLoaderData, Link, useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import { toast } from "sonner";
 
 export function meta() {
   return [
@@ -83,6 +84,7 @@ export default function AdminCardDetail() {
     assets: CardAsset[];
     cardId: string;
   };
+  const navigate = useNavigate();
 
   if (!data || !data.card) {
     return (
@@ -110,11 +112,38 @@ export default function AdminCardDetail() {
 
   const card = data.card;
   const assets = data.assets;
+  const vcfUrl =
+    (assets || []).find(a => a.asset_type === 'vcf' && !a._missing_in_s3)?.s3_url
+    || (card.s3_base_url ? `https://${card.s3_base_url}/contact.vcf` : undefined);
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "This will permanently delete the card, its assets in S3, and database records. This action cannot be undone.\n\nDo you want to continue?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch("/.netlify/functions/delete-card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId: data.cardId }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Delete failed with status ${response.status}`);
+      }
+      toast.success("Card deleted");
+      navigate("/admin/cards");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete card";
+      toast.error(message);
+    }
+  };
 
   const getStatusBadge = (status: string, error?: string) => {
     switch (status) {
       case 'success':
-        return <Badge className="bg-green-100 text-green-800">Success</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Live</Badge>;
       case 'error':
         return <Badge className="bg-red-100 text-red-800" title={error}>Error</Badge>;
       case 'pending':
@@ -182,6 +211,16 @@ export default function AdminCardDetail() {
                 </a>
               </Button>
             )}
+            {vcfUrl && (
+              <Button asChild variant="outline">
+                <a href={vcfUrl} target="_blank" rel="noopener noreferrer">
+                  Download VCF
+                </a>
+              </Button>
+            )}
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete Card
+            </Button>
           </div>
         </div>
 
