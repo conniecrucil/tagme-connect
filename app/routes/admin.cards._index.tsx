@@ -265,11 +265,18 @@ export default function AdminCardsIndex() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">All Contact Cards</h1>
-          <p className="text-gray-600 mt-2">
-            Browse, search, and manage all contact cards created through the system.
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">All Contact Cards</h1>
+            <p className="text-gray-600 mt-2">
+              Browse, search, and manage all contact cards created through the system.
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/admin/create">
+              Create Card
+            </Link>
+          </Button>
         </div>
 
         {/* Filters */}

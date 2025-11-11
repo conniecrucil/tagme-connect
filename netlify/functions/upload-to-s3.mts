@@ -789,12 +789,11 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       }
       
       .custom-message {
-        padding: 8px 0;
-        border-bottom: 1px solid #f0f0f0;
-        font-style: italic;
-        color: #1f2937;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 18px;
+        color: #000000;
         text-align: left;
-        font-size: 14px;
       }
       
       .download-btn {
@@ -1049,7 +1048,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       
       ${data.customMessage ? `
         <div class="custom-message">
-          "${data.customMessage}"
+          ${data.customMessage}
         </div>
       ` : ''}
     </div>

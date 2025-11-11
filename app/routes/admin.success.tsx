@@ -246,9 +246,14 @@ export default function AdminSuccess() {
               Create Another Contact
             </Button>
           </Link>
-          <Link to="/">
-            <Button className="w-full sm:w-auto">
-              Return to Home
+          <Link to={`/admin/cards/${creationDetails.card_id}`}>
+            <Button variant="outline" className="w-full sm:w-auto">
+              View Card Details
+            </Button>
+          </Link>
+          <Link to="/admin/cards">
+            <Button variant="outline" className="w-full sm:w-auto">
+              Return to Cards
             </Button>
           </Link>
         </div>

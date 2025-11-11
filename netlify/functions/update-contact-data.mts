@@ -23,6 +23,57 @@ const s3Client = new S3Client({
   forcePathStyle: true, // Use path-style addressing to avoid region mismatch issues
 });
 
+// Display name mapping for action labels
+const getDisplayName = (name: string): string => {
+  const displayNames: Record<string, string> = {
+    // Primary actions
+    email: 'Email',
+    call: 'Call',
+    Mobile: 'Mobile',
+    website: 'Website',
+    location: 'Location',
+    calendar: 'Calendar',
+    Home: 'Home',
+    Office: 'Office',
+    fax: 'Fax',
+    signal: 'Signal',
+    messenger: 'Messenger',
+    whatsApp: 'WhatsApp',
+    telegram: 'Telegram',
+    weChat: 'WeChat',
+    matrix: 'Matrix',
+    
+    // Secondary actions
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    linkedin: 'LinkedIn',
+    youtube: 'YouTube',
+    x: 'X',
+    bluesky: 'Bluesky',
+    tiktok: 'TikTok',
+    snapchat: 'Snapchat',
+    twitch: 'Twitch',
+    vimeo: 'Vimeo',
+    spotify: 'Spotify',
+    discord: 'Discord',
+    reddit: 'Reddit',
+    pinterest: 'Pinterest',
+    github: 'GitHub',
+    apple: 'Apple',
+    behance: 'Behance',
+    dribbble: 'Dribbble',
+    artstation: 'ArtStation',
+    bemer: 'Bemer',
+    buymeacoffee: 'Buy Me a Coffee',
+    cashapp: 'Cash App',
+    coinbase: 'Coinbase',
+    yelp: 'Yelp',
+    npm: 'NPM'
+  };
+  
+  return displayNames[name] || name;
+};
+
 interface ContactCardData {
   name?: string;
   email?: string;
@@ -595,12 +646,11 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
       }
       
       .custom-message {
-        padding: 24px;
-        background: #f8f9fa;
-        border-top: 1px solid #f0f0f0;
-        font-style: italic;
-        color: #666;
-        text-align: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 18px;
+        color: #000000;
+        text-align: left;
       }
       
       .download-btn {
@@ -623,6 +673,45 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         color: white;
       }
       
+      .social-links {
+        padding: 0 12px 12px;
+      }
+      
+      .social-links h3 {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #000;
+      }
+      
+      .social-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+      }
+      
+      .social-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        white-space: nowrap;
+      }
+      
+      .social-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+      
       @media (max-width: 480px) {
         body {
           padding: 10px;
@@ -641,7 +730,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         }
         
         .social-links {
-          padding: 16px;
+          padding: 0 16px 16px;
         }
         
         .custom-message {
@@ -651,7 +740,7 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
     </style>
   `;
 
-  // Generate social media icons (simplified SVG icons)
+  // Generate social media icons (simplified SVG icons) - UNUSED: now using text-based buttons
   const getSocialIcon = (platform: string): string => {
     const icons: Record<string, string> = {
       linkedin: '<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>',
@@ -722,11 +811,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         }
         
         socialLinks.push(`
-          <a href="${href}" class="social-link" target="_blank">
-            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
-              ${getSocialIcon(action.name)}
-            </svg>
-            ${action.name.charAt(0).toUpperCase() + action.name.slice(1)}
+          <a href="${href}" class="social-link" target="_blank" style="background-color: ${action.color || '#6c757d'}">
+            ${getDisplayName(action.name)}
           </a>
         `);
       }
@@ -748,11 +834,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         }
         
         socialLinks.push(`
-          <a href="${href}" class="social-link" target="_blank">
-            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
-              ${getSocialIcon(action.name)}
-            </svg>
-            ${action.name.charAt(0).toUpperCase() + action.name.slice(1)}
+          <a href="${href}" class="social-link" target="_blank" style="background-color: ${action.color || '#6c757d'}">
+            ${getDisplayName(action.name)}
           </a>
         `);
       }
@@ -764,11 +847,8 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
     Object.entries(data.socialMedia).forEach(([platform, url]) => {
       if (url) {
         socialLinks.push(`
-          <a href="${url}" class="social-link" target="_blank">
-            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
-              ${getSocialIcon(platform)}
-            </svg>
-            ${platform.charAt(0).toUpperCase() + platform.slice(1)}
+          <a href="${url}" class="social-link" target="_blank" style="background-color: #6c757d">
+            ${getDisplayName(platform)}
           </a>
         `);
       }
@@ -874,6 +954,12 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
     <!-- Contact Information -->
     <div class="contact-info">
       ${contactItems.join('')}
+      
+      ${data.customMessage ? `
+        <div class="custom-message">
+          ${data.customMessage}
+        </div>
+      ` : ''}
     </div>
 
     <!-- Social Media Links -->
@@ -883,13 +969,6 @@ function generateContactCardHTML(data: ContactCardData, baseUrl?: string): strin
         <div class="social-grid">
           ${socialLinks.join('')}
         </div>
-      </div>
-    ` : ''}
-
-    <!-- Custom Message -->
-    ${data.customMessage ? `
-      <div class="custom-message">
-        "${data.customMessage}"
       </div>
     ` : ''}
 
