@@ -46,7 +46,6 @@ export default function About() {
 
                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
                   As a Vocational Counselor in the Cowichan Region, I work  with people who face barriers to communication and employment. TagMe was born from that experience — the belief that everyone deserves a professional way to say "this is who I am" with a single tap.
-
                 </p>
 
                 <blockquote className="text-2xl font-semibold text-green-700 italic text-center my-12 p-8 bg-green-50 rounded-lg border-l-4 border-green-500">
