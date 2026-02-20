@@ -33,7 +33,7 @@ export default function Contact() {
                     <strong>Email:</strong> contact@tagmeconnections.com
                   </p>
                   <p className="text-lg text-gray-700">
-                    <strong>Phone:</strong> (555) 555-5555
+                    <strong>Phone:</strong> +1 (250) 686-1518
                   </p>
                 </div>
               </div>
