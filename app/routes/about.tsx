@@ -45,7 +45,7 @@ export default function About() {
                 </p>
 
                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  As a Vocational Counselor in the Cowichan Region, I work  with people who face barriers to communication and employment. TagMe was born from that experience — the belief that everyone deserves a professional way to say "this is who I am" with a single tap.
+                  As a Vocational Counselor in the Cowichan Region, I work with people who face barriers to communication and employment. TagMe was born from that experience — the belief that everyone deserves a professional way to say "this is who I am" with a single tap.
                 </p>
 
                 <blockquote className="text-2xl font-semibold text-green-700 italic text-center my-12 p-8 bg-green-50 rounded-lg border-l-4 border-green-500">
@@ -59,7 +59,6 @@ export default function About() {
                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
                   Today, TagMe serves small business owners, freelancers, nonprofit organizations, and individuals with diverse abilities across British Columbia. Every card we make is a step toward a more connected, sustainable, and inclusive world.
                 </p>
-                </div>
               </div>
             </div>
           </div>
@@ -74,13 +73,11 @@ export default function About() {
             <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
               Interested in working together? Fill out some info and we will be in touch shortly. We can't wait to hear from you!
             </p>
-            <Link to="/contact" className=" rounded bg-white text-green-600 hover:bg-green-50 border-white px-8 py-3 text-lg">
+            <Link to="/contact" className="rounded bg-white text-green-600 hover:bg-green-50 border-white px-8 py-3 text-lg">
               Get in Touch
             </Link>
           </div>
         </section>
-
-       
       </main>
     </div>
   );
