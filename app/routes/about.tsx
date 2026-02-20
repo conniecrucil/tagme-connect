@@ -45,71 +45,21 @@ export default function About() {
                 </p>
 
                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  The idea behind this project came to me during my work as a Job Coach, supporting people with diverse abilities. I often attended networking events, community meetings, and professional gatherings—but more than once, I found myself without my own business cards. I had to borrow a colleague's or quickly scribble my details on a napkin.
-                </p>
+                  As a Vocational Counselor in the Cowichan Region, I work  with people who face barriers to communication and employment. TagMe was born from that experience — the belief that everyone deserves a professional way to say "this is who I am" with a single tap.
 
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  One day, I noticed someone had saved a photo of a colleague's card on their phone. That moment sparked a question in me:
                 </p>
 
                 <blockquote className="text-2xl font-semibold text-green-700 italic text-center my-12 p-8 bg-green-50 rounded-lg border-l-4 border-green-500">
-                  "How can I make it easier for people to remember me and save my contact info instantly—especially in busy, on-the-go situations?"
+                  "In 2024, I created a TagMe card for a client with speech challenges who is a non-speaker. When they tapped the card on a stranger's phone, their name, photo, and story appeared instantly. For the first time, they didn't need someone else to introduce them. That card became their voice"
                 </blockquote>
-
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                
+                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
                   That's when TagMe was born.
                 </p>
 
                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  I created TagMe Connections to solve a real problem—one I faced myself. It's a practical tool for real life, designed to help people connect faster and more effectively, whether they're networking, collaborating, or performing.
+                  Today, TagMe serves small business owners, freelancers, nonprofit organizations, and individuals with diverse abilities across British Columbia. Every card we make is a step toward a more connected, sustainable, and inclusive world.
                 </p>
-
-                <div className="bg-gray-50 p-8 rounded-lg my-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">My Journey</h2>
-                  <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                    My path to this project hasn't been linear.<br />
-                    In Chile, I trained as a journalist—drawn to stories, communication, and human connection. After moving to Canada, I built a career that blends structure and creativity: I work as a bookkeeper, supporting businesses with clarity and organization, and I also teach aqua fitness and dance, where I guide others through movement and rhythm.
-                  </p>
-
-                  <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                    These roles may seem different, but they're connected by one core idea:
-                  </p>
-
-                  <blockquote className="text-xl font-semibold text-green-700 italic text-center my-8 p-6 bg-white rounded-lg border-l-4 border-green-500">
-                    helping people move with confidence—whether in their bodies, in their businesses, or in their communities.
-                  </blockquote>
-                </div>
-
-                <div className="bg-green-50 p-8 rounded-lg my-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Water & Connection</h2>
-                  <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                    Water, especially, plays a central role in my life. It's where I feel most at home—fluid, grounded, and energized.<br />
-                    And just like water, I see connection as something that flows.
-                  </p>
-
-                  <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                    Through movement and water, I help people reconnect with themselves.<br />
-                    Through technology and TagMe, I help them reconnect with each other.
-                  </p>
-                </div>
-
-                <div className="bg-gray-900 text-white p-8 rounded-lg my-12">
-                  <h2 className="text-2xl font-bold mb-6">My Story</h2>
-                  <p className="text-lg leading-relaxed mb-6">
-                    Born in Chile and now living on Vancouver Island, Canada, I've learned to adapt, to bridge cultures, and to build something meaningful from everything I've lived.
-                  </p>
-
-                  <p className="text-lg leading-relaxed mb-6">
-                    TagMe is a reflection of that journey—a tool rooted in real experience, made for real people who want to connect with purpose.
-                  </p>
-
-                  <p className="text-lg leading-relaxed">
-                    Thank you for being here.
-                  </p>
-
-                  <p className="text-lg font-semibold mt-8 text-green-400">
-                    — Connie
-                  </p>
                 </div>
               </div>
             </div>
