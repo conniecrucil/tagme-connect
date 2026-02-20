@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import conniePhoto from "../../assets/connie-photo.jpg";
 import tagmeLogo from "../../assets/tagme-logo.png";
 
+
 export function meta() {
   return [
     { title: "About - TagMe Connections" },
