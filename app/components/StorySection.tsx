@@ -1,4 +1,4 @@
-import { Button } from "./ui/button";
+import StarBorder from "./StarBorder";
 
 export function StorySection() {
   return (
@@ -22,9 +22,16 @@ export function StorySection() {
             <p className="text-lg text-gray-600 mb-8 leading-relaxed animate-fade-in-up animation-delay-600">
               TagMe Cards revolutionizes professional networking with innovative e-business cards. Our eco-friendly solution allows users to share contact information instantly, eliminating the need for paper cards. Join us in creating sustainable and personalized networking experiences.
             </p>
-            <Button className="bg-black hover:bg-gray-800 text-white animate-fade-in-up animation-delay-800 hover:scale-105 transition-transform duration-300">
+            <StarBorder
+              as="button"
+              type="button"
+              color="rgb(34 197 94)"
+              speed="4s"
+              thickness={1}
+              className="tagme-star-cta tagme-star-cta-sm animate-fade-in-up animation-delay-800 hover:scale-105 transition-transform duration-300"
+            >
               Learn more
-            </Button>
+            </StarBorder>
           </div>
         </div>
       </div>

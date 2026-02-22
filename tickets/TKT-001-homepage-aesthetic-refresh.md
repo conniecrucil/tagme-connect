@@ -1,5 +1,15 @@
 # TKT-001: Homepage Aesthetic Refresh (React Bits Evaluation)
 
+## Status
+
+Closed on 2026-02-22
+
+## Completion Notes
+
+- Added React Bits `StarBorder` component via `npx shadcn@latest add @react-bits/StarBorder-JS-CSS`.
+- Applied `StarBorder` effect to homepage CTA buttons in hero and story sections while keeping the original black/green TagMe aesthetic and layout.
+- Added reduced-motion fallback for the border animation.
+
 ## Summary
 
 Evaluate [React Bits](https://www.reactbits.dev/) patterns/components and refresh the homepage aesthetic while preserving existing messaging and conversion path to `/shop`.

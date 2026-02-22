@@ -1,6 +1,6 @@
-import { Button } from "./ui/button";
 import { AnimatedImage } from "./AnimatedImage";
 import { Link } from "react-router";
+import StarBorder from "./StarBorder";
 
 export function HeroSection() {
   return (
@@ -21,11 +21,17 @@ export function HeroSection() {
             </p>
             
             {/* CTA Button */}
-            <Link to="/shop">
-              <Button size="lg" className="bg-black hover:bg-gray-800 text-white text-lg px-8 py-6 animate-fade-in-up animation-delay-700 hover:scale-105 transition-transform duration-300 pulse-glow">
-                Start Today
-              </Button>
-            </Link>
+            <StarBorder
+              as={Link}
+              to="/shop"
+              color="rgb(34 197 94)"
+              speed="4s"
+              thickness={1}
+              className="tagme-star-cta text-lg animate-fade-in-up animation-delay-700 hover:scale-105 transition-transform duration-300 pulse-glow"
+              aria-label="Start today and shop TagMe cards"
+            >
+              Start Today
+            </StarBorder>
           </div>
 
           {/* Right side - Image */}
