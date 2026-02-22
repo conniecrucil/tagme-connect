@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLoaderData, Link } from "react-router";
-import type { ClientLoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { toast } from "sonner";
+import { listAdminOrdersFromRequest } from "~/lib/server/admin-orders.server";
 import { 
   Table, 
   TableBody, 
@@ -21,11 +22,9 @@ export function meta() {
   ];
 }
 
-export async function clientLoader(_args: ClientLoaderFunctionArgs) {
+export async function loader(_args: LoaderFunctionArgs) {
   try {
-    const response = await fetch('/.netlify/functions/get-orders');
-    if (!response.ok) throw new Error('Failed to fetch orders');
-    const data = await response.json();
+    const data = await listAdminOrdersFromRequest(_args.request);
     return {
       orders: data.orders || [],
     };
@@ -65,7 +64,7 @@ interface Order {
 }
 
 export default function AdminOrdersIndex() {
-  const { orders: initialOrders } = useLoaderData<typeof clientLoader>();
+  const { orders: initialOrders } = useLoaderData<typeof loader>();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
@@ -77,7 +76,7 @@ export default function AdminOrdersIndex() {
   const updateFulfillment = async (orderId: string, field: 'shipped' | 'fulfilled', value: boolean) => {
     setUpdating(prev => ({ ...prev, [orderId]: true }));
     try {
-      const response = await fetch('/.netlify/functions/update-order-fulfillment', {
+      const response = await fetch('/api/update-order-fulfillment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, [field]: value }),
@@ -227,4 +226,3 @@ export default function AdminOrdersIndex() {
     </div>
   );
 }
-

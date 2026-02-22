@@ -39,7 +39,7 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+function AppShell({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -48,6 +48,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   };
 
+  return (
+    <PostHogProvider
+      apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+      options={{
+        api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+        defaults: '2025-05-24',
+        capture_exceptions: true,
+        debug: import.meta.env.MODE === "development",
+      }}
+    >
+      {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
+      <div className={isLoading ? "opacity-0" : "opacity-100 transition-opacity duration-500"}>
+        {!isAdminRoute && <Header />}
+        {children}
+        {!isAdminRoute && <Footer />}
+        <ScrollRestoration />
+        <Scripts />
+        <Toaster />
+        <SonnerToaster
+          position="top-right"
+          expand={false}
+          richColors
+          closeButton
+        />
+      </div>
+    </PostHogProvider>
+  );
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -86,31 +116,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <PostHogProvider
-          apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
-          options={{
-            api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-            defaults: '2025-05-24',
-            capture_exceptions: true,
-            debug: import.meta.env.MODE === "development",
-          }}
-        >
-          {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
-          <div className={isLoading ? "opacity-0" : "opacity-100 transition-opacity duration-500"}>
-            {!isAdminRoute && <Header />}
-            {children}
-            {!isAdminRoute && <Footer />}
-            <ScrollRestoration />
-            <Scripts />
-            <Toaster />
-            <SonnerToaster
-              position="top-right"
-              expand={false}
-              richColors
-              closeButton
-            />
-          </div>
-        </PostHogProvider>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

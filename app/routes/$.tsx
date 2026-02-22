@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
 
-export async function clientLoader({ request }: { request: Request }) {
+export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   
   // If someone tries to access /index.html, redirect to home

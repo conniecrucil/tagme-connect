@@ -46,7 +46,7 @@ function AdminContent() {
             setIsAuthorized(true);
           } else {
             const response = await fetch(
-              `/.netlify/functions/check-admin-authorization?email=${encodeURIComponent(user.email)}`
+              `/api/check-admin-authorization?email=${encodeURIComponent(user.email)}`
             );
             const data = await response.json();
             setIsAuthorized(data.authorized === true);

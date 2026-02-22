@@ -123,7 +123,7 @@ export default function AdminCardDetail() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch("/.netlify/functions/delete-card", {
+      const response = await fetch("/api/delete-card", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cardId: data.cardId }),

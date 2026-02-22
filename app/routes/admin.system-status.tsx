@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLoaderData } from "react-router";
-import type { ClientLoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -13,9 +13,9 @@ export function meta() {
   ];
 }
 
-export async function clientLoader(_args: ClientLoaderFunctionArgs) {
+export async function loader(_args: LoaderFunctionArgs) {
   try {
-    const response = await fetch(`/.netlify/functions/check-system-status`);
+    const response = await fetch(`/api/check-system-status`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch system status');
@@ -60,8 +60,9 @@ interface SystemStatus {
     user: boolean;
     pass: boolean;
   };
-  netlify: {
-    siteUrl: boolean;
+  deployment: {
+    appBaseUrl: boolean;
+    vercelUrl: boolean;
   };
   supabase: {
     url: boolean;
@@ -99,7 +100,7 @@ interface SystemStatusResponse {
 
 export default function AdminSystemStatus() {
   const { toast } = useToast();
-  const { systemStatus: loaderStatus } = useLoaderData<typeof clientLoader>();
+  const { systemStatus: loaderStatus } = useLoaderData<typeof loader>();
   const [systemStatus, setSystemStatus] = useState(loaderStatus);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,7 +108,7 @@ export default function AdminSystemStatus() {
     try {
       setError(null);
       
-      const response = await fetch(`/.netlify/functions/check-system-status`);
+      const response = await fetch(`/api/check-system-status`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch system status');

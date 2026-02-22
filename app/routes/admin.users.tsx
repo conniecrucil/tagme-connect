@@ -1,6 +1,6 @@
 import { useState, useEffect, useId } from "react";
 import { useLoaderData } from "react-router";
-import type { ClientLoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~
 import { useToast } from "~/components/ui/use-toast";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { Trash2, Plus } from "lucide-react";
+import { listAdminUsers } from "~/lib/server/admin-users.server";
 
 export function meta() {
   return [
@@ -17,17 +18,10 @@ export function meta() {
   ];
 }
 
-export async function clientLoader(_args: ClientLoaderFunctionArgs) {
+export async function loader(_args: LoaderFunctionArgs) {
   try {
-    const response = await fetch('/.netlify/functions/admin-users-list');
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch admin users');
-    }
-
-    const data = await response.json();
     return {
-      users: data.users || [],
+      users: await listAdminUsers(),
     };
   } catch (error) {
     console.error('Error fetching admin users:', error);
@@ -49,7 +43,7 @@ interface AdminUser {
 
 export default function AdminUsers() {
   const { toast } = useToast();
-  const { users: initialUsers } = useLoaderData<typeof clientLoader>();
+  const { users: initialUsers } = useLoaderData<typeof loader>();
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -76,7 +70,7 @@ export default function AdminUsers() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/.netlify/functions/admin-users-create', {
+      const response = await fetch('/api/admin-users-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +118,7 @@ export default function AdminUsers() {
 
     setDeletingId(user.id);
     try {
-      const response = await fetch('/.netlify/functions/admin-users-delete', {
+      const response = await fetch('/api/admin-users-delete', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

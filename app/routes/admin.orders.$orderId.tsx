@@ -1,9 +1,10 @@
 import { useLoaderData, Link } from "react-router";
-import type { ClientLoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { toast } from "sonner";
+import { getAdminOrderDetails } from "~/lib/server/admin-orders.server";
 
 export function meta() {
   return [
@@ -12,7 +13,7 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const { orderId } = params;
   
   if (!orderId) {
@@ -20,16 +21,7 @@ export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
   }
 
   try {
-    const response = await fetch(`/.netlify/functions/get-order?orderId=${orderId}`);
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error("Order not found");
-      }
-      throw new Error(`Failed to fetch order details: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    const data = await getAdminOrderDetails(orderId);
     
     return {
       order: data.order,
@@ -37,7 +29,7 @@ export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
       orderId,
     };
   } catch (error) {
-    console.error('Error in clientLoader:', error);
+    console.error('Error in loader:', error);
     throw error;
   }
 }
@@ -79,7 +71,7 @@ interface Order {
 }
 
 export default function AdminOrderDetail() {
-  const data = useLoaderData<typeof clientLoader>();
+  const data = useLoaderData<typeof loader>();
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -145,7 +137,7 @@ export default function AdminOrderDetail() {
   const getStripeReceiptUrl = async () => {
     if (!order.stripe_receipt_url) {
       try {
-        const response = await fetch('/.netlify/functions/get-stripe-receipt-url', {
+        const response = await fetch('/api/get-stripe-receipt-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId: order.stripe_session_id }),
@@ -425,4 +417,3 @@ export default function AdminOrderDetail() {
     </div>
   );
 }
-

@@ -49,9 +49,10 @@ VITE_AWS_S3_BUCKET_URL=https://cards.yourdomain.com
 ADMIN_USER=admin
 ADMIN_PASS=admin123
 
-# Netlify Configuration (REQUIRED)
-NETLIFY_SITE_URL=https://your-site.netlify.app
-NETLIFY_ACCESS_TOKEN=your_netlify_access_token_here
+# Deployment Configuration (REQUIRED for production callbacks/URLs)
+APP_BASE_URL=https://app.yourdomain.com
+# Optional Vercel deployment URL fallback (auto-provided in Vercel)
+VERCEL_URL=your-project.vercel.app
 
 # Supabase Configuration (Local Development - Default values work for local dev)
 SUPABASE_URL=http://localhost:54321
@@ -71,7 +72,7 @@ VITE_AUTH0_CLIENT_ID=your_client_id_here
 AUTH0_CLIENT_SECRET=your_client_secret_here
 AUTH0_AUDIENCE=https://your-tenant.us.auth0.com/api/v2/
 
-# Supabase Configuration (SaaS - Server-side only for Netlify functions)
+# Supabase Configuration (SaaS - Server-side)
 PROJECT_URL=https://your-project-id.supabase.co
 SUPABASE_KEY=your_service_role_key_here
 EOF
@@ -86,9 +87,8 @@ echo "   - ADMIN_EMAIL and SUPPORT_EMAIL"
 echo "   - COMPANY_NAME and COMPANY_WEBSITE"
 echo "   - AWS credentials (for production S3)"
 echo "   - ADMIN_USER and ADMIN_PASS"
-echo "   - NETLIFY_SITE_URL"
+echo "   - APP_BASE_URL (and optionally VERCEL_URL for deployments)"
 echo ""
 echo "📖 See ENVIRONMENT_VARIABLES.md for detailed setup instructions."
 echo ""
 echo "🚀 You can now run 'make dev' to start the development environment!"
-

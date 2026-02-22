@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import type { ClientLoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 
 export function meta() {
   return [
@@ -8,7 +8,7 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const { cardId } = params;
   
   if (!cardId) {
@@ -16,7 +16,7 @@ export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
   }
 
   try {
-    const response = await fetch(`/.netlify/functions/get-card-details?cardId=${cardId}`);
+    const response = await fetch(`/api/get-card-details?cardId=${cardId}`);
     
     if (!response.ok) {
       if (response.status === 404) {
@@ -33,7 +33,7 @@ export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
       cardId,
     };
   } catch (error) {
-    console.error('Error in clientLoader:', error);
+    console.error('Error in loader:', error);
     throw error;
   }
 }

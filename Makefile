@@ -3,7 +3,6 @@ SHELL := /bin/bash
 
 NPM ?= npm
 SUPABASE ?= supabase
-NETLIFY ?= netlify
 PSQL ?= psql
 DOCKER ?= docker
 SUPABASE_START_FLAGS ?= --debug
@@ -19,7 +18,7 @@ SUPABASE_API_URL ?= http://127.0.0.1:54321
 SUPABASE_STUDIO_URL ?= http://127.0.0.1:54323
 SUPABASE_MAILPIT_URL ?= http://127.0.0.1:54324
 SUPABASE_STORAGE_S3_URL ?= http://127.0.0.1:54321/storage/v1/s3
-NETLIFY_DEV_URL ?= http://127.0.0.1:8888
+APP_DEV_URL ?= http://127.0.0.1:3000
 MINIO_API_URL ?= $(SUPABASE_STORAGE_S3_URL)
 MINIO_CONSOLE_URL ?= $(SUPABASE_STUDIO_URL)
 MINIO_PUBLIC_URL ?= http://127.0.0.1:54321/storage/v1
@@ -60,17 +59,13 @@ up: ensure-tools ## Start local stack, ensure schema/seed, and update .env.local
 down: ## Stop local Supabase stack
 	@$(SUPABASE) stop
 
-dev: ## Run app/functions through Netlify Dev
+dev: ## Run fullstack React Router app locally (Vercel-compatible)
 	@set -euo pipefail; \
 	set -a; \
 	[ -f "$(ENV_LOCAL)" ] && . "$(ENV_LOCAL)" || true; \
 	set +a; \
 	export SUPABASE_PREFER_LOCAL=true; \
-	if command -v $(NETLIFY) >/dev/null 2>&1; then \
-		$(NETLIFY) dev; \
-	else \
-		npx netlify-cli dev; \
-	fi
+	$(NPM) run dev -- --port 3000
 
 nuke: ## Destroy local Supabase stack volumes (DB + MinIO) and refresh local env file
 	@set -euo pipefail; \
@@ -115,7 +110,7 @@ status: ## Show local service status, ports, and quick health checks
 	fi; \
 	echo; \
 	echo "== Port listeners =="; \
-	for spec in "8888 Netlify Dev" "54321 Supabase API" "54322 Postgres" "54323 Supabase Studio" "54324 Mailpit"; do \
+	for spec in "3000 App Dev Server" "54321 Supabase API" "54322 Postgres" "54323 Supabase Studio" "54324 Mailpit"; do \
 		port=$${spec%% *}; label=$${spec#* }; \
 		if lsof -nP -iTCP:$$port -sTCP:LISTEN >/dev/null 2>&1; then \
 			echo "[LISTENING] $$label ($$port)"; \
@@ -142,7 +137,7 @@ status: ## Show local service status, ports, and quick health checks
 			echo "[FAIL] $$label -> $$url"; \
 		fi; \
 	}; \
-	check_http "Netlify Dev" "$(NETLIFY_DEV_URL)"; \
+	check_http "App Dev Server" "$(APP_DEV_URL)"; \
 	check_http "Supabase API" "$(SUPABASE_API_URL)/rest/v1/"; \
 	check_http "Supabase Studio" "$(SUPABASE_STUDIO_URL)"; \
 	check_http "Mailpit" "$(SUPABASE_MAILPIT_URL)"; \

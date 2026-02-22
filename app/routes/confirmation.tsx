@@ -59,7 +59,7 @@ export default function Confirmation() {
     setEmailStatus('sending');
     
     try {
-      const response = await fetch('/.netlify/functions/send-purchase-emails', {
+      const response = await fetch('/api/send-purchase-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export default function Confirmation() {
           // Try to retrieve the Stripe session to get shipping address and customer info
           let stripeData = null;
           try {
-            const stripeResponse = await fetch('/.netlify/functions/get-stripe-session', {
+            const stripeResponse = await fetch('/api/get-stripe-session', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -282,7 +282,7 @@ export default function Confirmation() {
             // Update order in database with shipping address if available
             if (customerInfo.shipping) {
               try {
-                const updateResponse = await fetch('/.netlify/functions/update-contact-data', {
+                const updateResponse = await fetch('/api/update-contact-data', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',

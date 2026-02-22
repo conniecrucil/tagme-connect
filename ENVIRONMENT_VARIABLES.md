@@ -1,6 +1,6 @@
 # Environment Variables Configuration
 
-This document outlines all the environment variables required for the Netlify POC application.
+This document outlines environment variables required for the TagMe Connect app (Vercel + React Router fullstack runtime).
 
 ## Required Environment Variables
 
@@ -34,14 +34,15 @@ This document outlines all the environment variables required for the Netlify PO
 - `AUTH0_CLIENT_SECRET` - Auth0 application client secret (server-side only, not exposed to client)
 - `AUTH0_AUDIENCE` - Optional Auth0 API identifier (defaults to Auth0 Management API)
 
-### Netlify Configuration
-- `NETLIFY_ACCESS_TOKEN` - Netlify personal access token (required for running netlify dev in Docker)
-- `NETLIFY_SITE_URL` - Your Netlify site URL (e.g., https://your-site.netlify.app)
+### Deployment Configuration
+- `APP_BASE_URL` - Canonical public app URL (e.g., https://app.example.com)
+- `VERCEL_URL` - Vercel deployment URL (usually auto-injected by Vercel)
+- `NETLIFY_SITE_URL` - Legacy fallback during migration (optional)
 
 ### Supabase Configuration (SaaS - Server-side only)
 - `PROJECT_URL` - Your Supabase project URL (e.g., `https://xxxxx.supabase.co`)
   - Get from your Supabase project settings under "Project Settings" → "API"
-- `SUPABASE_KEY` - Supabase service role key for server-side operations (Netlify functions only)
+- `SUPABASE_KEY` - Supabase service role key for server-side operations
   - Get from your Supabase project settings under "Project Settings" → "API" → "Service role key"
   - **Keep secret!** This key has full access to your database
 

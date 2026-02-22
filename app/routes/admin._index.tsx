@@ -4,6 +4,7 @@ import { Button } from "~/components/ui/button";
 import { DashboardMetricCard } from "~/components/DashboardMetricCard";
 import { DashboardMetricsGridSkeleton } from "~/components/DashboardMetricSkeleton";
 import { CreditCard, Users, ShoppingCart, FileText } from "lucide-react";
+import { getDashboardMetricsData } from "~/lib/server/admin-dashboard.server";
 
 export function meta() {
   return [
@@ -37,19 +38,11 @@ interface DashboardMetrics {
   };
 }
 
-export async function clientLoader() {
+export async function loader() {
   try {
-    const response = await fetch('/.netlify/functions/get-dashboard-metrics');
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}: Failed to fetch dashboard metrics`;
-      console.error('Dashboard metrics fetch error:', errorMessage);
-      throw new Error(errorMessage);
-    }
-    const data = await response.json();
-    return data as DashboardMetrics;
+    return (await getDashboardMetricsData()) as DashboardMetrics;
   } catch (error) {
-    console.error('Error in clientLoader:', error);
+    console.error('Error in loader:', error);
     throw error;
   }
 }

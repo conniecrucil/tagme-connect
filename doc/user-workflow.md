@@ -96,7 +96,7 @@ This document outlines the complete user journey for purchasing smart business c
   - Shipping timeline (15-20 business days)
   - Support contact information
   - Company branding and professional styling
-- **Trigger**: Sent automatically when confirmation page loads via `/.netlify/functions/send-purchase-emails`
+- **Trigger**: Sent automatically when confirmation page loads via `/api/send-purchase-emails`
 - **Template**: Professional HTML email template with company branding
 
 #### 8.2 Admin Notification Emails
@@ -111,7 +111,7 @@ This document outlines the complete user journey for purchasing smart business c
   - Attached files:
     - Customer-uploaded images/logos
     - Generated vCard file (.vcf)
-- **Trigger**: Sent for each card in the order when confirmation page loads via `/.netlify/functions/send-purchase-emails`
+- **Trigger**: Sent for each card in the order when confirmation page loads via `/api/send-purchase-emails`
 - **Template**: Admin-focused template with order processing details
 
 ## Technical Implementation Notes
@@ -175,9 +175,9 @@ See `.env.example` for complete configuration template.
 ## API Endpoints (Netlify Functions)
 
 ### Core Workflow Endpoints
-- `/.netlify/functions/validate-card`: Validates card configuration and generates vCard
-- `/.netlify/functions/create-checkout-session`: Creates Stripe Checkout Session with order details
-- `/.netlify/functions/send-purchase-emails`: Sends all purchase-related emails (customer confirmation and admin notifications)
+- `/api/validate-card`: Validates card configuration and generates vCard
+- `/api/create-checkout-session`: Creates Stripe Checkout Session with order details
+- `/api/send-purchase-emails`: Sends all purchase-related emails (customer confirmation and admin notifications)
 
 ### Implementation Details
 - All endpoints use Netlify Functions (serverless)

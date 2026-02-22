@@ -247,7 +247,7 @@ export default function AdminContactBuilder() {
       };
 
       // Call admin creation API
-      const response = await fetch('/.netlify/functions/admin-create-contact', {
+      const response = await fetch('/api/admin-create-contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

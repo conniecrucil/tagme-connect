@@ -367,7 +367,7 @@ function AdminEditForm() {
       };
 
       // Call the update endpoint with the card UUID
-      const response = await fetch('/.netlify/functions/update-contact-data', {
+      const response = await fetch('/api/update-contact-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

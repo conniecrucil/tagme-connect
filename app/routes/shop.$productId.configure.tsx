@@ -186,7 +186,7 @@ export default function ConfigureProduct() {
         };
 
         // Validate configuration for core card
-        const response = await fetch('/.netlify/functions/validate-card', {
+        const response = await fetch('/api/validate-card', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

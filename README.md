@@ -17,12 +17,12 @@ TagMe Connect powers Connie’s NFC business pipeline end to end:
 
 - Customers purchase cards, upload assets, and track order status.
 - Operations teams review submissions and trigger card production.
-- Netlify functions integrate with Supabase to orchestrate card asset generation and fulfillment.
+- React Router server loaders/actions integrate with Supabase to orchestrate card asset generation and fulfillment.
 
 ## Architecture Snapshot
 
 - React Router (Framework) handles routing, server rendering, and data loading.
-- Netlify Functions provide serverless business logic and third-party integrations.
+- React Router server routes (`loader`/`action`) provide server-side business logic and third-party integrations.
 - Supabase stores customer, order, and card metadata while exposing real-time APIs.
 - AWS S3 stores the auto-generated websites
 
@@ -35,7 +35,6 @@ This repo uses a `Makefile` for the standard local workflow.
 - Node.js 18+ (includes `npm`)
 - Supabase CLI
 - Docker Desktop (running)
-- Netlify CLI (optional if you use `npx`; recommended global install)
 
 macOS (Homebrew) example:
 
@@ -48,8 +47,6 @@ brew install nvm supabase/tap/supabase
 nvm install --lts
 nvm use --lts
 
-# optional: global Netlify CLI
-npm install -g netlify-cli
 ```
 
 ### 2. Install Project Dependencies
@@ -85,13 +82,13 @@ What `make up` does:
 - seeds the DB if empty
 - seeds local S3 assets
 
-### 5. Run the App (Netlify Dev)
+### 5. Run the App
 
 ```bash
 make dev
 ```
 
-The app will be available at `http://127.0.0.1:8888`.
+The app will be available at `http://127.0.0.1:3000`.
 
 ### 6. Common Commands
 
@@ -108,7 +105,7 @@ make db-logs  # tail Supabase Postgres logs (useful when startup hangs)
 - If the DB container reports `No space left on device`, free Docker Desktop space (image/build cache), then rerun:
   1. `make nuke`
   2. `make up`
-- If `make dev` says port `8888` is in use, stop the existing process using that port and retry.
+- If `make dev` says port `3000` is in use, stop the existing process using that port and retry.
 
 ## Documentation Index
 
@@ -120,6 +117,6 @@ make db-logs  # tail Supabase Postgres logs (useful when startup hangs)
 
 - Database migrations live in `supabase/migrations/`
 - Component styling follows the Tailwind CSS conventions defined in `tailwind.config.js`
-- Netlify Functions reside in `netlify/functions/`
+- Server logic is served through React Router resource routes at `/api/*` (legacy-compatible handlers live in `app/lib/server/api-legacy/` as server modules).
 
 For troubleshooting, common commands, and deep dives into specific features, consult the linked guides above. Built with love for the Connie team.

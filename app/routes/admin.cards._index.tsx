@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useId } from "react";
 import { Link, useLoaderData, useSearchParams } from "react-router";
-import type { ClientLoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -16,6 +16,7 @@ import {
   TableCell,
   type ColumnDef 
 } from "@components/kibo-ui/table";
+import { listAdminCardsFromRequest } from "~/lib/server/admin-cards.server";
 
 export function meta() {
   return [
@@ -24,7 +25,7 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const limit = parseInt(url.searchParams.get('limit') || '20');
   const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -34,23 +35,7 @@ export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
   const dateTo = url.searchParams.get('date_to') || '';
 
   try {
-    const searchParams = new URLSearchParams({
-      limit: limit.toString(),
-      offset: offset.toString(),
-    });
-
-    if (customerEmail) searchParams.append('customer_email', customerEmail);
-    if (status) searchParams.append('status', status);
-    if (dateFrom) searchParams.append('date_from', dateFrom);
-    if (dateTo) searchParams.append('date_to', dateTo);
-
-    const response = await fetch(`/.netlify/functions/get-cards?${searchParams}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch cards');
-    }
-
-    const data: CardsListResponse = await response.json();
+    const data: CardsListResponse = await listAdminCardsFromRequest(request);
     return {
       cards: data.cards || [],
       total: data.total || 0,
@@ -108,7 +93,7 @@ export default function AdminCardsIndex() {
   const dateToId = useId();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  const data = useLoaderData<typeof clientLoader>();
+  const data = useLoaderData<typeof loader>();
   const { cards, total, page: loaderPage, limit } = data;
   
   const [page, setPage] = useState(loaderPage);
