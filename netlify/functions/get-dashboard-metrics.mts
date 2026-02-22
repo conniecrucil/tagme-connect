@@ -1,5 +1,5 @@
 import type { Context } from '@netlify/functions';
-import { getSupabaseClient } from './utils/supabase';
+import { getSupabaseClient, resolveSupabaseEnvConfig } from './utils/supabase';
 
 interface DashboardMetrics {
   cards: {
@@ -32,14 +32,8 @@ export default async (req: Request, _context: Context) => {
       });
     }
 
-    // Validate environment variables before proceeding
-    if (!process.env.PROJECT_URL || !process.env.SUPABASE_KEY) {
-      throw new Error('Missing Supabase environment variables. Please set PROJECT_URL and SUPABASE_KEY.');
-    }
-
-    // Log the URL being used (without exposing the key)
-    const supabaseUrl = process.env.PROJECT_URL;
-    console.log(`Connecting to Supabase at: ${supabaseUrl}`);
+    const resolvedSupabase = resolveSupabaseEnvConfig();
+    console.log(`Connecting to Supabase at: ${resolvedSupabase.url} (source: ${resolvedSupabase.source})`);
 
     const supabase = getSupabaseClient();
 
@@ -166,4 +160,3 @@ export default async (req: Request, _context: Context) => {
     });
   }
 };
-

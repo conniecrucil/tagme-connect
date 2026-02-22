@@ -17,6 +17,42 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 let supabaseClient: SupabaseClient | null = null;
 
+export interface SupabaseEnvConfig {
+  url: string;
+  serviceKey: string;
+  source: 'local' | 'saas';
+}
+
+export function resolveSupabaseEnvConfig(): SupabaseEnvConfig {
+  const localUrl = process.env.SUPABASE_URL;
+  const localKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const saasUrl = process.env.PROJECT_URL;
+  const saasKey = process.env.SUPABASE_KEY;
+
+  const preferLocal =
+    process.env.SUPABASE_PREFER_LOCAL === 'true' ||
+    process.env.NETLIFY_DEV === 'true' ||
+    process.env.NODE_ENV === 'development';
+
+  if (preferLocal && localUrl && localKey) {
+    return { url: localUrl, serviceKey: localKey, source: 'local' };
+  }
+
+  if (saasUrl && saasKey) {
+    return { url: saasUrl, serviceKey: saasKey, source: 'saas' };
+  }
+
+  if (localUrl && localKey) {
+    return { url: localUrl, serviceKey: localKey, source: 'local' };
+  }
+
+  throw new Error(
+    'Missing Supabase environment variables. Please set either:\n' +
+    '- For SaaS: PROJECT_URL and SUPABASE_KEY\n' +
+    '- For local dev: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY'
+  );
+}
+
 /**
  * Get or create a Supabase client instance
  * Uses singleton pattern to reuse the client across function invocations
@@ -30,23 +66,9 @@ export function getSupabaseClient(): SupabaseClient {
     return supabaseClient;
   }
 
-  // Try SaaS variables first (PROJECT_URL, SUPABASE_KEY)
-  let supabaseUrl = process.env.PROJECT_URL;
-  let supabaseServiceKey = process.env.SUPABASE_KEY;
-
-  // Fallback to local development variables (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-  if (!supabaseUrl || !supabaseServiceKey) {
-    supabaseUrl = process.env.SUPABASE_URL;
-    supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  }
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error(
-      'Missing Supabase environment variables. Please set either:\n' +
-      '- For SaaS: PROJECT_URL and SUPABASE_KEY\n' +
-      '- For local dev: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY'
-    );
-  }
+  const resolved = resolveSupabaseEnvConfig();
+  const supabaseUrl = resolved.url;
+  const supabaseServiceKey = resolved.serviceKey;
 
   supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
@@ -63,7 +85,7 @@ export function getSupabaseClient(): SupabaseClient {
     },
   });
   
-  console.log(`Supabase client created successfully for URL: ${supabaseUrl}`);
+  console.log(`Supabase client created successfully for URL: ${supabaseUrl} (source: ${resolved.source})`);
 
   return supabaseClient;
 }
@@ -611,6 +633,5 @@ export async function upsertCardAsset(assetData: Omit<CardAsset, 'id' | 'created
     return await createCardAsset(assetData);
   }
 }
-
 
 

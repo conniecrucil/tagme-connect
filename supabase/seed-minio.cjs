@@ -20,6 +20,8 @@ const s3Client = new S3Client({
 });
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'tagme-dev';
+const S3_ENDPOINT = process.env.S3_ENDPOINT || 'http://localhost:9000';
+const S3_PUBLIC_BASE_URL = process.env.S3_PUBLIC_BASE_URL || S3_ENDPOINT;
 
 // Customer data matching the SQL seed
 const customers = [
@@ -317,7 +319,7 @@ function createFakeImage(width = 200, height = 200, text = 'IMG') {
  */
 async function seedMinIO() {
   console.log(`🌱 Seeding MinIO bucket: ${BUCKET_NAME}`);
-  console.log(`📡 MinIO endpoint: ${process.env.S3_ENDPOINT || 'http://localhost:9000'}`);
+  console.log(`📡 MinIO endpoint: ${S3_ENDPOINT}`);
   
   // Ensure bucket exists
   await ensureBucketExists();
@@ -333,7 +335,7 @@ async function seedMinIO() {
   console.log(`\n🎉 MinIO seeding completed!`);
   console.log(`\n📱 Access your seeded VCF files at:`);
   customers.forEach(customer => {
-    console.log(`   http://localhost:9000/${BUCKET_NAME}/${customer.uuid}/contact.vcf`);
+    console.log(`   ${S3_PUBLIC_BASE_URL}/${BUCKET_NAME}/${customer.uuid}/contact.vcf`);
   });
 }
 
