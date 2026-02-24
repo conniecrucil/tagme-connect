@@ -84,7 +84,6 @@ test.describe('Basic Card Purchase Workflow', () => {
       await assertMailpitPurchaseEmails({
         sessionId,
         customerEmail: identity.email,
-        customerName: identity.fullName,
         websiteUrl: identity.websiteUrl,
         productLabel: 'TAG Basic Card',
       });

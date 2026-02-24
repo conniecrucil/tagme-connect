@@ -279,7 +279,7 @@ e2e-dev: e2e-preflight ## Run local E2E suite (assumes app dev server is already
 	fi; \
 	echo "App reports TEST_ENV=true via /api/test-mode"; \
 	echo "Running Playwright E2E tests..."; \
-	PLAYWRIGHT_EXTERNAL_SERVER=1 npx playwright test
+	PLAYWRIGHT_EXTERNAL_SERVER=1 PLAYWRIGHT_E2E_LOCAL=1 npx playwright test
 
 ensure-tools:
 	@set -euo pipefail; \

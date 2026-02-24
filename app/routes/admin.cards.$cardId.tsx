@@ -8,7 +8,7 @@ export function meta() {
   ];
 }
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ params, request }: LoaderFunctionArgs) {
   const { cardId } = params;
   
   if (!cardId) {
@@ -16,7 +16,9 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }
 
   try {
-    const response = await fetch(`/api/get-card-details?cardId=${cardId}`);
+    const url = new URL(request.url);
+    const apiUrl = new URL(`/api/get-card-details?cardId=${encodeURIComponent(cardId)}`, url.origin);
+    const response = await fetch(apiUrl.toString());
     
     if (!response.ok) {
       if (response.status === 404) {

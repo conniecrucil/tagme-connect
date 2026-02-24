@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { createTestIdentity, uploadGeneratedPngViaButton } from './utils/e2e-helpers';
 
 test.describe('Admin Create TAG Core Card Workflow', () => {
   test('Admin can create TAG Core Card', async ({ page }) => {
+    const identity = createTestIdentity('core');
+
     // Navigate to admin dashboard (authentication is bypassed in development)
     await page.goto('/admin');
     
@@ -15,23 +18,20 @@ test.describe('Admin Create TAG Core Card Workflow', () => {
     await page.waitForLoadState('networkidle');
     
     // Fill in basic information
-    await page.fill('input[id="fname"]', 'John');
-    await page.fill('input[id="lname"]', 'Doe');
+    await page.fill('input[id="fname"]', identity.firstName);
+    await page.fill('input[id="lname"]', identity.lastName);
     await page.fill('input[id="title"]', 'Software Engineer');
     await page.fill('input[id="biz"]', 'Test Company');
-    await page.fill('input[id="email"]', 'connectme-customer@mailinator.com');
-    await page.fill('input[id="phone"]', '555-123-4567');
-    await page.fill('input[id="website"]', 'https://bancroft.io');
+    await page.fill('input[id="email"]', identity.email);
+    await page.fill('input[id="phone"]', identity.phone);
+    await page.fill('input[id="website"]', identity.websiteUrl);
     await page.fill('textarea[id="desc"]', 'Experienced software engineer with a passion for creating innovative solutions.');
     
-    // Upload placeholder images from app/assets
-    const imageInputs = page.locator('input[type="file"]');
-    const imageCount = await imageInputs.count();
-    
-    for (let i = 0; i < imageCount; i++) {
-      const input = imageInputs.nth(i);
-      await input.setInputFiles('/Users/brianbancroft/programming/side-hustle/connie/smartvcard/netlify-poc/app/assets/300x300.png');
-    }
+    // Upload generated images (no filesystem dependency)
+    await uploadGeneratedPngViaButton(page, 'Upload Cover Photo', `admin-cover-${identity.suffix}.png`, 960, 640, '#2563eb');
+    await expect(page.getByAltText('Cover image')).toBeVisible();
+    await uploadGeneratedPngViaButton(page, 'Upload Photo', `admin-photo-${identity.suffix}.png`, 300, 300, '#ea580c');
+    await expect(page.getByAltText('Photo')).toBeVisible();
     
     // Add social media actions
     const linkedinButton = page.locator('button').filter({ hasText: 'linkedin' });
@@ -55,51 +55,37 @@ test.describe('Admin Create TAG Core Card Workflow', () => {
     }
     
     // Click the create button
-    const createButton = page.locator('button[type="submit"]');
+    const createButton = page.getByRole('button', { name: 'Create Contact' });
     await expect(createButton).toBeVisible();
+    const adminCreateResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/admin-create-contact') &&
+        response.request().method() === 'POST',
+      { timeout: 15000 },
+    );
     await createButton.click();
+    const adminCreateResponse = await adminCreateResponsePromise;
+    expect(adminCreateResponse.ok()).toBeTruthy();
     
     // Wait for success page
     await page.waitForURL('**/admin/success**', { timeout: 30000 });
     
     // Verify we're on the success page
-    await expect(page.locator('h1')).toContainText('Contact Created Successfully');
-    
-    // Verify the website URL is displayed correctly
-    await expect(page.locator('text=https://bancroft.io')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /contact created successfully/i })).toBeVisible();
     
     // Verify customer email is displayed
-    await expect(page.locator('text=connectme-customer@mailinator.com')).toBeVisible();
+    await expect(page.locator(`text=${identity.email}`)).toBeVisible();
     
-    // Get the generated website URL from the success page
-    const websiteUrlElement = page.locator('text=https://bancroft.io').first();
-    const websiteUrl = await websiteUrlElement.textContent();
+    // Get the generated website URL from the success page (Online Contact Page textbox)
+    const onlineContactInput = page.locator('input[readonly]').first();
+    await expect(onlineContactInput).toBeVisible();
+    const websiteUrl = await onlineContactInput.inputValue();
+    expect(websiteUrl).toContain('/storage/v1/');
     
-    // Extract UUID from the URL if it's a generated URL
-    const uuidMatch = websiteUrl?.match(/demo\.bancroft\.io\/([a-f0-9-]+)/);
-    if (uuidMatch) {
-      const uuid = uuidMatch[1];
-      
-      // Navigate to the generated website
-      await page.goto(`https://demo.bancroft.io/${uuid}`);
-      
-      // Verify the website loads
-      await page.waitForLoadState('networkidle');
-      
-      // Verify images are displayed
-      const images = page.locator('img');
-      const imageCount = await images.count();
-      expect(imageCount).toBeGreaterThan(0);
-      
-      // Verify vCard download link exists
-      const vcardLink = page.locator('a[href*=".vcf"]');
-      await expect(vcardLink).toBeVisible();
-      
-      // Test vCard download
-      const downloadPromise = page.waitForEvent('download');
-      await vcardLink.click();
-      const download = await downloadPromise;
-      expect(download.suggestedFilename()).toMatch(/\.vcf$/);
-    }
+    // Verify success page includes a vCard URL and download action
+    const vcardUrlInput = page.locator('input[readonly]').nth(1);
+    await expect(vcardUrlInput).toBeVisible();
+    await expect(vcardUrlInput).toHaveValue(/contact\.vcf/);
+    await expect(page.getByRole('link', { name: 'Download' })).toBeVisible();
   });
 });

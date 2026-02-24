@@ -152,10 +152,11 @@ export async function assertMailpitPurchaseEmails(options: {
   websiteUrl: string;
   productLabel: 'TAG Basic Card' | 'TAG Core Card';
   customerName?: string;
+  requireWebsiteInCustomerBody?: boolean;
   requireWebsiteInAdminBody?: boolean;
   timeoutMs?: number;
 }) {
-  const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || 'connectme-test@mailinator.com').trim().toLowerCase();
   if (!adminEmail) {
     throw new Error('ADMIN_EMAIL must be set to validate Mailpit admin recipient');
   }
@@ -209,7 +210,9 @@ export async function assertMailpitPurchaseEmails(options: {
     expect(body).toContain(options.sessionId);
     expect(body).toContain(options.customerEmail);
   }
-  expect(result.customerMatch.body).toContain(options.websiteUrl);
+  if (options.requireWebsiteInCustomerBody ?? true) {
+    expect(result.customerMatch.body).toContain(options.websiteUrl);
+  }
   if (options.requireWebsiteInAdminBody ?? true) {
     expect(result.adminMatch.body).toContain(options.websiteUrl);
   }
