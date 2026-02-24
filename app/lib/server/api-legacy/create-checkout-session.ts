@@ -37,8 +37,7 @@ export default async (req: Request, context: any) => {
     // Use the origin from the request headers to support both localhost and production
     const configuredBaseUrl =
       process.env.APP_BASE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-      process.env.NETLIFY_SITE_URL;
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
     const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^\/]*$/, '') || configuredBaseUrl || 'http://localhost:3000';
     const baseUrl = origin;
 

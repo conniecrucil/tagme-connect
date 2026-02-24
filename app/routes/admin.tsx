@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -17,20 +17,10 @@ export function handle() {
 
 
 function AdminContent() {
-  const { isAuthenticated, isLoading, loginWithRedirect, user, logout } = useAuth0();
+  const { isAuthenticated, isLoading, user, logout } = useAuth0();
+  const location = useLocation();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(false);
-
-  const handleLogin = () => {
-    loginWithRedirect({
-      authorizationParams: {
-        connection: 'google-oauth2',
-      },
-      appState: {
-        returnTo: '/admin',
-      },
-    });
-  };
 
   // Check authorization when user becomes authenticated
   useEffect(() => {
@@ -75,23 +65,8 @@ function AdminContent() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Admin Access Required</CardTitle>
-            <CardDescription>
-              Please sign in with Google to access the admin dashboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleLogin} className="w-full" size="lg">
-              Sign in with Google
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
 
   // Show loading while checking authorization

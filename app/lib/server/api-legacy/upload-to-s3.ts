@@ -17,7 +17,7 @@ import * as Sentry from '@sentry/node';
 // Initialize Sentry for error tracking
 Sentry.init({
   dsn: 'https://7184a4ca4bd3c0d242e0297974ff3ce0@o258608.ingest.us.sentry.io/4510055747223552',
-  environment: process.env.NETLIFY ? 'production' : 'development',
+  environment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   tracesSampleRate: 1.0,
 });
 

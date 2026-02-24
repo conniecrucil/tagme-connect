@@ -42,7 +42,6 @@ function getBaseUrlFromRequest(req: Request): string {
   return (
     process.env.APP_BASE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-    process.env.NETLIFY_SITE_URL ||
     'http://localhost:3000'
   );
 }

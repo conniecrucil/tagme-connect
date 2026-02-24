@@ -142,7 +142,7 @@ export const handler = async (event: any) => {
         pass: !!process.env.ADMIN_PASS,
       },
       deployment: {
-        appBaseUrl: !!process.env.APP_BASE_URL || !!process.env.NETLIFY_SITE_URL,
+        appBaseUrl: !!process.env.APP_BASE_URL,
         vercelUrl: !!process.env.VERCEL_URL,
       },
       supabase: {

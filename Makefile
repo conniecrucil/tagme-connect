@@ -30,7 +30,7 @@ SEED_SQL := supabase/seed.sql
 
 .PHONY: help up down dev nuke status db-logs docker-status \
 	ensure-tools ensure-db-ready ensure-migrations ensure-seed ensure-minio-seed env-local \
-	migrate seed seed-minio init-minio psql-check
+	migrate seed seed-minio init-minio psql-check add-admin
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_.-]+:.*## / {printf "%-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -382,3 +382,27 @@ seed-minio: ensure-minio-seed ## Seed MinIO assets
 
 psql-check: ## Check direct Postgres connectivity
 	@PGPASSWORD="$(DB_PASSWORD)" $(PSQL) -h "$(DB_HOST)" -p "$(DB_PORT)" -U "$(DB_USER)" -d "$(DB_NAME)" -Atqc "select version();"
+
+add-admin: ensure-db-ready ## Prompt for an admin email and add it to admin_users_auth0 (use EMAIL=... to skip prompt)
+	@set -euo pipefail; \
+	email="$${EMAIL:-}"; \
+	if [ -z "$$email" ]; then \
+		read -r -p "Admin email to add: " email; \
+	fi; \
+	email="$$(printf '%s' "$$email" | tr -d '\r' | xargs)"; \
+	if [ -z "$$email" ]; then \
+		echo "Email is required."; \
+		exit 1; \
+	fi; \
+	if ! printf '%s' "$$email" | grep -Eq '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$$'; then \
+		echo "Invalid email format: $$email"; \
+		exit 1; \
+	fi; \
+	escaped_email="$${email//\'/\'\'}"; \
+	result=$$(PGPASSWORD="$(DB_PASSWORD)" $(PSQL) -h "$(DB_HOST)" -p "$(DB_PORT)" -U "$(DB_USER)" -d "$(DB_NAME)" -Atq \
+		-c "WITH ins AS (INSERT INTO public.admin_users_auth0 (email) VALUES ('$$escaped_email') ON CONFLICT (email) DO NOTHING RETURNING email) SELECT CASE WHEN EXISTS (SELECT 1 FROM ins) THEN 'inserted' ELSE 'exists' END;"); \
+	if [ "$$result" = "inserted" ]; then \
+		echo "Added admin user: $$email"; \
+	else \
+		echo "Admin user already exists: $$email"; \
+	fi

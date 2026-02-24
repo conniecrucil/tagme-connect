@@ -42,7 +42,10 @@ export const links: Route.LinksFunction = () => [
 function AppShell({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isShelllessRoute =
+    location.pathname.startsWith('/admin') ||
+    location.pathname === '/login' ||
+    location.pathname === '/logout';
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
@@ -60,9 +63,9 @@ function AppShell({ children }: { children: React.ReactNode }) {
     >
       {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
       <div className={isLoading ? "opacity-0" : "opacity-100 transition-opacity duration-500"}>
-        {!isAdminRoute && <Header />}
+        {!isShelllessRoute && <Header />}
         {children}
-        {!isAdminRoute && <Footer />}
+        {!isShelllessRoute && <Footer />}
         <ScrollRestoration />
         <Scripts />
         <Toaster />

@@ -32,7 +32,6 @@ export function resolveSupabaseEnvConfig(): SupabaseEnvConfig {
 
   const preferLocal =
     process.env.SUPABASE_PREFER_LOCAL === 'true' ||
-    process.env.NETLIFY_DEV === 'true' ||
     process.env.NODE_ENV === 'development';
 
   if (preferLocal && localUrl && localKey) {
@@ -634,4 +633,3 @@ export async function upsertCardAsset(assetData: Omit<CardAsset, 'id' | 'created
     return await createCardAsset(assetData);
   }
 }
-
