@@ -9,6 +9,50 @@ const resend = new Resend(process.env.RESEND_API_KEY || '');
 
 const emailFrom = process.env.EMAIL_FROM || 'contact@tagmeconnections.con';
 const adminEmail = process.env.ADMIN_EMAIL || 'contact@tagmeconnections.con';
+const isTestEnv = String(process.env.TEST_ENV || '').toLowerCase() === 'true';
+const mailpitApiUrl = process.env.MAILPIT_API_URL || process.env.SUPABASE_MAILPIT_URL || 'http://127.0.0.1:54324';
+
+function stripHtml(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function sendEmail(params: { from: string; to: string[]; subject: string; html: string }) {
+  if (isTestEnv) {
+    const payload = {
+      From: { Email: params.from },
+      To: params.to.map((email) => ({ Email: email })),
+      Subject: params.subject,
+      HTML: params.html,
+      Text: stripHtml(params.html),
+    };
+
+    const response = await fetch(`${mailpitApiUrl}/api/v1/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new Error(`Mailpit send failed (${response.status}): ${body}`);
+    }
+    return;
+  }
+
+  await resend.emails.send({
+    from: params.from,
+    to: params.to,
+    subject: params.subject,
+    html: params.html,
+  });
+}
 
 // In-memory store for tracking sent emails (in production, use a database or Redis)
 // This prevents duplicate emails from being sent if the function is called multiple times
@@ -300,7 +344,7 @@ async function sendCustomerConfirmationEmail(session: any, customerData: any, ca
       s3Urls
     });
 
-    await resend.emails.send({
+    await sendEmail({
       from: emailFrom, // This should be your verified domain
       to: [customerData.email],
       subject: `Order Confirmation - ${session.id}`,
@@ -360,11 +404,11 @@ async function sendAdminNotificationEmail(session: any, customerData: any, item:
       cardDesignZipUrl
     });
 
-    await resend.emails.send({
+    await sendEmail({
       from: emailFrom, // This should be your verified domain
       to: [adminEmail],
       subject: `New Order - ${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'} #${cardNumber}`,
-      html: inlineEmailCSS(emailHtml)
+      html: inlineEmailCSS(emailHtml),
     });
 
     console.log(`Admin notification email sent for card ${cardNumber} - comprehensive template`);

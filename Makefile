@@ -28,7 +28,7 @@ SUPABASE_DB_CONTAINER ?= supabase_db_$(SUPABASE_PROJECT_LABEL)
 MIGRATIONS := $(sort $(wildcard supabase/migrations/*.sql))
 SEED_SQL := supabase/seed.sql
 
-.PHONY: help up down dev nuke status db-logs docker-status \
+.PHONY: help up down dev nuke status db-logs docker-status e2e-preflight e2e-dev \
 	ensure-tools ensure-db-ready ensure-migrations ensure-seed ensure-minio-seed env-local \
 	migrate seed seed-minio init-minio psql-check add-admin
 
@@ -65,7 +65,7 @@ dev: ## Run fullstack React Router app locally (Vercel-compatible)
 	[ -f "$(ENV_LOCAL)" ] && . "$(ENV_LOCAL)" || true; \
 	set +a; \
 	export SUPABASE_PREFER_LOCAL=true; \
-	$(NPM) run dev -- --port 3000
+	$(NPM) run dev -- --port 3000 --host
 
 nuke: ## Destroy local Supabase stack volumes (DB + MinIO) and refresh local env file
 	@set -euo pipefail; \
@@ -173,6 +173,113 @@ docker-status: ## Show Supabase-related Docker containers/volumes/networks for t
 	echo; \
 	echo "== Networks =="; \
 	$(DOCKER) network ls | (grep "$(SUPABASE_PROJECT_LABEL)" || true)
+
+e2e-preflight: ## Validate local env and prove Supabase/MinIO are reachable before E2E
+	@set -euo pipefail; \
+	load_dotenv_file() { \
+		file="$$1"; \
+		[ -f "$$file" ] || return 0; \
+		while IFS= read -r line || [ -n "$$line" ]; do \
+			line="$${line%$$'\r'}"; \
+			case "$$line" in ''|\#*) continue ;; esac; \
+			case "$$line" in export\ *) line="$${line#export }" ;; esac; \
+			key="$${line%%=*}"; \
+			value="$${line#*=}"; \
+			key="$$(printf '%s' "$$key" | sed 's/[[:space:]]*$$//')"; \
+			if ! printf '%s' "$$key" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*$$'; then \
+				continue; \
+			fi; \
+			export "$$key=$$value"; \
+		done < "$$file"; \
+	}; \
+	load_dotenv_file ./.env; \
+	load_dotenv_file "$(ENV_LOCAL)"; \
+	require_env() { \
+		name="$$1"; \
+		value="$${!name:-}"; \
+		if [ -z "$$value" ]; then \
+			echo "Missing required env var for E2E: $$name" >&2; \
+			missing=1; \
+		fi; \
+	}; \
+	missing=0; \
+	require_env STRIPE_SECRET_KEY; \
+	require_env VITE_STRIPE_PUBLISHABLE_KEY; \
+	require_env SUPABASE_URL; \
+	require_env SUPABASE_SERVICE_ROLE_KEY; \
+	require_env S3_ENDPOINT; \
+	require_env S3_ACCESS_KEY; \
+	require_env S3_SECRET_KEY; \
+	require_env S3_BUCKET_NAME; \
+	if [ "$$missing" -ne 0 ]; then \
+		echo "E2E preflight failed due to missing environment variables." >&2; \
+		echo "Load/update .env and $(ENV_LOCAL), then rerun 'make e2e-dev'." >&2; \
+		exit 1; \
+	fi; \
+	http_code() { \
+		curl -sS -o /dev/null --max-time 3 -w "%{http_code}" "$$1" || true; \
+	}; \
+	api_code=$$(http_code "$(SUPABASE_API_URL)/rest/v1/"); \
+	s3_code=$$(http_code "$(SUPABASE_STORAGE_S3_URL)"); \
+	studio_code=$$(http_code "$(SUPABASE_STUDIO_URL)"); \
+	mailpit_code=$$(http_code "$(SUPABASE_MAILPIT_URL)/api/v1/info"); \
+	if [ -z "$$api_code" ] || [ "$$api_code" = "000" ] || [ -z "$$s3_code" ] || [ "$$s3_code" = "000" ] || [ -z "$$mailpit_code" ] || [ "$$mailpit_code" = "000" ]; then \
+		echo "Local Supabase/MinIO is not reachable. Run 'make up' first, then rerun 'make e2e-dev'." >&2; \
+		echo "  Supabase API: $(SUPABASE_API_URL)/rest/v1/ (HTTP $${api_code:-000})" >&2; \
+		echo "  Storage S3:    $(SUPABASE_STORAGE_S3_URL) (HTTP $${s3_code:-000})" >&2; \
+		echo "  Mailpit API:   $(SUPABASE_MAILPIT_URL)/api/v1/info (HTTP $${mailpit_code:-000})" >&2; \
+		exit 1; \
+	fi; \
+	echo "E2E preflight OK:"; \
+	echo "  Supabase API reachable at $(SUPABASE_API_URL)/rest/v1/ (HTTP $$api_code)"; \
+	echo "  Storage S3 reachable at $(SUPABASE_STORAGE_S3_URL) (HTTP $$s3_code)"; \
+	echo "  Mailpit API reachable at $(SUPABASE_MAILPIT_URL)/api/v1/info (HTTP $$mailpit_code)"; \
+	if [ -n "$$studio_code" ] && [ "$$studio_code" != "000" ]; then \
+		echo "  Studio reachable at $(SUPABASE_STUDIO_URL) (HTTP $$studio_code)"; \
+	else \
+		echo "  Studio not reachable at $(SUPABASE_STUDIO_URL) (optional)"; \
+	fi
+
+e2e-dev: e2e-preflight ## Run local E2E suite (assumes app dev server is already running)
+	@set -euo pipefail; \
+	load_dotenv_file() { \
+		file="$$1"; \
+		[ -f "$$file" ] || return 0; \
+		while IFS= read -r line || [ -n "$$line" ]; do \
+			line="$${line%$$'\r'}"; \
+			case "$$line" in ''|\#*) continue ;; esac; \
+			case "$$line" in export\ *) line="$${line#export }" ;; esac; \
+			key="$${line%%=*}"; \
+			value="$${line#*=}"; \
+			key="$$(printf '%s' "$$key" | sed 's/[[:space:]]*$$//')"; \
+			if ! printf '%s' "$$key" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*$$'; then \
+				continue; \
+			fi; \
+			export "$$key=$$value"; \
+		done < "$$file"; \
+	}; \
+	load_dotenv_file ./.env; \
+	load_dotenv_file "$(ENV_LOCAL)"; \
+	if ! curl -fsS -o /dev/null --max-time 2 "$(APP_DEV_URL)"; then \
+		echo "App dev server is not reachable at $(APP_DEV_URL)." >&2; \
+		echo "Start it first (for example: 'make dev'), then rerun 'make e2e-dev'." >&2; \
+		exit 1; \
+	fi; \
+	echo "App dev server is reachable at $(APP_DEV_URL)"; \
+	test_mode_json=$$(curl -fsS --max-time 5 "$(APP_DEV_URL)/api/test-mode" || true); \
+	if [ -z "$$test_mode_json" ]; then \
+		echo "Failed to read test mode status from $(APP_DEV_URL)/api/test-mode." >&2; \
+		echo "Make sure the app is running the latest code, then rerun 'make e2e-dev'." >&2; \
+		exit 1; \
+	fi; \
+	if ! printf '%s' "$$test_mode_json" | grep -Eq '"active"[[:space:]]*:[[:space:]]*true'; then \
+		echo "TEST_ENV is not enabled in the running app (/api/test-mode returned: $$test_mode_json)." >&2; \
+		echo "Restart the dev server with TEST_ENV=true (for example: 'TEST_ENV=true make dev'), then rerun 'make e2e-dev'." >&2; \
+		exit 1; \
+	fi; \
+	echo "App reports TEST_ENV=true via /api/test-mode"; \
+	echo "Running Playwright E2E tests..."; \
+	PLAYWRIGHT_EXTERNAL_SERVER=1 npx playwright test
 
 ensure-tools:
 	@set -euo pipefail; \

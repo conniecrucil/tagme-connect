@@ -9,11 +9,12 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "~/components/ui/s
 import { Separator } from "~/components/ui/separator";
 import { useEffect, useRef, useState } from "react";
 import { AdminBreadcrumbs } from "~/components/AdminBreadcrumbs";
-import { getAuthorizedAdminFromSession } from "~/lib/server/admin-auth-session.server";
+import { getAuthorizedAdminFromSession, isTestEnvBypassEnabled } from "~/lib/server/admin-auth-session.server";
 
 type AdminLoaderData = {
   authState: "authorized" | "unauthenticated" | "forbidden";
   sessionUser: { email: string; name?: string; picture?: string } | null;
+  testEnvBypass: boolean;
 };
 
 function json(data: AdminLoaderData) {
@@ -23,17 +24,7 @@ function json(data: AdminLoaderData) {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const url = new URL(request.url);
-  console.log("[admin.loader] Request", {
-    method: request.method,
-    path: url.pathname,
-  });
-
   const result = await getAuthorizedAdminFromSession(request);
-  console.log("[admin.loader] Session auth result", {
-    state: result.state,
-    email: result.user?.email ?? null,
-  });
   return json({
     authState: result.state,
     sessionUser: result.user
@@ -43,6 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
           picture: result.user.picture,
         }
       : null,
+    testEnvBypass: isTestEnvBypassEnabled(),
   });
 }
 
@@ -53,8 +45,27 @@ export function handle() {
 }
 
 
-function AdminContent() {
-  const loaderData = useLoaderData<typeof loader>() as AdminLoaderData;
+function AdminScaffold({ userData }: { userData: { name: string; email: string; avatar?: string } }) {
+  return (
+    <SidebarProvider>
+      <AppSidebar user={userData} />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <AdminBreadcrumbs />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <Outlet />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+function AdminContent({ loaderData }: { loaderData: AdminLoaderData }) {
   const { isAuthenticated, isLoading, user, getIdTokenClaims } = useAuth0();
   const location = useLocation();
   const [syncingServerSession, setSyncingServerSession] = useState(false);
@@ -91,11 +102,6 @@ function AdminContent() {
         if (!cancelled) {
           setServerSessionSyncError(null);
           const returnTo = `${location.pathname}${location.search}${location.hash}` || "/admin";
-          console.log("Submitting admin session sync form for document redirect", {
-            returnTo,
-            email: user.email,
-          });
-
           const form = document.createElement("form");
           form.method = "POST";
           form.action = "/api/admin-session";
@@ -232,30 +238,29 @@ function AdminContent() {
     avatar: user?.picture || loaderData.sessionUser?.picture,
   };
 
-  // If authenticated, render child routes with sidebar
-  return (
-    <SidebarProvider>
-      <AppSidebar user={userData} />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-            <AdminBreadcrumbs />
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Outlet />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
-  );
+  return <AdminScaffold userData={userData} />;
+}
+
+function TestEnvAdminContent({ loaderData }: { loaderData: AdminLoaderData }) {
+  const userData = {
+    name: loaderData.sessionUser?.name || "Test Admin",
+    email: loaderData.sessionUser?.email || "test-admin@local",
+    avatar: loaderData.sessionUser?.picture,
+  };
+
+  return <AdminScaffold userData={userData} />;
 }
 
 export default function Admin() {
+  const loaderData = useLoaderData<typeof loader>() as AdminLoaderData;
+
+  if (loaderData.testEnvBypass) {
+    return <TestEnvAdminContent loaderData={loaderData} />;
+  }
+
   return (
     <Auth0ProviderWrapper>
-      <AdminContent />
+      <AdminContent loaderData={loaderData} />
     </Auth0ProviderWrapper>
   );
 }

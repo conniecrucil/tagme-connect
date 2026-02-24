@@ -11,6 +11,3 @@ export async function action({ request }: ActionFunctionArgs) {
   return runLegacyApiModule(MODULE_NAME, request);
 }
 
-export default function ApiRoute() {
-  return null;
-}

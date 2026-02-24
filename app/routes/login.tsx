@@ -1,6 +1,7 @@
+import type { LoaderFunctionArgs } from "react-router";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useMemo } from "react";
-import { Navigate, useSearchParams } from "react-router";
+import { Navigate, redirect, useSearchParams } from "react-router";
 import { Auth0ProviderWrapper } from "~/providers/auth0-provider";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
@@ -10,6 +11,16 @@ export function meta() {
     { title: "Login - TagMe Connections" },
     { name: "description", content: "Sign in to access the TagMe admin dashboard." },
   ];
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  if (process.env.TEST_ENV === "true") {
+    const url = new URL(request.url);
+    const returnTo = sanitizeReturnTo(url.searchParams.get("returnTo"));
+    throw redirect(returnTo || "/admin");
+  }
+
+  return null;
 }
 
 function sanitizeReturnTo(value: string | null) {

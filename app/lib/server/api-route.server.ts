@@ -1,6 +1,7 @@
 export type LegacyRequestHandler = (request: Request, context: any) => Promise<Response> | Response;
 
 type LegacyNetlifyHandlerResult = { statusCode?: number; headers?: HeadersInit; body?: string } | void;
+type LegacyApiModule = Record<string, unknown>;
 
 function jsonError(status: number, error: string) {
   return new Response(JSON.stringify({ error }), {
@@ -9,8 +10,18 @@ function jsonError(status: number, error: string) {
   });
 }
 
+const legacyApiModuleImporters = import.meta.glob<LegacyApiModule>("./api-legacy/*.{js,ts}");
+
 async function importLegacyApiModule(moduleName: string) {
-  return import(`./api-legacy/${moduleName}`);
+  const importer =
+    legacyApiModuleImporters[`./api-legacy/${moduleName}.ts`] ??
+    legacyApiModuleImporters[`./api-legacy/${moduleName}.js`];
+
+  if (!importer) {
+    throw new Error(`Unknown legacy API module: ${moduleName}`);
+  }
+
+  return importer();
 }
 
 export async function runLegacyApiModule(moduleName: string, request: Request) {

@@ -1,0 +1,1202 @@
+{
+  "buildManifest": {
+    "serverBundles": {
+      "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0": {
+        "id": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+        "file": "build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    },
+    "routeIdToServerBundleId": {
+      "routes/api.check-admin-authorization": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.update-order-fulfillment": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.create-checkout-session": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.get-stripe-receipt-url": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.admin-create-contact": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.send-purchase-emails": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.check-system-status": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.update-contact-data": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.admin-users-create": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.admin-users-delete": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.get-stripe-session": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.admin-users-list": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.get-card-details": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/terms-and-conditions": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.upload-logo-zip": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.admin-session": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.validate-card": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.upload-to-s3": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/purchase-success": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.delete-card": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/shop.$productId.configure": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/shop.$productId._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/privacy-policy": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.$function": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/builder-test": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/confirmation": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/shop._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/checkout": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/contact": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/_index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/logout": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/about": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.email-templates.customer-confirmation": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.email-templates.admin-notification": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.email-templates._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.cards.$cardId._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.cards.$cardId.edit": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.system-status": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.cards._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.preview": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.success": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.create": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.orders.$orderId": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.orders._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.users": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/login": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/cart": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/$": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0"
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "app/root.tsx",
+        "path": "",
+        "config": {}
+      },
+      "routes/api.check-admin-authorization": {
+        "id": "routes/api.check-admin-authorization",
+        "parentId": "root",
+        "file": "app/routes/api.check-admin-authorization.ts",
+        "path": "api/check-admin-authorization",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.update-order-fulfillment": {
+        "id": "routes/api.update-order-fulfillment",
+        "parentId": "root",
+        "file": "app/routes/api.update-order-fulfillment.ts",
+        "path": "api/update-order-fulfillment",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.create-checkout-session": {
+        "id": "routes/api.create-checkout-session",
+        "parentId": "root",
+        "file": "app/routes/api.create-checkout-session.ts",
+        "path": "api/create-checkout-session",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.get-stripe-receipt-url": {
+        "id": "routes/api.get-stripe-receipt-url",
+        "parentId": "root",
+        "file": "app/routes/api.get-stripe-receipt-url.ts",
+        "path": "api/get-stripe-receipt-url",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.admin-create-contact": {
+        "id": "routes/api.admin-create-contact",
+        "parentId": "root",
+        "file": "app/routes/api.admin-create-contact.ts",
+        "path": "api/admin-create-contact",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.send-purchase-emails": {
+        "id": "routes/api.send-purchase-emails",
+        "parentId": "root",
+        "file": "app/routes/api.send-purchase-emails.ts",
+        "path": "api/send-purchase-emails",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.check-system-status": {
+        "id": "routes/api.check-system-status",
+        "parentId": "root",
+        "file": "app/routes/api.check-system-status.ts",
+        "path": "api/check-system-status",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.update-contact-data": {
+        "id": "routes/api.update-contact-data",
+        "parentId": "root",
+        "file": "app/routes/api.update-contact-data.ts",
+        "path": "api/update-contact-data",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.admin-users-create": {
+        "id": "routes/api.admin-users-create",
+        "parentId": "root",
+        "file": "app/routes/api.admin-users-create.ts",
+        "path": "api/admin-users-create",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.admin-users-delete": {
+        "id": "routes/api.admin-users-delete",
+        "parentId": "root",
+        "file": "app/routes/api.admin-users-delete.ts",
+        "path": "api/admin-users-delete",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.get-stripe-session": {
+        "id": "routes/api.get-stripe-session",
+        "parentId": "root",
+        "file": "app/routes/api.get-stripe-session.ts",
+        "path": "api/get-stripe-session",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.admin-users-list": {
+        "id": "routes/api.admin-users-list",
+        "parentId": "root",
+        "file": "app/routes/api.admin-users-list.ts",
+        "path": "api/admin-users-list",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.get-card-details": {
+        "id": "routes/api.get-card-details",
+        "parentId": "root",
+        "file": "app/routes/api.get-card-details.ts",
+        "path": "api/get-card-details",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/terms-and-conditions": {
+        "id": "routes/terms-and-conditions",
+        "parentId": "root",
+        "file": "app/routes/terms-and-conditions.tsx",
+        "path": "terms-and-conditions",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.upload-logo-zip": {
+        "id": "routes/api.upload-logo-zip",
+        "parentId": "root",
+        "file": "app/routes/api.upload-logo-zip.ts",
+        "path": "api/upload-logo-zip",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.admin-session": {
+        "id": "routes/api.admin-session",
+        "parentId": "root",
+        "file": "app/routes/api.admin-session.ts",
+        "path": "api/admin-session",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.validate-card": {
+        "id": "routes/api.validate-card",
+        "parentId": "root",
+        "file": "app/routes/api.validate-card.ts",
+        "path": "api/validate-card",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.upload-to-s3": {
+        "id": "routes/api.upload-to-s3",
+        "parentId": "root",
+        "file": "app/routes/api.upload-to-s3.ts",
+        "path": "api/upload-to-s3",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/purchase-success": {
+        "id": "routes/purchase-success",
+        "parentId": "root",
+        "file": "app/routes/purchase-success.tsx",
+        "path": "purchase-success",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.delete-card": {
+        "id": "routes/api.delete-card",
+        "parentId": "root",
+        "file": "app/routes/api.delete-card.ts",
+        "path": "api/delete-card",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/shop.$productId": {
+        "id": "routes/shop.$productId",
+        "parentId": "root",
+        "file": "app/routes/shop.$productId.tsx",
+        "path": "shop/:productId",
+        "config": {}
+      },
+      "routes/shop.$productId.configure": {
+        "id": "routes/shop.$productId.configure",
+        "parentId": "routes/shop.$productId",
+        "file": "app/routes/shop.$productId.configure.tsx",
+        "path": "configure",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/shop.$productId._index": {
+        "id": "routes/shop.$productId._index",
+        "parentId": "routes/shop.$productId",
+        "file": "app/routes/shop.$productId._index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/privacy-policy": {
+        "id": "routes/privacy-policy",
+        "parentId": "root",
+        "file": "app/routes/privacy-policy.tsx",
+        "path": "privacy-policy",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.$function": {
+        "id": "routes/api.$function",
+        "parentId": "root",
+        "file": "app/routes/api.$function.ts",
+        "path": "api/:function",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/builder-test": {
+        "id": "routes/builder-test",
+        "parentId": "root",
+        "file": "app/routes/builder-test.tsx",
+        "path": "builder-test",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/confirmation": {
+        "id": "routes/confirmation",
+        "parentId": "root",
+        "file": "app/routes/confirmation.tsx",
+        "path": "confirmation",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/shop._index": {
+        "id": "routes/shop._index",
+        "parentId": "root",
+        "file": "app/routes/shop._index.tsx",
+        "path": "shop",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard": {
+        "id": "routes/dashboard",
+        "parentId": "root",
+        "file": "app/routes/dashboard.tsx",
+        "path": "dashboard",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/checkout": {
+        "id": "routes/checkout",
+        "parentId": "root",
+        "file": "app/routes/checkout.tsx",
+        "path": "checkout",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/contact": {
+        "id": "routes/contact",
+        "parentId": "root",
+        "file": "app/routes/contact.tsx",
+        "path": "contact",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "root",
+        "file": "app/routes/_index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/logout": {
+        "id": "routes/logout",
+        "parentId": "root",
+        "file": "app/routes/logout.tsx",
+        "path": "logout",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/about": {
+        "id": "routes/about",
+        "parentId": "root",
+        "file": "app/routes/about.tsx",
+        "path": "about",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin": {
+        "id": "routes/admin",
+        "parentId": "root",
+        "file": "app/routes/admin.tsx",
+        "path": "admin",
+        "config": {}
+      },
+      "routes/admin.email-templates.customer-confirmation": {
+        "id": "routes/admin.email-templates.customer-confirmation",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.email-templates.customer-confirmation.tsx",
+        "path": "email-templates/customer-confirmation",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.email-templates.admin-notification": {
+        "id": "routes/admin.email-templates.admin-notification",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.email-templates.admin-notification.tsx",
+        "path": "email-templates/admin-notification",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.email-templates._index": {
+        "id": "routes/admin.email-templates._index",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.email-templates._index.tsx",
+        "path": "email-templates",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.cards.$cardId": {
+        "id": "routes/admin.cards.$cardId",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.cards.$cardId.tsx",
+        "path": "cards/:cardId",
+        "config": {}
+      },
+      "routes/admin.cards.$cardId._index": {
+        "id": "routes/admin.cards.$cardId._index",
+        "parentId": "routes/admin.cards.$cardId",
+        "file": "app/routes/admin.cards.$cardId._index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.cards.$cardId.edit": {
+        "id": "routes/admin.cards.$cardId.edit",
+        "parentId": "routes/admin.cards.$cardId",
+        "file": "app/routes/admin.cards.$cardId.edit.tsx",
+        "path": "edit",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.system-status": {
+        "id": "routes/admin.system-status",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.system-status.tsx",
+        "path": "system-status",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.cards._index": {
+        "id": "routes/admin.cards._index",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.cards._index.tsx",
+        "path": "cards",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.preview": {
+        "id": "routes/admin.preview",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.preview.tsx",
+        "path": "preview",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.success": {
+        "id": "routes/admin.success",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.success.tsx",
+        "path": "success",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin._index": {
+        "id": "routes/admin._index",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin._index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.create": {
+        "id": "routes/admin.create",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.create.tsx",
+        "path": "create",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.orders": {
+        "id": "routes/admin.orders",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.orders.tsx",
+        "path": "orders",
+        "config": {}
+      },
+      "routes/admin.orders.$orderId": {
+        "id": "routes/admin.orders.$orderId",
+        "parentId": "routes/admin.orders",
+        "file": "app/routes/admin.orders.$orderId.tsx",
+        "path": ":orderId",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.orders._index": {
+        "id": "routes/admin.orders._index",
+        "parentId": "routes/admin.orders",
+        "file": "app/routes/admin.orders._index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.users": {
+        "id": "routes/admin.users",
+        "parentId": "routes/admin",
+        "file": "app/routes/admin.users.tsx",
+        "path": "users",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/login": {
+        "id": "routes/login",
+        "parentId": "root",
+        "file": "app/routes/login.tsx",
+        "path": "login",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/cart": {
+        "id": "routes/cart",
+        "parentId": "root",
+        "file": "app/routes/cart.tsx",
+        "path": "cart",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/$": {
+        "id": "routes/$",
+        "parentId": "root",
+        "file": "app/routes/$.tsx",
+        "path": "*",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    }
+  },
+  "reactRouterConfig": {
+    "appDirectory": "/Users/brianbancroft/programming/side-hustle/connie/tagme-connect/app",
+    "basename": "/",
+    "buildDirectory": "/Users/brianbancroft/programming/side-hustle/connie/tagme-connect/build",
+    "future": {
+      "v8_middleware": false,
+      "unstable_optimizeDeps": false,
+      "unstable_splitRouteModules": false,
+      "unstable_subResourceIntegrity": false,
+      "unstable_viteEnvironmentApi": false
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "root.tsx",
+        "path": ""
+      },
+      "routes/api.check-admin-authorization": {
+        "id": "routes/api.check-admin-authorization",
+        "parentId": "root",
+        "file": "routes/api.check-admin-authorization.ts",
+        "path": "api/check-admin-authorization"
+      },
+      "routes/api.update-order-fulfillment": {
+        "id": "routes/api.update-order-fulfillment",
+        "parentId": "root",
+        "file": "routes/api.update-order-fulfillment.ts",
+        "path": "api/update-order-fulfillment"
+      },
+      "routes/api.create-checkout-session": {
+        "id": "routes/api.create-checkout-session",
+        "parentId": "root",
+        "file": "routes/api.create-checkout-session.ts",
+        "path": "api/create-checkout-session"
+      },
+      "routes/api.get-stripe-receipt-url": {
+        "id": "routes/api.get-stripe-receipt-url",
+        "parentId": "root",
+        "file": "routes/api.get-stripe-receipt-url.ts",
+        "path": "api/get-stripe-receipt-url"
+      },
+      "routes/api.admin-create-contact": {
+        "id": "routes/api.admin-create-contact",
+        "parentId": "root",
+        "file": "routes/api.admin-create-contact.ts",
+        "path": "api/admin-create-contact"
+      },
+      "routes/api.send-purchase-emails": {
+        "id": "routes/api.send-purchase-emails",
+        "parentId": "root",
+        "file": "routes/api.send-purchase-emails.ts",
+        "path": "api/send-purchase-emails"
+      },
+      "routes/api.check-system-status": {
+        "id": "routes/api.check-system-status",
+        "parentId": "root",
+        "file": "routes/api.check-system-status.ts",
+        "path": "api/check-system-status"
+      },
+      "routes/api.update-contact-data": {
+        "id": "routes/api.update-contact-data",
+        "parentId": "root",
+        "file": "routes/api.update-contact-data.ts",
+        "path": "api/update-contact-data"
+      },
+      "routes/api.admin-users-create": {
+        "id": "routes/api.admin-users-create",
+        "parentId": "root",
+        "file": "routes/api.admin-users-create.ts",
+        "path": "api/admin-users-create"
+      },
+      "routes/api.admin-users-delete": {
+        "id": "routes/api.admin-users-delete",
+        "parentId": "root",
+        "file": "routes/api.admin-users-delete.ts",
+        "path": "api/admin-users-delete"
+      },
+      "routes/api.get-stripe-session": {
+        "id": "routes/api.get-stripe-session",
+        "parentId": "root",
+        "file": "routes/api.get-stripe-session.ts",
+        "path": "api/get-stripe-session"
+      },
+      "routes/api.admin-users-list": {
+        "id": "routes/api.admin-users-list",
+        "parentId": "root",
+        "file": "routes/api.admin-users-list.ts",
+        "path": "api/admin-users-list"
+      },
+      "routes/api.get-card-details": {
+        "id": "routes/api.get-card-details",
+        "parentId": "root",
+        "file": "routes/api.get-card-details.ts",
+        "path": "api/get-card-details"
+      },
+      "routes/terms-and-conditions": {
+        "id": "routes/terms-and-conditions",
+        "parentId": "root",
+        "file": "routes/terms-and-conditions.tsx",
+        "path": "terms-and-conditions"
+      },
+      "routes/api.upload-logo-zip": {
+        "id": "routes/api.upload-logo-zip",
+        "parentId": "root",
+        "file": "routes/api.upload-logo-zip.ts",
+        "path": "api/upload-logo-zip"
+      },
+      "routes/api.admin-session": {
+        "id": "routes/api.admin-session",
+        "parentId": "root",
+        "file": "routes/api.admin-session.ts",
+        "path": "api/admin-session"
+      },
+      "routes/api.validate-card": {
+        "id": "routes/api.validate-card",
+        "parentId": "root",
+        "file": "routes/api.validate-card.ts",
+        "path": "api/validate-card"
+      },
+      "routes/api.upload-to-s3": {
+        "id": "routes/api.upload-to-s3",
+        "parentId": "root",
+        "file": "routes/api.upload-to-s3.ts",
+        "path": "api/upload-to-s3"
+      },
+      "routes/purchase-success": {
+        "id": "routes/purchase-success",
+        "parentId": "root",
+        "file": "routes/purchase-success.tsx",
+        "path": "purchase-success"
+      },
+      "routes/api.delete-card": {
+        "id": "routes/api.delete-card",
+        "parentId": "root",
+        "file": "routes/api.delete-card.ts",
+        "path": "api/delete-card"
+      },
+      "routes/shop.$productId": {
+        "id": "routes/shop.$productId",
+        "parentId": "root",
+        "file": "routes/shop.$productId.tsx",
+        "path": "shop/:productId"
+      },
+      "routes/shop.$productId.configure": {
+        "id": "routes/shop.$productId.configure",
+        "parentId": "routes/shop.$productId",
+        "file": "routes/shop.$productId.configure.tsx",
+        "path": "configure"
+      },
+      "routes/shop.$productId._index": {
+        "id": "routes/shop.$productId._index",
+        "parentId": "routes/shop.$productId",
+        "file": "routes/shop.$productId._index.tsx",
+        "index": true
+      },
+      "routes/privacy-policy": {
+        "id": "routes/privacy-policy",
+        "parentId": "root",
+        "file": "routes/privacy-policy.tsx",
+        "path": "privacy-policy"
+      },
+      "routes/api.$function": {
+        "id": "routes/api.$function",
+        "parentId": "root",
+        "file": "routes/api.$function.ts",
+        "path": "api/:function"
+      },
+      "routes/builder-test": {
+        "id": "routes/builder-test",
+        "parentId": "root",
+        "file": "routes/builder-test.tsx",
+        "path": "builder-test"
+      },
+      "routes/confirmation": {
+        "id": "routes/confirmation",
+        "parentId": "root",
+        "file": "routes/confirmation.tsx",
+        "path": "confirmation"
+      },
+      "routes/shop._index": {
+        "id": "routes/shop._index",
+        "parentId": "root",
+        "file": "routes/shop._index.tsx",
+        "path": "shop",
+        "index": true
+      },
+      "routes/dashboard": {
+        "id": "routes/dashboard",
+        "parentId": "root",
+        "file": "routes/dashboard.tsx",
+        "path": "dashboard"
+      },
+      "routes/checkout": {
+        "id": "routes/checkout",
+        "parentId": "root",
+        "file": "routes/checkout.tsx",
+        "path": "checkout"
+      },
+      "routes/contact": {
+        "id": "routes/contact",
+        "parentId": "root",
+        "file": "routes/contact.tsx",
+        "path": "contact"
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "root",
+        "file": "routes/_index.tsx",
+        "index": true
+      },
+      "routes/logout": {
+        "id": "routes/logout",
+        "parentId": "root",
+        "file": "routes/logout.tsx",
+        "path": "logout"
+      },
+      "routes/about": {
+        "id": "routes/about",
+        "parentId": "root",
+        "file": "routes/about.tsx",
+        "path": "about"
+      },
+      "routes/admin": {
+        "id": "routes/admin",
+        "parentId": "root",
+        "file": "routes/admin.tsx",
+        "path": "admin"
+      },
+      "routes/admin.email-templates.customer-confirmation": {
+        "id": "routes/admin.email-templates.customer-confirmation",
+        "parentId": "routes/admin",
+        "file": "routes/admin.email-templates.customer-confirmation.tsx",
+        "path": "email-templates/customer-confirmation"
+      },
+      "routes/admin.email-templates.admin-notification": {
+        "id": "routes/admin.email-templates.admin-notification",
+        "parentId": "routes/admin",
+        "file": "routes/admin.email-templates.admin-notification.tsx",
+        "path": "email-templates/admin-notification"
+      },
+      "routes/admin.email-templates._index": {
+        "id": "routes/admin.email-templates._index",
+        "parentId": "routes/admin",
+        "file": "routes/admin.email-templates._index.tsx",
+        "path": "email-templates",
+        "index": true
+      },
+      "routes/admin.cards.$cardId": {
+        "id": "routes/admin.cards.$cardId",
+        "parentId": "routes/admin",
+        "file": "routes/admin.cards.$cardId.tsx",
+        "path": "cards/:cardId"
+      },
+      "routes/admin.cards.$cardId._index": {
+        "id": "routes/admin.cards.$cardId._index",
+        "parentId": "routes/admin.cards.$cardId",
+        "file": "routes/admin.cards.$cardId._index.tsx",
+        "index": true
+      },
+      "routes/admin.cards.$cardId.edit": {
+        "id": "routes/admin.cards.$cardId.edit",
+        "parentId": "routes/admin.cards.$cardId",
+        "file": "routes/admin.cards.$cardId.edit.tsx",
+        "path": "edit"
+      },
+      "routes/admin.system-status": {
+        "id": "routes/admin.system-status",
+        "parentId": "routes/admin",
+        "file": "routes/admin.system-status.tsx",
+        "path": "system-status"
+      },
+      "routes/admin.cards._index": {
+        "id": "routes/admin.cards._index",
+        "parentId": "routes/admin",
+        "file": "routes/admin.cards._index.tsx",
+        "path": "cards",
+        "index": true
+      },
+      "routes/admin.preview": {
+        "id": "routes/admin.preview",
+        "parentId": "routes/admin",
+        "file": "routes/admin.preview.tsx",
+        "path": "preview"
+      },
+      "routes/admin.success": {
+        "id": "routes/admin.success",
+        "parentId": "routes/admin",
+        "file": "routes/admin.success.tsx",
+        "path": "success"
+      },
+      "routes/admin._index": {
+        "id": "routes/admin._index",
+        "parentId": "routes/admin",
+        "file": "routes/admin._index.tsx",
+        "index": true
+      },
+      "routes/admin.create": {
+        "id": "routes/admin.create",
+        "parentId": "routes/admin",
+        "file": "routes/admin.create.tsx",
+        "path": "create"
+      },
+      "routes/admin.orders": {
+        "id": "routes/admin.orders",
+        "parentId": "routes/admin",
+        "file": "routes/admin.orders.tsx",
+        "path": "orders"
+      },
+      "routes/admin.orders.$orderId": {
+        "id": "routes/admin.orders.$orderId",
+        "parentId": "routes/admin.orders",
+        "file": "routes/admin.orders.$orderId.tsx",
+        "path": ":orderId"
+      },
+      "routes/admin.orders._index": {
+        "id": "routes/admin.orders._index",
+        "parentId": "routes/admin.orders",
+        "file": "routes/admin.orders._index.tsx",
+        "index": true
+      },
+      "routes/admin.users": {
+        "id": "routes/admin.users",
+        "parentId": "routes/admin",
+        "file": "routes/admin.users.tsx",
+        "path": "users"
+      },
+      "routes/login": {
+        "id": "routes/login",
+        "parentId": "root",
+        "file": "routes/login.tsx",
+        "path": "login"
+      },
+      "routes/cart": {
+        "id": "routes/cart",
+        "parentId": "root",
+        "file": "routes/cart.tsx",
+        "path": "cart"
+      },
+      "routes/$": {
+        "id": "routes/$",
+        "parentId": "root",
+        "file": "routes/$.tsx",
+        "path": "*"
+      }
+    },
+    "routeDiscovery": {
+      "mode": "lazy",
+      "manifestPath": "/__manifest"
+    },
+    "serverBuildFile": "index.js",
+    "serverModuleFormat": "esm",
+    "ssr": true,
+    "unstable_routeConfig": [
+      {
+        "id": "root",
+        "path": "",
+        "file": "root.tsx",
+        "children": [
+          {
+            "id": "routes/api.check-admin-authorization",
+            "file": "routes/api.check-admin-authorization.ts",
+            "path": "api/check-admin-authorization"
+          },
+          {
+            "id": "routes/api.update-order-fulfillment",
+            "file": "routes/api.update-order-fulfillment.ts",
+            "path": "api/update-order-fulfillment"
+          },
+          {
+            "id": "routes/api.create-checkout-session",
+            "file": "routes/api.create-checkout-session.ts",
+            "path": "api/create-checkout-session"
+          },
+          {
+            "id": "routes/api.get-stripe-receipt-url",
+            "file": "routes/api.get-stripe-receipt-url.ts",
+            "path": "api/get-stripe-receipt-url"
+          },
+          {
+            "id": "routes/api.admin-create-contact",
+            "file": "routes/api.admin-create-contact.ts",
+            "path": "api/admin-create-contact"
+          },
+          {
+            "id": "routes/api.send-purchase-emails",
+            "file": "routes/api.send-purchase-emails.ts",
+            "path": "api/send-purchase-emails"
+          },
+          {
+            "id": "routes/api.check-system-status",
+            "file": "routes/api.check-system-status.ts",
+            "path": "api/check-system-status"
+          },
+          {
+            "id": "routes/api.update-contact-data",
+            "file": "routes/api.update-contact-data.ts",
+            "path": "api/update-contact-data"
+          },
+          {
+            "id": "routes/api.admin-users-create",
+            "file": "routes/api.admin-users-create.ts",
+            "path": "api/admin-users-create"
+          },
+          {
+            "id": "routes/api.admin-users-delete",
+            "file": "routes/api.admin-users-delete.ts",
+            "path": "api/admin-users-delete"
+          },
+          {
+            "id": "routes/api.get-stripe-session",
+            "file": "routes/api.get-stripe-session.ts",
+            "path": "api/get-stripe-session"
+          },
+          {
+            "id": "routes/api.admin-users-list",
+            "file": "routes/api.admin-users-list.ts",
+            "path": "api/admin-users-list"
+          },
+          {
+            "id": "routes/api.get-card-details",
+            "file": "routes/api.get-card-details.ts",
+            "path": "api/get-card-details"
+          },
+          {
+            "id": "routes/terms-and-conditions",
+            "file": "routes/terms-and-conditions.tsx",
+            "path": "terms-and-conditions"
+          },
+          {
+            "id": "routes/api.upload-logo-zip",
+            "file": "routes/api.upload-logo-zip.ts",
+            "path": "api/upload-logo-zip"
+          },
+          {
+            "id": "routes/api.admin-session",
+            "file": "routes/api.admin-session.ts",
+            "path": "api/admin-session"
+          },
+          {
+            "id": "routes/api.validate-card",
+            "file": "routes/api.validate-card.ts",
+            "path": "api/validate-card"
+          },
+          {
+            "id": "routes/api.upload-to-s3",
+            "file": "routes/api.upload-to-s3.ts",
+            "path": "api/upload-to-s3"
+          },
+          {
+            "id": "routes/purchase-success",
+            "file": "routes/purchase-success.tsx",
+            "path": "purchase-success"
+          },
+          {
+            "id": "routes/api.delete-card",
+            "file": "routes/api.delete-card.ts",
+            "path": "api/delete-card"
+          },
+          {
+            "id": "routes/shop.$productId",
+            "file": "routes/shop.$productId.tsx",
+            "path": "shop/:productId",
+            "children": [
+              {
+                "id": "routes/shop.$productId.configure",
+                "file": "routes/shop.$productId.configure.tsx",
+                "path": "configure"
+              },
+              {
+                "id": "routes/shop.$productId._index",
+                "file": "routes/shop.$productId._index.tsx",
+                "index": true
+              }
+            ]
+          },
+          {
+            "id": "routes/privacy-policy",
+            "file": "routes/privacy-policy.tsx",
+            "path": "privacy-policy"
+          },
+          {
+            "id": "routes/api.$function",
+            "file": "routes/api.$function.ts",
+            "path": "api/:function"
+          },
+          {
+            "id": "routes/builder-test",
+            "file": "routes/builder-test.tsx",
+            "path": "builder-test"
+          },
+          {
+            "id": "routes/confirmation",
+            "file": "routes/confirmation.tsx",
+            "path": "confirmation"
+          },
+          {
+            "id": "routes/shop._index",
+            "file": "routes/shop._index.tsx",
+            "path": "shop",
+            "index": true
+          },
+          {
+            "id": "routes/dashboard",
+            "file": "routes/dashboard.tsx",
+            "path": "dashboard"
+          },
+          {
+            "id": "routes/checkout",
+            "file": "routes/checkout.tsx",
+            "path": "checkout"
+          },
+          {
+            "id": "routes/contact",
+            "file": "routes/contact.tsx",
+            "path": "contact"
+          },
+          {
+            "id": "routes/_index",
+            "file": "routes/_index.tsx",
+            "index": true
+          },
+          {
+            "id": "routes/logout",
+            "file": "routes/logout.tsx",
+            "path": "logout"
+          },
+          {
+            "id": "routes/about",
+            "file": "routes/about.tsx",
+            "path": "about"
+          },
+          {
+            "id": "routes/admin",
+            "file": "routes/admin.tsx",
+            "path": "admin",
+            "children": [
+              {
+                "id": "routes/admin.email-templates.customer-confirmation",
+                "file": "routes/admin.email-templates.customer-confirmation.tsx",
+                "path": "email-templates/customer-confirmation"
+              },
+              {
+                "id": "routes/admin.email-templates.admin-notification",
+                "file": "routes/admin.email-templates.admin-notification.tsx",
+                "path": "email-templates/admin-notification"
+              },
+              {
+                "id": "routes/admin.email-templates._index",
+                "file": "routes/admin.email-templates._index.tsx",
+                "path": "email-templates",
+                "index": true
+              },
+              {
+                "id": "routes/admin.cards.$cardId",
+                "file": "routes/admin.cards.$cardId.tsx",
+                "path": "cards/:cardId",
+                "children": [
+                  {
+                    "id": "routes/admin.cards.$cardId._index",
+                    "file": "routes/admin.cards.$cardId._index.tsx",
+                    "index": true
+                  },
+                  {
+                    "id": "routes/admin.cards.$cardId.edit",
+                    "file": "routes/admin.cards.$cardId.edit.tsx",
+                    "path": "edit"
+                  }
+                ]
+              },
+              {
+                "id": "routes/admin.system-status",
+                "file": "routes/admin.system-status.tsx",
+                "path": "system-status"
+              },
+              {
+                "id": "routes/admin.cards._index",
+                "file": "routes/admin.cards._index.tsx",
+                "path": "cards",
+                "index": true
+              },
+              {
+                "id": "routes/admin.preview",
+                "file": "routes/admin.preview.tsx",
+                "path": "preview"
+              },
+              {
+                "id": "routes/admin.success",
+                "file": "routes/admin.success.tsx",
+                "path": "success"
+              },
+              {
+                "id": "routes/admin._index",
+                "file": "routes/admin._index.tsx",
+                "index": true
+              },
+              {
+                "id": "routes/admin.create",
+                "file": "routes/admin.create.tsx",
+                "path": "create"
+              },
+              {
+                "id": "routes/admin.orders",
+                "file": "routes/admin.orders.tsx",
+                "path": "orders",
+                "children": [
+                  {
+                    "id": "routes/admin.orders.$orderId",
+                    "file": "routes/admin.orders.$orderId.tsx",
+                    "path": ":orderId"
+                  },
+                  {
+                    "id": "routes/admin.orders._index",
+                    "file": "routes/admin.orders._index.tsx",
+                    "index": true
+                  }
+                ]
+              },
+              {
+                "id": "routes/admin.users",
+                "file": "routes/admin.users.tsx",
+                "path": "users"
+              }
+            ]
+          },
+          {
+            "id": "routes/login",
+            "file": "routes/login.tsx",
+            "path": "login"
+          },
+          {
+            "id": "routes/cart",
+            "file": "routes/cart.tsx",
+            "path": "cart"
+          },
+          {
+            "id": "routes/$",
+            "file": "routes/$.tsx",
+            "path": "*"
+          }
+        ]
+      }
+    ]
+  },
+  "viteConfig": {
+    "build": {
+      "assetsDir": "assets"
+    }
+  }
+}

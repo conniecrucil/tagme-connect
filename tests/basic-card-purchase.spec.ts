@@ -1,8 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { completeStripeCheckout, waitForPaymentCompletion } from './utils/stripe-helpers';
+import {
+  assertMailpitPurchaseEmails,
+  createTestIdentity,
+  getSessionIdFromPageUrl,
+} from './utils/e2e-helpers';
 
 test.describe('Basic Card Purchase Workflow', () => {
   test('User can purchase basic card', async ({ page }) => {
+    const identity = createTestIdentity('basic');
+
     // Navigate to the shop
     await page.goto('/shop');
     
@@ -18,7 +25,7 @@ test.describe('Basic Card Purchase Workflow', () => {
     await page.waitForLoadState('networkidle');
     
     // Fill in the website URL for basic card
-    await page.fill('input[id="url"]', 'https://bancroft.io');
+    await page.fill('input[id="url"]', identity.websiteUrl);
     
     // Click the "Add to Cart" button (wait for it to be enabled)
     const addToCartButton = page.locator('button').filter({ hasText: 'Add to Cart' });
@@ -37,9 +44,9 @@ test.describe('Basic Card Purchase Workflow', () => {
     await page.waitForURL('**/checkout**', { timeout: 10000 });
     
     // Fill in customer information on checkout page
-    await page.fill('input[id="name"]', 'John Doe');
-    await page.fill('input[id="email"]', 'connectme-customer@mailinator.com');
-    await page.fill('input[id="phone"]', '555-123-4567');
+    await page.fill('input[id="name"]', identity.fullName);
+    await page.fill('input[id="email"]', identity.email);
+    await page.fill('input[id="phone"]', identity.phone);
     
     // Click the payment button
     const purchaseButton = page.locator('button').filter({ hasText: 'Pay $40.00' });
@@ -68,10 +75,19 @@ test.describe('Basic Card Purchase Workflow', () => {
       await expect(page.locator('h1')).toContainText('Order Confirmed');
 
       // Verify the website URL is displayed correctly
-      await expect(page.locator('text=https://bancroft.io')).toBeVisible();
+      await expect(page.locator(`text=${identity.websiteUrl}`)).toBeVisible();
 
       // Verify customer email is displayed
-      await expect(page.locator('text=connectme-customer@mailinator.com')).toBeVisible();
+      await expect(page.locator(`text=${identity.email}`)).toBeVisible();
+
+      const sessionId = getSessionIdFromPageUrl(page.url());
+      await assertMailpitPurchaseEmails({
+        sessionId,
+        customerEmail: identity.email,
+        customerName: identity.fullName,
+        websiteUrl: identity.websiteUrl,
+        productLabel: 'TAG Basic Card',
+      });
     }
   });
 });

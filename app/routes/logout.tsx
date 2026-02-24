@@ -2,6 +2,15 @@ import { redirect } from "react-router";
 import { destroyAdminSession } from "~/lib/server/admin-auth-session.server";
 
 export async function loader({ request }: { request: Request }) {
+  if (process.env.TEST_ENV === "true") {
+    const setCookie = await destroyAdminSession(request);
+    throw redirect("/", {
+      headers: {
+        "Set-Cookie": setCookie,
+      },
+    });
+  }
+
   const rawDomain = import.meta.env.VITE_AUTH0_DOMAIN;
   const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
 

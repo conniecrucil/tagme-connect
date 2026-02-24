@@ -1,8 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { completeStripeCheckout, waitForPaymentCompletion } from './utils/stripe-helpers';
+import {
+  assertMailpitPurchaseEmails,
+  assertMinioObjectsExist,
+  createTestIdentity,
+  getSessionIdFromPageUrl,
+  uploadGeneratedPngViaButton,
+  waitForCoreCardArtifactsByEmail,
+} from './utils/e2e-helpers';
 
 test.describe('TAG Core Card Purchase Workflow', () => {
   test('User can create TAG Core Card', async ({ page }) => {
+    const identity = createTestIdentity('core');
+    const testStartMs = Date.now();
+
     // Navigate directly to the TAG Core Card configure page
     await page.goto('/shop/tag-core-card/configure');
 
@@ -10,11 +21,19 @@ test.describe('TAG Core Card Purchase Workflow', () => {
     await page.waitForLoadState('networkidle');
     
     // Fill in basic information (minimum required for core card)
-    await page.fill('input[id="fname"]', 'John');
-    await page.fill('input[id="lname"]', 'Doe');
-    await page.fill('input[id="email"]', 'connectme-customer@mailinator.com');
-    await page.fill('input[id="phone"]', '555-123-4567');
-    await page.fill('input[id="website"]', 'https://bancroft.io');
+    await page.fill('input[id="fname"]', identity.firstName);
+    await page.fill('input[id="lname"]', identity.lastName);
+    await page.fill('input[id="email"]', identity.email);
+    await page.fill('input[id="phone"]', identity.phone);
+    await page.fill('input[id="website"]', identity.websiteUrl);
+
+    // Upload generated images sized to the UI recommendations.
+    await uploadGeneratedPngViaButton(page, 'Upload Header Image', `cover-${identity.suffix}.png`, 960, 640, '#0ea5e9');
+    await expect(page.getByAltText('Cover image')).toBeVisible();
+    await uploadGeneratedPngViaButton(page, 'Upload Card Design', `card-design-${identity.suffix}.png`, 1050, 600, '#16a34a');
+    await expect(page.getByAltText('Card design preview')).toBeVisible();
+    await uploadGeneratedPngViaButton(page, 'Upload Photo', `photo-${identity.suffix}.png`, 300, 300, '#f97316');
+    await expect(page.getByAltText('Photo')).toBeVisible();
     
     // Click the "Add to Cart" button
     const addToCartButton = page.locator('button[type="submit"]').filter({ hasText: 'Add to Cart' });
@@ -22,7 +41,7 @@ test.describe('TAG Core Card Purchase Workflow', () => {
     await addToCartButton.click();
     
     // Wait for redirect to cart page
-    await page.waitForURL('**/cart**', { timeout: 10000 });
+    await page.waitForURL('**/cart**', { timeout: 20000 });
     
     // Proceed to checkout
     const checkoutButton = page.locator('button').filter({ hasText: 'Proceed to Checkout' });
@@ -33,9 +52,9 @@ test.describe('TAG Core Card Purchase Workflow', () => {
     await page.waitForURL('**/checkout**', { timeout: 10000 });
     
     // Fill in customer information on checkout page
-    await page.fill('input[id="name"]', 'John Doe');
-    await page.fill('input[id="email"]', 'connectme-customer@mailinator.com');
-    await page.fill('input[id="phone"]', '555-123-4567');
+    await page.fill('input[id="name"]', identity.fullName);
+    await page.fill('input[id="email"]', identity.email);
+    await page.fill('input[id="phone"]', identity.phone);
     
     // Click the payment button
     const purchaseButton = page.locator('button').filter({ hasText: 'Pay $47.00' });
@@ -65,13 +84,34 @@ test.describe('TAG Core Card Purchase Workflow', () => {
     await expect(page.locator('h1')).toContainText('Order Confirmed');
     
     // Verify the website URL is displayed correctly
-    await expect(page.locator('text=https://bancroft.io')).toBeVisible();
+    await expect(page.locator(`text=${identity.websiteUrl}`)).toBeVisible();
     
     // Verify customer email is displayed
-    await expect(page.locator('text=connectme-customer@mailinator.com')).toBeVisible();
+    await expect(page.locator(`text=${identity.email}`)).toBeVisible();
+
+    const sessionId = getSessionIdFromPageUrl(page.url());
+    const emailAssertions = await assertMailpitPurchaseEmails({
+      sessionId,
+      customerEmail: identity.email,
+      customerName: identity.fullName,
+      websiteUrl: identity.websiteUrl,
+      productLabel: 'TAG Core Card',
+      requireWebsiteInAdminBody: false,
+    });
+    expect(emailAssertions.adminBody).toContain('download zip');
+
+    const artifacts = await waitForCoreCardArtifactsByEmail(identity.email, testStartMs, ['cover', 'photo']);
+    const requiredKeys = artifacts.assets
+      .filter((asset) => ['html', 'vcf', 'cover', 'photo'].includes(asset.asset_type))
+      .map((asset) => asset.s3_key);
+    const zipKeyMatch = emailAssertions.adminBody.match(/user-logos\/[a-f0-9-]+\.zip/);
+    if (zipKeyMatch) {
+      requiredKeys.push(zipKeyMatch[0]);
+    }
+    await assertMinioObjectsExist(requiredKeys);
     
     // Get the generated website URL from the confirmation page
-    const websiteUrlElement = page.locator('text=https://bancroft.io').first();
+    const websiteUrlElement = page.locator(`text=${identity.websiteUrl}`).first();
     const websiteUrl = await websiteUrlElement.textContent();
     
     // Extract UUID from the URL if it's a generated URL

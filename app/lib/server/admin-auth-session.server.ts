@@ -22,6 +22,17 @@ interface Auth0IdTokenClaims extends jwt.JwtPayload {
   picture?: string;
 }
 
+export function isTestEnvBypassEnabled() {
+  return process.env.TEST_ENV === "true";
+}
+
+function getTestEnvBypassUser(): AdminSessionUser {
+  return {
+    email: "test-admin@local",
+    name: "Test Admin",
+  };
+}
+
 function getRequiredAuth0Config() {
   const rawDomain =
     process.env.AUTH0_DOMAIN ??
@@ -144,42 +155,27 @@ export async function verifyAuth0IdToken(idToken: string): Promise<AdminSessionU
 
 export async function getAdminSession(request: Request) {
   const cookieHeader = request.headers.get("Cookie");
-  console.log("[admin-session] getAdminSession", {
-    hasCookieHeader: Boolean(cookieHeader),
-    hasAdminSessionCookie: cookieHeader?.includes("__tagme_admin_session=") ?? false,
-    cookieHeaderLength: cookieHeader?.length ?? 0,
-  });
   const session = await sessionStorage.getSession(cookieHeader);
   const user = session.get("user") as AdminSessionUser | undefined;
-  console.log("[admin-session] Parsed session", {
-    hasUser: Boolean(user),
-    email: user?.email ?? null,
-  });
   return { session, user };
 }
 
 export async function commitAdminSessionForUser(request: Request, user: AdminSessionUser) {
   const { session } = await getAdminSession(request);
   session.set("user", user);
-  const setCookie = await sessionStorage.commitSession(session);
-  console.log("[admin-session] commitAdminSessionForUser", {
-    email: user.email,
-    setCookieLength: setCookie.length,
-    cookiePrefix: setCookie.split(";")[0]?.slice(0, 120) ?? "",
-  });
-  return setCookie;
+  return sessionStorage.commitSession(session);
 }
 
 export async function destroyAdminSession(request: Request) {
   const { session } = await getAdminSession(request);
-  const setCookie = await sessionStorage.destroySession(session);
-  console.log("[admin-session] destroyAdminSession", {
-    setCookieLength: setCookie.length,
-  });
-  return setCookie;
+  return sessionStorage.destroySession(session);
 }
 
 export async function getAuthorizedAdminFromSession(request: Request) {
+  if (isTestEnvBypassEnabled()) {
+    return { state: "authorized" as const, user: getTestEnvBypassUser() };
+  }
+
   const { user } = await getAdminSession(request);
   if (!user?.email) {
     return { state: "unauthenticated" as const, user: null };

@@ -3,11 +3,6 @@ import { getSupabaseClient } from './utils/supabase';
 export default async (req: Request, context: any) => {
   try {
     const requestUrl = new URL(req.url);
-    console.log('[check-admin-authorization] Incoming request', {
-      method: req.method,
-      path: requestUrl.pathname,
-      search: requestUrl.search,
-    });
 
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
@@ -38,7 +33,6 @@ export default async (req: Request, context: any) => {
     const email = requestUrl.searchParams.get('email');
 
     if (!email) {
-      console.warn('[check-admin-authorization] Missing email query parameter');
       return new Response(JSON.stringify({ 
         authorized: false, 
         error: 'Email parameter is required' 
@@ -61,10 +55,7 @@ export default async (req: Request, context: any) => {
 
     if (error) {
       // User not found or other error
-      console.error('[check-admin-authorization] Supabase lookup error or no row:', {
-        email,
-        error,
-      });
+      console.error('Admin authorization check error:', error);
       return new Response(JSON.stringify({ 
         authorized: false, 
         email: email 
@@ -78,10 +69,6 @@ export default async (req: Request, context: any) => {
     }
 
     // User is authorized
-    console.log('[check-admin-authorization] Authorized admin user found', {
-      email,
-      id: data?.id,
-    });
     return new Response(JSON.stringify({ 
       authorized: true, 
       email: email 
@@ -94,7 +81,7 @@ export default async (req: Request, context: any) => {
     });
 
   } catch (error) {
-    console.error('[check-admin-authorization] Unexpected error:', error);
+    console.error('Unexpected error in check-admin-authorization:', error);
     return new Response(JSON.stringify({ 
       authorized: false,
       error: error instanceof Error ? error.message : 'Internal server error'

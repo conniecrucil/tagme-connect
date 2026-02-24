@@ -2,11 +2,6 @@ import { redirect } from "react-router";
 
 export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
-  console.warn("[catchall.loader] Unmatched route request", {
-    method: request.method,
-    path: url.pathname,
-    search: url.search,
-  });
   
   // If someone tries to access /index.html, redirect to home
   if (url.pathname === "/index.html") {
