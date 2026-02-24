@@ -11,6 +11,13 @@ function jsonError(status: number, error: string) {
 }
 
 async function callLegacyHandler(functionName: string | undefined, request: Request) {
+  const url = new URL(request.url);
+  console.log("[api.$function] Request", {
+    method: request.method,
+    path: url.pathname,
+    functionName: functionName ?? null,
+  });
+
   if (!functionName) {
     return jsonError(400, "Function name is required");
   }
@@ -76,6 +83,11 @@ async function callLegacyHandler(functionName: string | undefined, request: Requ
     }
   }
 
+  console.warn("[api.$function] Unknown API endpoint", {
+    method: request.method,
+    path: url.pathname,
+    functionName,
+  });
   return jsonError(404, `Unknown API endpoint: ${functionName}`);
 }
 

@@ -2,7 +2,7 @@ import {
   ChevronsUpDown,
   LogOut,
 } from "lucide-react"
-import { useAuth0 } from "@auth0/auth0-react"
+import { Link } from "react-router"
 
 import {
   Avatar,
@@ -23,7 +23,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "~/components/ui/sidebar"
-import { toast } from "sonner"
 
 export function NavUser({
   user,
@@ -35,18 +34,6 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-  const { logout } = useAuth0()
-
-  const handleLogout = () => {
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin,
-      },
-    })
-    toast.success("Logged Out", {
-      description: "You have been successfully logged out.",
-    })
-  }
 
   const getUserInitials = () => {
     if (user.name) {
@@ -100,9 +87,11 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut />
-              Log out
+            <DropdownMenuItem asChild>
+              <Link to="/logout">
+                <LogOut />
+                Log out
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

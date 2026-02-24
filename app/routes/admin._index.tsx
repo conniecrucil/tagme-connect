@@ -1,10 +1,10 @@
-import { Link, useLoaderData } from "react-router";
+import { Link, useLoaderData, useNavigation } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { DashboardMetricCard } from "~/components/DashboardMetricCard";
-import { DashboardMetricsGridSkeleton } from "~/components/DashboardMetricSkeleton";
 import { CreditCard, Users, ShoppingCart, FileText } from "lucide-react";
 import { getDashboardMetricsData } from "~/lib/server/admin-dashboard.server";
+import { AdminDashboardPageSkeleton } from "~/components/AdminPageSkeletons";
 
 export function meta() {
   return [
@@ -50,20 +50,13 @@ export async function loader() {
 
 export default function AdminIndex() {
   const metrics = useLoaderData<DashboardMetrics>();
+  const navigation = useNavigation();
+  const isPendingCurrentRoute =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === "/admin";
 
-  // Show loading skeleton if data isn't available yet
-  if (!metrics) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Track your TagMe contact card system metrics
-          </p>
-        </div>
-        <DashboardMetricsGridSkeleton />
-      </div>
-    );
+  if (isPendingCurrentRoute || !metrics) {
+    return <AdminDashboardPageSkeleton />;
   }
 
   return (

@@ -1,7 +1,22 @@
-import { HeroSection } from "../components/HeroSection";
-import { FeaturesSection } from "../components/FeaturesSection";
-import { TagMeCardsSection } from "../components/TagMeCardsSection";
-import { StorySection } from "../components/StorySection";
+import { Suspense, lazy } from "react";
+import { HomePageSkeleton } from "../components/HomePageSkeleton";
+
+const HeroSection = lazy(async () => {
+  const mod = await import("../components/HeroSection");
+  return { default: mod.HeroSection };
+});
+const FeaturesSection = lazy(async () => {
+  const mod = await import("../components/FeaturesSection");
+  return { default: mod.FeaturesSection };
+});
+const TagMeCardsSection = lazy(async () => {
+  const mod = await import("../components/TagMeCardsSection");
+  return { default: mod.TagMeCardsSection };
+});
+const StorySection = lazy(async () => {
+  const mod = await import("../components/StorySection");
+  return { default: mod.StorySection };
+});
 
 export function meta() {
   return [
@@ -12,12 +27,13 @@ export function meta() {
 
 export default function Home() {
   return (
-  <main className="min-h-screen">
+    <Suspense fallback={<HomePageSkeleton />}>
+      <main className="min-h-screen">
         <HeroSection />
         <FeaturesSection />
         <TagMeCardsSection />
         <StorySection />
-    </main>
-
+      </main>
+    </Suspense>
   );
 }

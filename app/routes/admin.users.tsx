@@ -1,5 +1,5 @@
 import { useState, useEffect, useId } from "react";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigation } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
@@ -10,6 +10,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { Trash2, Plus } from "lucide-react";
 import { listAdminUsers } from "~/lib/server/admin-users.server";
+import { AdminUsersPageSkeleton } from "~/components/AdminPageSkeletons";
 
 export function meta() {
   return [
@@ -44,6 +45,7 @@ interface AdminUser {
 export default function AdminUsers() {
   const { toast } = useToast();
   const { users: initialUsers } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -159,6 +161,14 @@ export default function AdminUsers() {
       day: 'numeric',
     });
   };
+
+  const isPendingCurrentRoute =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === "/admin/users";
+
+  if (isPendingCurrentRoute) {
+    return <AdminUsersPageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

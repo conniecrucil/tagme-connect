@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLoaderData, Link } from "react-router";
+import { useLoaderData, Link, useNavigation } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
@@ -14,6 +14,7 @@ import {
   TableHeader, 
   TableRow 
 } from "~/components/ui/table";
+import { AdminOrdersPageSkeleton } from "~/components/AdminPageSkeletons";
 
 export function meta() {
   return [
@@ -65,6 +66,7 @@ interface Order {
 
 export default function AdminOrdersIndex() {
   const { orders: initialOrders } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
@@ -111,6 +113,14 @@ export default function AdminOrdersIndex() {
       minute: '2-digit',
     });
   };
+
+  const isPendingCurrentRoute =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === "/admin/orders";
+
+  if (isPendingCurrentRoute) {
+    return <AdminOrdersPageSkeleton />;
+  }
 
   return (
     <div className="space-y-4">
