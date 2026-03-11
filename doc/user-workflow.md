@@ -8,8 +8,8 @@ This document outlines the complete user journey for purchasing smart business c
 ### 1. Product Selection (`/shop`)
 - **Entry Point**: User navigates to the shop page
 - **Available Products**:
-  - TAG Basic Card ($40.00) - One custom NFC card with personalized smart link
-  - TAG Core Card ($47.00) - Complete digital profile with automatic contact saving
+  - TAG Basic Card ($50.00) - One custom NFC card with personalized smart link
+  - TAG Core Card ($57.00) - Complete digital profile with automatic contact saving
 - **User Action**: User clicks "View Details" on desired product
 
 ### 2. Product Details (`/shop/{productId}`)

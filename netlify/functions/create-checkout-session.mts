@@ -53,7 +53,7 @@ export default async (req: Request, context: Context) => {
             : `${baseUrl}/sample-tag-core-card.webp`
           ],
         },
-        unit_amount: item.productType === 'basic' ? 4000 : 4700, // $40.00 and $47.00 in cents
+        unit_amount: item.productType === 'basic' ? 5000 : 5700, // $50.00 and $57.00 in cents
       },
       quantity: item.quantity,
     }));

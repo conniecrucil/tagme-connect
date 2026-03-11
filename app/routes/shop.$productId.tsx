@@ -9,7 +9,7 @@ export default function ProductLayout() {
     "tag-basic-card": {
       id: "tag-basic-card",
       name: "TAG Basic Card",
-      price: "$40.00",
+      price: "$50.00",
       description: "One Link. Endless Possibilities.",
       image: "/sample-tag-basic-card.webp"
     },
