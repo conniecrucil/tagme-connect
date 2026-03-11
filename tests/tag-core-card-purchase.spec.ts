@@ -38,7 +38,7 @@ test.describe('TAG Core Card Purchase Workflow', () => {
     await page.fill('input[id="phone"]', '555-123-4567');
     
     // Click the payment button
-    const purchaseButton = page.locator('button').filter({ hasText: 'Pay $47.00' });
+    const purchaseButton = page.locator('button').filter({ hasText: 'Pay $57.00' });
     await expect(purchaseButton).toBeVisible();
     await purchaseButton.click();
     
