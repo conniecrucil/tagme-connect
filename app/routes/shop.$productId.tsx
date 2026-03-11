@@ -16,7 +16,7 @@ export default function ProductLayout() {
     "tag-core-card": {
       id: "tag-core-card",
       name: "TAG Core Card",
-      price: "$47.00",
+      price: "$57.00",
       description: "Instant Connection. Full Profile. One Tap.",
       image: "/sample-tag-core-card.webp"
     }
