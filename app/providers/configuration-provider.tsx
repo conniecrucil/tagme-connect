@@ -139,14 +139,14 @@ export function ConfigurationProvider({
     "tag-basic-card": {
       id: "tag-basic-card",
       name: "TAG Basic Card",
-      price: "$40.00",
+      price: "$50.00",
       description: "One Link. Endless Possibilities.",
       image: "/sample-tag-basic-card.webp"
     },
     "tag-core-card": {
       id: "tag-core-card",
       name: "TAG Core Card",
-      price: "$47.00",
+      price: "$57.00",
       description: "Instant Connection. Full Profile. One Tap.",
       image: "/sample-tag-core-card.webp"
     }

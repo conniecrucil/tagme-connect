@@ -115,8 +115,8 @@ export default function CustomerConfirmationTemplate() {
               <div class="item">
                 <strong>${item.productType === 'basic' ? 'TAG Basic Card' : 'TAG Core Card'}</strong><br>
                 Quantity: ${item.quantity}<br>
-                Unit Price: $${item.productType === 'basic' ? '40.00' : '47.00'}<br>
-                Item Total: $${((item.productType === 'basic' ? 40 : 47) * item.quantity).toFixed(2)}
+                Unit Price: $${item.productType === 'basic' ? '50.00' : '57.00'}<br>
+                Item Total: $${((item.productType === 'basic' ? 50 : 57) * item.quantity).toFixed(2)}
                 ${item.configuration ? `
                   ${item.productType === 'basic' ? 
                     `<br><em>Website URL: <a href="${item.configuration.website}" target="_blank" style="color: #10b981;">${item.configuration.website}</a></em>` :
