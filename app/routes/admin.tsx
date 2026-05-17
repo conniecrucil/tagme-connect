@@ -16,6 +16,48 @@ export function handle() {
 }
 
 
+const DEV_BYPASS = import.meta.env.DEV && import.meta.env.VITE_ADMIN_AUTH_BYPASS === 'true';
+
+function AdminLayout() {
+  return (
+    <SidebarProvider>
+      <AppSidebar user={{ name: 'Dev Admin', email: 'dev@local', avatar: undefined }} />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <AdminBreadcrumbs />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <Outlet />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+function AdminLayoutWithUser({ name, email, avatar }: { name: string; email: string; avatar?: string }) {
+  return (
+    <SidebarProvider>
+      <AppSidebar user={{ name, email, avatar }} />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <AdminBreadcrumbs />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <Outlet />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
 function AdminContent() {
   const { isAuthenticated, isLoading, loginWithRedirect, user, logout } = useAuth0();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -23,40 +65,27 @@ function AdminContent() {
 
   const handleLogin = () => {
     loginWithRedirect({
-      authorizationParams: {
-        connection: 'google-oauth2',
-      },
-      appState: {
-        returnTo: '/admin',
-      },
+      authorizationParams: { connection: 'google-oauth2' },
+      appState: { returnTo: '/admin' },
     });
   };
 
-  // Check authorization when user becomes authenticated
   useEffect(() => {
+    if (!isAuthenticated || !user?.email) return;
+
     const checkAuthorization = async () => {
-      if (isAuthenticated && user?.email) {
-        setCheckingAuth(true);
-        try {
-          // In development, bypass authorization check if VITE_ADMIN_AUTH_BYPASS is true
-          const authBypass = import.meta.env.DEV && import.meta.env.VITE_ADMIN_AUTH_BYPASS === 'true';
-          
-          if (authBypass) {
-            console.log('[DEV] Authorization bypass enabled via VITE_ADMIN_AUTH_BYPASS');
-            setIsAuthorized(true);
-          } else {
-            const response = await fetch(
-              `/.netlify/functions/check-admin-authorization?email=${encodeURIComponent(user.email)}`
-            );
-            const data = await response.json();
-            setIsAuthorized(data.authorized === true);
-          }
-        } catch (error) {
-          console.error('Authorization check failed:', error);
-          setIsAuthorized(false);
-        } finally {
-          setCheckingAuth(false);
-        }
+      setCheckingAuth(true);
+      try {
+        const response = await fetch(
+          `/.netlify/functions/check-admin-authorization?email=${encodeURIComponent(user.email ?? '')}`
+        );
+        const data = await response.json();
+        setIsAuthorized(data.authorized === true);
+      } catch (error) {
+        console.error('Authorization check failed:', error);
+        setIsAuthorized(false);
+      } finally {
+        setCheckingAuth(false);
       }
     };
 
@@ -94,7 +123,6 @@ function AdminContent() {
     );
   }
 
-  // Show loading while checking authorization
   if (checkingAuth || isAuthorized === null) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -106,8 +134,7 @@ function AdminContent() {
     );
   }
 
-  // Show unauthorized message if user is not in admin list
-  if (isAuthenticated && !isAuthorized) {
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -121,11 +148,7 @@ function AdminContent() {
             <p className="text-sm text-gray-600">
               Please contact an administrator if you believe you should have access.
             </p>
-            <Button 
-              onClick={() => logout()} 
-              className="w-full" 
-              variant="outline"
-            >
+            <Button onClick={() => logout()} className="w-full" variant="outline">
               Sign Out
             </Button>
           </CardContent>
@@ -134,34 +157,19 @@ function AdminContent() {
     );
   }
 
-  // Pass user data to AppSidebar
-  const userData = {
-    name: user?.name || 'Admin User',
-    email: user?.email || '',
-    avatar: user?.picture,
-  };
-
-  // If authenticated, render child routes with sidebar
   return (
-    <SidebarProvider>
-      <AppSidebar user={userData} />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-            <AdminBreadcrumbs />
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Outlet />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <AdminLayoutWithUser
+      name={user?.name || 'Admin User'}
+      email={user?.email || ''}
+      avatar={user?.picture}
+    />
   );
 }
 
 export default function Admin() {
+  if (DEV_BYPASS) {
+    return <AdminLayout />;
+  }
   return (
     <Auth0ProviderWrapper>
       <AdminContent />

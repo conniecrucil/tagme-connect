@@ -84,6 +84,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           url: "/admin/system-status",
         },
         {
+          title: "Data Management",
+          url: "/admin/data-management",
+        },
+        {
           title: "Email Templates",
           url: "/admin/email-templates",
         },
